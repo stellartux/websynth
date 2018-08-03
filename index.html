@@ -18,7 +18,31 @@
   <button type="submit">Select</button>
 </form>
 
+<section class="oscillator-panel">
+<label> Waveform:
+<select class="waveform" name="waveform">
+<option value="sine" selected>Sine</option>
+<option value="triangle">Triangle</option>
+<option value="square">Square</option>
+<option value="sawtooth">Sawtooth</option>
+</select>
+</label>
+<label>Gain:
+<input type="range" name="gain" class="gain" value="0.5" min="0.0" max="1.0" step=any>
+</label>
+<label>Detune:
+<input type="number" name="detune" class="detune" value="0" min="-100" max="100" step=any>
+</label>
+<label>Octave:
+<input type="number" name="octave" class="octave" value="0" min="-6" max="6">
+</label>
+</section>
+
 <div class="keyboard"></div>
+
+<section class="master-panel">
+<input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
+</section>
 
 </div>
 </body>
