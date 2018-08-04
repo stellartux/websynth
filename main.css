@@ -18,3 +18,11 @@ body {
   padding: 1em;
   border: solid thick #800;
 }
+
+.curve {
+  display: none;
+}
+
+section.oscillator:only-of-type > button.removeOscillator {
+  display: none;
+}

@@ -18,9 +18,16 @@
   <button type="submit">Select</button>
 </form>
 
-<section class="oscillator-panel">
+<section id="oscillator-panel">
+<div>
+<button id="addOscillator">+</button>
+</div>
+</section>
+
+<template id="oscillator-template">
+<section class="oscillator">
 <label> Waveform:
-<select class="waveform" name="waveform">
+<select class="waveform">
 <option value="sine" selected>Sine</option>
 <option value="triangle">Triangle</option>
 <option value="square">Square</option>
@@ -28,20 +35,41 @@
 </select>
 </label>
 <label>Gain:
-<input type="range" name="gain" class="gain" value="0.5" min="0.0" max="1.0" step=any>
+<input type="range" class="gain" value="0.5" min="0" max="1" step="any">
 </label>
 <label>Detune:
-<input type="number" name="detune" class="detune" value="0" min="-100" max="100" step=any>
+<input type="number" class="detune" value="0" min="-100" max="100" step="any">
 </label>
 <label>Octave:
-<input type="number" name="octave" class="octave" value="0" min="-6" max="6">
+<input type="number" class="octave" value="0" min="-6" max="6">
+</label>
+<label>Note Offset:
+<input type="number" class="note-offset" value="0" min="-11" max="11">
+</label>
+<button class="removeOscillator">-</button>
+</section>
+</template>
+
+<section id="envelope-controls">
+<label>Attack:
+<input class="attack" type="range" value="0.2" min="0" max="2" step="any">
+</label>
+<label>Decay:
+<input class="decay" type="range" value="0.2" min="0" max="1" step="any">
+</label>
+<label>Sustain:
+<input class="sustain" type="range" value="0.4" min="0" max="1" step="any">
+</label>
+<label>Release:
+<input class="release" type="range" value="0.1" min="0.02" max="1.2" step="any">
+</label>
 </label>
 </section>
 
-<div class="keyboard"></div>
-
 <section class="master-panel">
+<label>Master Gain:
 <input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
+</label>
 </section>
 
 </div>
