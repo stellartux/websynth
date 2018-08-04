@@ -4,11 +4,11 @@ class Note {
     this.envGain = audio.createGain()
     this.envGain.gain.setValueAtTime(0, audio.currentTime)
     this.envGain.gain.linearRampToValueAtTime(
-      1,
+      this.envelope.velocity,
       this.envelope.triggerTime + this.envelope.attack
     )
     this.envGain.gain.setTargetAtTime(
-      this.envelope.sustain,
+      this.envelope.sustain * this.envelope.velocity,
       this.envelope.triggerTime + this.envelope.attack,
       this.envelope.decay
     )
@@ -70,7 +70,7 @@ function updateEnvelope() {
   envelope.release = Number(domObj.querySelector("input.release").value)
 }
 
-function noteOn(midiNum) {
+function noteOn(midiNum, velocity = 1) {
   let panels = document.getElementsByClassName("oscillator")
   const oscParams = []
   for (let panel of panels) {
@@ -87,6 +87,11 @@ function noteOn(midiNum) {
   }
   let env = envelope
   env.triggerTime = audio.currentTime
+  if (document.getElementById("velocity-sensitive").checked) {
+    env.velocity = velocity
+  } else {
+    env.velocity = 1
+  }
   playingNotes[midiNum] = new Note(oscParams, env)
 }
 
@@ -133,7 +138,9 @@ window.onload = () => {
           controller = WebMidi.getInputByName(
             cs.options[cs.selectedIndex].value
           )
-          controller.addListener("noteon", "all", e => noteOn(e.note.number))
+          controller.addListener("noteon", "all", e => {
+            noteOn(e.note.number, e.velocity)
+          })
           controller.addListener("noteoff", "all", e => noteOff(e.note.number))
           e.target.classList.add("hidden")
         })

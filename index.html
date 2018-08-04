@@ -12,11 +12,18 @@
 <body>
 
 <div class="container">
+
 <form id="controller-form">
   <label for"controller-select">Select your MIDI controller</label>
   <select name="controller-select" id="controller-select"></select>
   <button type="submit">Select</button>
 </form>
+
+<section id="controller-controls">
+<label>Velocity Sensitive
+<input type="checkbox" checked id="velocity-sensitive">
+</label>
+</section>
 
 <section id="oscillator-panel">
 <div>
@@ -52,7 +59,7 @@
 
 <section id="envelope-controls">
 <label>Attack:
-<input class="attack" type="range" value="0.2" min="0" max="2" step="any">
+<input class="attack" type="range" value="0.2" min="0" max="1" step="any">
 </label>
 <label>Decay:
 <input class="decay" type="range" value="0.2" min="0" max="1" step="any">
@@ -70,6 +77,7 @@
 <label>Master Gain:
 <input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
 </label>
+
 </section>
 
 </div>
