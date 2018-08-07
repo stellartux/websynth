@@ -1,55 +1,3 @@
-class Note {
-  constructor(_params = [], _env) {
-    this.envelope = _env
-    this.envGain = audio.createGain()
-    this.envGain.gain.setValueAtTime(0, audio.currentTime)
-    this.envGain.gain.linearRampToValueAtTime(
-      this.envelope.velocity,
-      this.envelope.triggerTime + this.envelope.attack
-    )
-    this.envGain.gain.setTargetAtTime(
-      this.envelope.sustain * this.envelope.velocity,
-      this.envelope.triggerTime + this.envelope.attack,
-      this.envelope.decay
-    )
-    this.envGain.connect(masterGain)
-    this.oscs = []
-    for (let p of _params) {
-      let gainer = new GainNode(audio)
-      let osc = audio.createOscillator()
-      gainer.gain.value = p.gain
-      osc.type = p.type
-      osc.detune.value = p.detune
-      osc.frequency.value = p.frequency
-      osc.connect(gainer)
-      gainer.connect(this.envGain)
-      osc.start()
-      this.oscs.push(osc)
-    }
-  }
-  release() {
-    for (let o of this.oscs) {
-      o.stop(audio.currentTime + this.envelope.release * 20)
-    }
-    if (
-      audio.currentTime >
-      this.envelope.triggerTime + this.envelope.attack + this.envelope.decay
-    ) {
-      this.envGain.gain.setTargetAtTime(
-        0,
-        audio.currentTime,
-        this.envelope.release
-      )
-    } else {
-      this.envGain.gain.setTargetAtTime(
-        0,
-        this.envelope.triggerTime + this.envelope.attack + this.envelope.decay,
-        this.envelope.release
-      )
-    }
-  }
-}
-
 let controller
 const audio = new (window.AudioContext || window.webkitAudioContext)()
 const playingNotes = {}
@@ -58,8 +6,8 @@ const masterGain = audio.createGain()
 masterGain.gain.value = 0.5
 masterGain.connect(audio.destination)
 
-function midiToFreq(num) {
-  return 13.75 * Math.pow(2, (num - 9) / 12)
+function midiToFreq(_num) {
+  return 13.75 * Math.pow(2, (_num - 9) / 12)
 }
 
 function updateEnvelope() {
@@ -70,7 +18,7 @@ function updateEnvelope() {
   envelope.release = Number(domObj.querySelector("input.release").value)
 }
 
-function noteOn(midiNum, velocity = 1) {
+function noteOn(_midiNum, _velocity = 1) {
   let panels = document.getElementsByClassName("oscillator")
   const oscParams = []
   for (let panel of panels) {
@@ -79,7 +27,7 @@ function noteOn(midiNum, velocity = 1) {
       detune: panel.getElementsByClassName("detune")[0].value,
       frequency: midiToFreq(
         Number(panel.getElementsByClassName("note-offset")[0].value) +
-          midiNum +
+          _midiNum +
           panel.getElementsByClassName("octave")[0].value * 12
       ),
       gain: panel.getElementsByClassName("gain")[0].value
@@ -88,16 +36,14 @@ function noteOn(midiNum, velocity = 1) {
   let env = envelope
   env.triggerTime = audio.currentTime
   if (document.getElementById("velocity-sensitive").checked) {
-    env.velocity = velocity
-  } else {
-    env.velocity = 1
+    env.velocity = _velocity
   }
-  playingNotes[midiNum] = new Note(oscParams, env)
+  playingNotes[_midiNum] = new Note(masterGain, oscParams, env)
 }
 
-function noteOff(midiNum) {
-  playingNotes[midiNum].release()
-  delete playingNotes[midiNum]
+function noteOff(_midiNum) {
+  playingNotes[_midiNum].releaseNote()
+  delete playingNotes[_midiNum]
 }
 
 function addOscillator() {
@@ -106,9 +52,20 @@ function addOscillator() {
     true
   )
   clone.querySelector(".removeOscillator").addEventListener("click", e => {
-    console.log(e.target.parentElement)
+    removeOscillator(e.target.parentElement)
   })
   document.getElementById("oscillator-panel").appendChild(clone)
+}
+
+function removeOscillator(_elem) {
+  document.getElementById("oscillator-panel").removeChild(_elem)
+}
+
+function setupControllerListeners() {
+  controller.addListener("noteon", "all", e =>
+    noteOn(e.note.number, e.velocity)
+  )
+  controller.addListener("noteoff", "all", e => noteOff(e.note.number))
 }
 
 window.onload = () => {
@@ -120,33 +77,38 @@ window.onload = () => {
 
       let cs = document.getElementById("controller-select")
 
-      for (let input of WebMidi.inputs) {
-        let elem = document.createElement("option")
-        elem.text = input.name
-        cs.add(elem)
-      }
-
       updateEnvelope()
       for (let obj of document.querySelectorAll("#envelope-controls input")) {
         obj.addEventListener("change", updateEnvelope)
       }
 
-      document
-        .getElementById("controller-form")
-        .addEventListener("submit", e => {
+      let cf = document.getElementById("controller-form")
+
+      cf.addEventListener("submit", e => {
           e.preventDefault()
           controller = WebMidi.getInputByName(
             cs.options[cs.selectedIndex].value
           )
-          controller.addListener("noteon", "all", e => {
-            noteOn(e.note.number, e.velocity)
-          })
-          controller.addListener("noteoff", "all", e => noteOff(e.note.number))
+          setupControllerListeners()
           e.target.classList.add("hidden")
         })
 
-      document.getElementById("masterGain").addEventListener("change", () => {
-        masterGain.gain.value = document.getElementById("masterGain").value
+      if (WebMidi.inputs.length === 0) {
+        cf.innerHTML = "<p>No MIDI devices detected.</p>"
+      } else if (WebMidi.inputs.length === 1) {
+        controller = WebMidi.inputs[0]
+        setupControllerListeners()
+        document.getElementById("controller-form").classList.add("hidden")
+      } else {
+        for (let input of WebMidi.inputs) {
+          let elem = document.createElement("option")
+          elem.text = input.name
+          cs.add(elem)
+        }
+      }
+
+      document.getElementById("masterGain").addEventListener("change", e => {
+        masterGain.gain.value = e.target.value
       })
 
       addOscillator()
