@@ -42,16 +42,16 @@
 <option value="sawtooth">Sawtooth</option>
 </select>
 </label>
-<label>Gain:
+<label>Gain
 <input type="range" class="gain" value="0.5" min="0" max="1" step="any">
 </label>
-<label>Detune:
+<label>Detune
 <input type="number" class="detune" value="0" min="-100" max="100" step="any">
 </label>
-<label>Octave:
+<label>Octave
 <input type="number" class="octave" value="0" min="-6" max="6">
 </label>
-<label>Note Offset:
+<label>Note Offset
 <input type="number" class="note-offset" value="0" min="-11" max="11">
 </label>
 <button class="removeOscillator">-</button>
@@ -59,25 +59,24 @@
 </template>
 
 <section id="envelope-controls">
-<label>Attack:
+<label>Attack
 <input class="attack" type="range" value="0.2" min="0" max="1" step="any">
 </label>
-<label>Decay:
+<label>Decay
 <input class="decay" type="range" value="0.2" min="0" max="1" step="any">
 </label>
-<label>Sustain:
+<label>Sustain
 <input class="sustain" type="range" value="0.4" min="0" max="1" step="any">
 </label>
-<label>Release:
+<label>Release
 <input class="release" type="range" value="0.1" min="0.02" max="1.2" step="any">
-</label>
 </label>
 </section>
 
-<section class="master-panel">
-<label>Master Gain:
+<section id="master-panel">
+
+<label for="masterGain">Master Gain</label>
 <input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
-</label>
 
 </section>
 

@@ -1,6 +1,6 @@
 class Note {
   constructor(_target, _oscParams = [], _noteParams = {}) {
-    this.context = _target.context
+    this.context = _target.context || _target
     this.attack = _noteParams.attack || 0.02
     this.decay = _noteParams.decay || 0.02
     this.sustain = _noteParams.sustain || 0.04
@@ -53,6 +53,11 @@ class Note {
         this.triggerTime + this.attack + this.decay,
         this.release
       )
+    }
+  }
+  stopNote() {
+    for (let o of this.oscs) {
+      o.stop(this.context.currentTime)
     }
   }
 }
