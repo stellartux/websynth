@@ -35,9 +35,7 @@ class Note {
     }
   }
   releaseNote() {
-    for (let o of this.oscs) {
-      o.stop(this.context.currentTime + this.release * 20)
-    }
+    this.stopNote(this.context.currentTime + this.release * 20)
     if (
       this.context.currentTime >
       this.triggerTime + this.attack + this.decay
@@ -55,9 +53,9 @@ class Note {
       )
     }
   }
-  stopNote() {
+  stopNote(_t = this.context.currentTime) {
     for (let o of this.oscs) {
-      o.stop(this.context.currentTime)
+      o.stop(_t)
     }
   }
 }

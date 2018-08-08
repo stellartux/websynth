@@ -40,10 +40,14 @@ function noteOn(_midiNum, _velocity = 1) {
       gain: panel.querySelector(".gain").value
     })
   }
-  const env = envelope
+  let env = Object.assign({}, envelope)
   env.triggerTime = audio.currentTime
   if (document.getElementById("velocity-sensitive").checked) {
     env.velocity = _velocity
+  }
+  if (pedals.soft) {
+    env.velocity *= 0.66
+    env.attack *= 1.333
   }
   playingNotes[_midiNum] = new Note(masterGain, oscParams, env)
 }
@@ -64,9 +68,12 @@ function controlChange(_ev) {
     case 64:
       sustainPedalEvent(_ev)
       break
-    case 1:
     case 66:
       sustenatoPedalEvent(_ev)
+      break
+    case 1:
+    case 67:
+      softPedalEvent(_ev)
       break
     default:
       console.log(_ev)
@@ -75,28 +82,36 @@ function controlChange(_ev) {
 }
 
 function sustainPedalEvent(_ev) {
-  if (pedals.sustain && (_ev.value < 64)) {
+  if (pedals.sustain && _ev.value < 64) {
     pedals.sustain = false
     for (let n in sustainingNotes) {
       sustainingNotes[n].releaseNote()
       delete sustainingNotes[n]
     }
-  } else if (!pedals.sustain && (_ev.value > 63)) {
+  } else if (!pedals.sustain && _ev.value > 63) {
     pedals.sustain = true
   }
 }
 
 function sustenatoPedalEvent(_ev) {
-  if (pedals.sustenato && (_ev.value < 64)) {
+  if (pedals.sustenato && _ev.value < 64) {
     pedals.sustenato = false
     for (let n in sustenatoNotes) {
       sustenatoNotes[n].releaseNote()
       delete sustenatoNotes[n]
     }
-  } else if (!pedals.sustenato && (_ev.value > 63)) {
+  } else if (!pedals.sustenato && _ev.value > 63) {
     pedals.sustenato = true
     sustenatoNotes = playingNotes
     playingNotes = {}
+  }
+}
+
+function softPedalEvent(_ev) {
+  if (_ev.value < 64) {
+    pedals.soft = false
+  } else {
+    pedals.soft = true
   }
 }
 
