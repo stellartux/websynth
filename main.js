@@ -1,7 +1,8 @@
 let controller
 const audio = new (window.AudioContext || window.webkitAudioContext)()
-const playingNotes = {}
-const sustainingNotes = {}
+let playingNotes = {}
+let sustainingNotes = {}
+let sustenatoNotes = {}
 const pedals = {
   sustain: false,
   sustenato: false,
@@ -51,16 +52,21 @@ function noteOff(_midiNum) {
   if (pedals.sustain) {
     sustainingNotes[_midiNum] = playingNotes[_midiNum]
   } else {
-    playingNotes[_midiNum].releaseNote()
+    if (playingNotes[_midiNum]) {
+      playingNotes[_midiNum].releaseNote()
+    }
   }
   delete playingNotes[_midiNum]
 }
 
 function controlChange(_ev) {
   switch (_ev.controller.number) {
-    case 1:
     case 64:
       sustainPedalEvent(_ev)
+      break
+    case 1:
+    case 66:
+      sustenatoPedalEvent(_ev)
       break
     default:
       console.log(_ev)
@@ -71,16 +77,26 @@ function controlChange(_ev) {
 function sustainPedalEvent(_ev) {
   if (pedals.sustain && (_ev.value < 64)) {
     pedals.sustain = false
-    sustainPedalRelease()
+    for (let n in sustainingNotes) {
+      sustainingNotes[n].releaseNote()
+      delete sustainingNotes[n]
+    }
   } else if (!pedals.sustain && (_ev.value > 63)) {
     pedals.sustain = true
   }
 }
 
-function sustainPedalRelease() {
-  for (let n in sustainingNotes) {
-    sustainingNotes[n].releaseNote()
-    delete sustainingNotes[n]
+function sustenatoPedalEvent(_ev) {
+  if (pedals.sustenato && (_ev.value < 64)) {
+    pedals.sustenato = false
+    for (let n in sustenatoNotes) {
+      sustenatoNotes[n].releaseNote()
+      delete sustenatoNotes[n]
+    }
+  } else if (!pedals.sustenato && (_ev.value > 63)) {
+    pedals.sustenato = true
+    sustenatoNotes = playingNotes
+    playingNotes = {}
   }
 }
 
