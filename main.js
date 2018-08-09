@@ -2,16 +2,61 @@ let controller
 const audio = new (window.AudioContext || window.webkitAudioContext)()
 let playingNotes = {}
 let sustainingNotes = {}
-let sustenatoNotes = {}
+let sostenutoNotes = {}
 const pedals = {
   sustain: false,
-  sustenato: false,
+  sostenuto: false,
   soft: false
 }
 const envelope = {}
 const masterGain = audio.createGain()
 masterGain.gain.value = 0.5
 masterGain.connect(audio.destination)
+
+function channelMode(_ev) {
+  switch (_ev.controller.number) {
+    case 120:
+      for (let n of playingNotes) {
+        n.stopNote()
+      }
+      for (let n of sustainingNotes) {
+        n.stopNote()
+      }
+      for (let n of sostenutoNotes) {
+        n.stopNote()
+      }
+      playingNotes = {}
+      sustainingNotes = {}
+      sostenutoNotes = {}
+      break
+    case 123:
+      for (let n of playingNotes) {
+        n.releaseNote()
+      }
+      playingNotes = {}
+      break
+    default:
+      break
+  }
+}
+
+function controlChange(_ev) {
+  switch (_ev.controller.number) {
+    case 64:
+      sustainPedalEvent(_ev)
+      break
+    case 1:
+    case 66:
+      sostenutoPedalEvent(_ev)
+      break
+    case 67:
+      softPedalEvent(_ev)
+      break
+    default:
+      console.log(_ev)
+      break
+  }
+}
 
 function midiToFreq(_num) {
   return 13.75 * Math.pow(2, (_num - 9) / 12)
@@ -37,19 +82,21 @@ function noteOn(_midiNum, _velocity = 1) {
           _midiNum +
           panel.querySelector(".octave").value * 12
       ),
-      gain: panel.querySelector(".gain").value
+      gain:
+        panel.querySelector(".gain").value *
+        (panel.querySelector(".invert-phase").checked ? 1 : -1)
     })
   }
-  let env = Object.assign({}, envelope)
-  env.triggerTime = audio.currentTime
+  let noteParams = Object.assign({}, envelope)
+  noteParams.triggerTime = audio.currentTime
   if (document.getElementById("velocity-sensitive").checked) {
-    env.velocity = _velocity
+    noteParams.velocity = _velocity
   }
   if (pedals.soft) {
-    env.velocity *= 0.66
-    env.attack *= 1.333
+    noteParams.velocity *= 0.66
+    noteParams.attack *= 1.333
   }
-  playingNotes[_midiNum] = new Note(masterGain, oscParams, env)
+  playingNotes[_midiNum] = new Note(masterGain, noteParams, oscParams)
 }
 
 function noteOff(_midiNum) {
@@ -61,24 +108,6 @@ function noteOff(_midiNum) {
     }
   }
   delete playingNotes[_midiNum]
-}
-
-function controlChange(_ev) {
-  switch (_ev.controller.number) {
-    case 64:
-      sustainPedalEvent(_ev)
-      break
-    case 66:
-      sustenatoPedalEvent(_ev)
-      break
-    case 1:
-    case 67:
-      softPedalEvent(_ev)
-      break
-    default:
-      console.log(_ev)
-      break
-  }
 }
 
 function sustainPedalEvent(_ev) {
@@ -93,16 +122,16 @@ function sustainPedalEvent(_ev) {
   }
 }
 
-function sustenatoPedalEvent(_ev) {
-  if (pedals.sustenato && _ev.value < 64) {
-    pedals.sustenato = false
-    for (let n in sustenatoNotes) {
-      sustenatoNotes[n].releaseNote()
-      delete sustenatoNotes[n]
+function sostenutoPedalEvent(_ev) {
+  if (pedals.sostenuto && _ev.value < 64) {
+    pedals.sostenuto = false
+    for (let n in sostenutoNotes) {
+      sostenutoNotes[n].releaseNote()
+      delete sostenutoNotes[n]
     }
-  } else if (!pedals.sustenato && _ev.value > 63) {
-    pedals.sustenato = true
-    sustenatoNotes = playingNotes
+  } else if (!pedals.sostenuto && _ev.value > 63) {
+    pedals.sostenuto = true
+    sostenutoNotes = playingNotes
     playingNotes = {}
   }
 }
@@ -136,6 +165,7 @@ function setupControllerListeners(channel = "all") {
   )
   controller.addListener("noteoff", channel, e => noteOff(e.note.number))
   controller.addListener("controlchange", channel, e => controlChange(e))
+  controller.addListener("channelmode", channel, e => channelMode(e))
 }
 
 window.onload = () => {

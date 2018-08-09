@@ -1,5 +1,5 @@
 class Note {
-  constructor(_target, _oscParams = [], _noteParams = {}) {
+  constructor(_target, _noteParams = {}, _oscParams = []) {
     this.context = _target.context || _target
     this.attack = _noteParams.attack || 0.02
     this.decay = _noteParams.decay || 0.02
