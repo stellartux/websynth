@@ -155,6 +155,9 @@ function addOscillator() {
   clone.querySelector(".removeOscillator").addEventListener("click", e => {
     removeOscillator(e.target.parentElement)
   })
+  clone.querySelector(".gain").addEventListener("dblclick", e => {
+    e.target.value = 0.5
+  })
   $("oscillator-panel").appendChild(clone)
 }
 
