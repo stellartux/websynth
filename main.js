@@ -145,33 +145,39 @@ window.onload = () => {
     } else {
       console.log("WebMidi enabled!")
 
-      const cs = document.getElementById("controller-select")
-
       updateEnvelope()
       for (let obj of document.querySelectorAll("#envelope-controls input")) {
         obj.addEventListener("change", updateEnvelope)
       }
 
       const cf = document.getElementById("controller-form")
+      const cs = document.getElementById("controller-select")
+      const chs = document.getElementById("channel-select")
 
       cf.addEventListener("submit", e => {
         e.preventDefault()
         controller = WebMidi.getInputByName(cs.options[cs.selectedIndex].value)
-        setupControllerListeners()
+        setupControllerListeners(chs.options[chs.selectedIndex].value)
         e.target.classList.add("hidden")
       })
 
       if (WebMidi.inputs.length === 0) {
         cf.innerHTML = "<p>No MIDI devices detected.</p>"
-      } else if (WebMidi.inputs.length === 1) {
-        controller = WebMidi.inputs[0]
-        setupControllerListeners()
-        document.getElementById("controller-form").classList.add("hidden")
       } else {
+        let elem
         for (const input of WebMidi.inputs) {
-          let elem = document.createElement("option")
+          elem = document.createElement("option")
           elem.text = input.name
           cs.add(elem)
+        }
+
+        elem = document.createElement("option")
+        elem.text = "all"
+        chs.add(elem)
+        for (let i = 1; i < 17; i++) {
+          elem = document.createElement("option")
+          elem.text = i
+          chs.add(elem)
         }
       }
 
