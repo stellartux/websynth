@@ -50,11 +50,11 @@
 <label>Detune
 <input type="number" class="detune" value="0" min="-100" max="100" step="any">
 </label>
-<label>Octave
-<input type="number" class="octave" value="0" min="-6" max="6">
-</label>
 <label>Note Offset
 <input type="number" class="note-offset" value="0" min="-11" max="11">
+</label>
+<label>Octave
+<input type="number" class="octave" value="0" min="-6" max="6">
 </label>
 <label>Ø
 <input type="checkbox" class="invert-phase">
@@ -79,7 +79,8 @@
 </section>
 
 <section id="master-panel">
-
+<label for="panning">Panning</label>
+<input type="range" name="panning" value="0" min="-1" max="1" step="any" id="panning">
 <label for="masterGain">Master Gain</label>
 <input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
 

@@ -1,16 +1,22 @@
 let controller
+const $ = x => document.getElementById(x)
+const $$ = x => Array.from(document.querySelectorAll(x))
 const audio = new (window.AudioContext || window.webkitAudioContext)()
 let playingNotes = {}
 let sustainingNotes = {}
 let sostenutoNotes = {}
+let pitchBend = 0
 const pedals = {
   sustain: false,
   sostenuto: false,
   soft: false
 }
 const envelope = {}
+const panner = audio.createStereoPanner()
 const masterGain = audio.createGain()
+panner.pan.value = 0
 masterGain.gain.value = 0.5
+panner.connect(masterGain)
 masterGain.connect(audio.destination)
 
 function channelMode(_ev) {
@@ -68,7 +74,7 @@ function midiToFreq(_num) {
 }
 
 function updateEnvelope() {
-  const domObj = document.getElementById("envelope-controls")
+  const domObj = $("envelope-controls")
   envelope.attack = Number(domObj.querySelector("input.attack").value)
   envelope.decay = Number(domObj.querySelector("input.decay").value)
   envelope.sustain = Number(domObj.querySelector("input.sustain").value)
@@ -94,14 +100,14 @@ function noteOn(_midiNum, _velocity = 1) {
   }
   let noteParams = Object.assign({}, envelope)
   noteParams.triggerTime = audio.currentTime
-  if (document.getElementById("velocity-sensitive").checked) {
+  if ($("velocity-sensitive").checked) {
     noteParams.velocity = _velocity
   }
   if (pedals.soft) {
     noteParams.velocity *= 0.66
     noteParams.attack *= 1.333
   }
-  playingNotes[_midiNum] = new Note(masterGain, noteParams, oscParams)
+  playingNotes[_midiNum] = new Note(panner, noteParams, oscParams)
 }
 
 function noteOff(_midiNum) {
@@ -143,17 +149,17 @@ function sostenutoPedalEvent(_ev) {
 
 function addOscillator() {
   const clone = document.importNode(
-    document.getElementById("oscillator-template").content,
+    $("oscillator-template").content,
     true
   )
   clone.querySelector(".removeOscillator").addEventListener("click", e => {
     removeOscillator(e.target.parentElement)
   })
-  document.getElementById("oscillator-panel").appendChild(clone)
+  $("oscillator-panel").appendChild(clone)
 }
 
 function removeOscillator(_elem) {
-  document.getElementById("oscillator-panel").removeChild(_elem)
+  $("oscillator-panel").removeChild(_elem)
 }
 
 function setupControllerListeners(channel = "all") {
@@ -177,9 +183,9 @@ window.onload = () => {
         obj.addEventListener("change", updateEnvelope)
       }
 
-      const cf = document.getElementById("controller-form")
-      const cs = document.getElementById("controller-select")
-      const chs = document.getElementById("channel-select")
+      const cf = $("controller-form")
+      const cs = $("controller-select")
+      const chs = $("channel-select")
 
       cf.addEventListener("submit", e => {
         e.preventDefault()
@@ -208,14 +214,23 @@ window.onload = () => {
         }
       }
 
-      document.getElementById("masterGain").addEventListener("change", e => {
+      $("masterGain").addEventListener("change", e => {
         masterGain.gain.value = e.target.value
       })
+      $("masterGain").addEventListener("dblclick", e => {
+        masterGain.gain.value = 0.5
+        e.target.value = 0.5
+      })
+      $("panning").addEventListener("change", e => {
+          panner.pan.value = e.target.value
+        })
+      $("panning").addEventListener("dblclick", e => {
+          panner.pan.value = 0
+          e.target.value = 0
+        })
 
       addOscillator()
-      document
-        .getElementById("addOscillator")
-        .addEventListener("click", addOscillator)
+      $("addOscillator").addEventListener("click", addOscillator)
     }
   })
 }
