@@ -15,7 +15,7 @@ masterGain.connect(audio.destination)
 
 function channelMode(_ev) {
   switch (_ev.controller.number) {
-    case 120:
+    case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allsoundoff:
       for (let n of playingNotes) {
         n.stopNote()
       }
@@ -29,7 +29,7 @@ function channelMode(_ev) {
       sustainingNotes = {}
       sostenutoNotes = {}
       break
-    case 123:
+    case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allnotesoff:
       for (let n of playingNotes) {
         n.releaseNote()
       }
@@ -42,15 +42,20 @@ function channelMode(_ev) {
 
 function controlChange(_ev) {
   switch (_ev.controller.number) {
-    case 64:
+    case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.holdpedal:
+    case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.hold2pedal:
       sustainPedalEvent(_ev)
       break
-    case 1:
-    case 66:
+    case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.modulationwheelcoarse:
+    case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.sustenutopedal:
       sostenutoPedalEvent(_ev)
       break
-    case 67:
-      softPedalEvent(_ev)
+    case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.softpedal:
+      if (_ev.value < 64) {
+        pedals.soft = false
+      } else {
+        pedals.soft = true
+      }
       break
     default:
       console.log(_ev)
@@ -84,7 +89,7 @@ function noteOn(_midiNum, _velocity = 1) {
       ),
       gain:
         panel.querySelector(".gain").value *
-        (panel.querySelector(".invert-phase").checked ? 1 : -1)
+        (panel.querySelector(".invert-phase").checked ? -1 : 1)
     })
   }
   let noteParams = Object.assign({}, envelope)
@@ -133,14 +138,6 @@ function sostenutoPedalEvent(_ev) {
     pedals.sostenuto = true
     sostenutoNotes = playingNotes
     playingNotes = {}
-  }
-}
-
-function softPedalEvent(_ev) {
-  if (_ev.value < 64) {
-    pedals.soft = false
-  } else {
-    pedals.soft = true
   }
 }
 
