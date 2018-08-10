@@ -111,12 +111,10 @@ function noteOn(_midiNum, _velocity = 1) {
 }
 
 function noteOff(_midiNum) {
-  if (pedals.sustain) {
+  if (pedals.sustain && !sustainingNotes[_midiNum]) {
     sustainingNotes[_midiNum] = playingNotes[_midiNum]
-  } else {
-    if (playingNotes[_midiNum]) {
-      playingNotes[_midiNum].releaseNote()
-    }
+  } else if (playingNotes[_midiNum]) {
+    playingNotes[_midiNum].releaseNote()
   }
   delete playingNotes[_midiNum]
 }

@@ -36,7 +36,17 @@ input[type="number"] {
 
 .container {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-evenly;
+}
+
+#oscillator-panel {
+  min-width: 400px;
+  flex: 3;
+}
+
+#global-controls {
+  flex: 1;
 }
 
 .oscillator {
