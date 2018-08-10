@@ -1,3 +1,9 @@
+@keyframes flashyheader {
+  25% { box-shadow: -1vmin 1vmin 2vmin #d2d; }
+  50% { box-shadow: -1vmin -1vmin 2vmin #2dd; }
+  75% { box-shadow: 1vmin -1vmin 2vmin #dd2; }
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -16,13 +22,18 @@ body {
 }
 
 h1 {
-  box-shadow: 4px 4px 9px #ddd;
+  box-shadow: 1vmin 1vmin 2vmin #ddd;
   border: thin solid #ddd;
   margin-left: 2em;
   padding: 0.2em;
-  padding-left: 8vw;
+  padding-left: 10vw;
+  padding-right: 4vw;
   min-width: 6em;
   width: 20vw;
+  animation: 2s infinite flashyheader paused;
+}
+h1:hover {
+  animation: 2s infinite flashyheader running;
 }
 
 input,
