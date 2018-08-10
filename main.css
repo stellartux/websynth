@@ -3,15 +3,46 @@
 }
 
 html, body {
-  height: 90vh;
+  min-height: 60vh;
   background-color: #222;
   color: #DDD;
+  font-family: "Aldrich", "Courier New", Courier, monospace;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 1em;
+  padding: 1em;
+}
+
+input, select {
+  margin-right: 1em;
+}
+
+input[type="number"] {
+  width: 3em;
 }
 
 .container {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-evenly;
+
+}
+
+.oscillator {
+  border: solid thin white;
+  padding: .2em;
+  border-left: none;
+  border-right: none;
+}
+
+#envelope-controls, #master-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 1em;
+  margin-top: 1em;
+  border: solid thin white;
 }
 
 #controller-form {

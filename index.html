@@ -3,16 +3,16 @@
 
 <head>
 <meta charset="utf-8">
-<title>Keyboard</title>
+<title>Websynth</title>
 <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
 <script src="notewrapper.js" charset="utf-8"></script>
 <script src="main.js" charset="utf-8"></script>
 <link rel="stylesheet" href="main.css">
+<link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
 </head>
 
 <body>
-
-<div class="container">
+<h1>Websynth</h1>
 
 <form id="controller-form">
 <label for"controller-select">Select your MIDI controller</label>
@@ -22,11 +22,7 @@
 <button type="submit">Select</button>
 </form>
 
-<section id="controller-controls">
-<label>Velocity Sensitive
-<input type="checkbox" checked id="velocity-sensitive">
-</label>
-</section>
+<div class="container">
 
 <section id="oscillator-panel">
 <div>
@@ -63,6 +59,7 @@
 </section>
 </template>
 
+<section id="global-controls">
 <section id="envelope-controls">
 <label>Attack
 <input class="attack" type="range" value="0.2" min="0" max="1" step="any">
@@ -79,11 +76,14 @@
 </section>
 
 <section id="master-panel">
+<label>Velocity Sensitive
+<input type="checkbox" checked id="velocity-sensitive">
+</label>
 <label for="panning">Panning</label>
 <input type="range" name="panning" value="0" min="-1" max="1" step="any" id="panning">
 <label for="masterGain">Master Gain</label>
 <input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
-
+</section>
 </section>
 
 </div>
