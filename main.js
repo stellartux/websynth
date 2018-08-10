@@ -194,7 +194,7 @@ window.onload = () => {
         e.preventDefault()
         controller = WebMidi.getInputByName(cs.options[cs.selectedIndex].value)
         setupControllerListeners(chs.options[chs.selectedIndex].value)
-        e.target.classList.add("hidden")
+        cf.classList.add("hidden")
       })
 
       if (WebMidi.inputs.length === 0) {
