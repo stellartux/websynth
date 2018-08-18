@@ -18,6 +18,47 @@ panner.pan.value = 0
 masterGain.gain.value = 0.5
 panner.connect(masterGain)
 masterGain.connect(audio.destination)
+const currentlyHeldKeys = {}
+const keyboardKeymap = {
+  "\\": 59,
+  z: 60,
+  x: 62,
+  c: 64,
+  v: 65,
+  b: 67,
+  n: 69,
+  m: 71,
+  ",": 72,
+  ".": 74,
+  "/": 76,
+  q: 72,
+  w: 74,
+  e: 76,
+  r: 77,
+  t: 79,
+  y: 81,
+  u: 83,
+  i: 84,
+  o: 86,
+  p: 88,
+  "[": 89,
+  "]": 91,
+  s: 61,
+  d: 63,
+  g: 66,
+  h: 68,
+  j: 70,
+  l: 73,
+  ";": 75,
+  2: 73,
+  3: 75,
+  5: 78,
+  6: 80,
+  7: 82,
+  9: 85,
+  0: 87,
+  "=": 90
+}
 
 function channelMode(_ev) {
   switch (_ev.controller.number) {
@@ -195,7 +236,7 @@ function setupDisplayKeyboard() {
     elem.onmousedown = e => noteOn(e.target.midiNumber)
     elem.onmouseleave = e => noteOff(e.target.midiNumber)
     elem.onmouseup = e => noteOff(e.target.midiNumber)
-    elem.style.setProperty("--squish", palette[i%12])
+    elem.style.setProperty("--squish", palette[i % 12])
     if (elem.id.includes("E") || elem.id.includes("B")) {
       makeShadowKey()
     }
@@ -212,24 +253,23 @@ function generateColorPalette(seed = 0) {
   const j = Math.PI / 6
   const k = 2 * Math.PI / 6
   for (let i = 0; i < 12; i++) {
-      let color = "rgb("
-      let f = (i + seed) * j
-      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-      color += ", "
-      f += 4 * j
-      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-      color += ", "
-      f += 4 * j
-      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-      color += ")"
-      palette.push(color)
+    let color = "rgb("
+    let f = (i + seed) * j
+    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+    color += ", "
+    f += 4 * j
+    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+    color += ", "
+    f += 4 * j
+    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+    color += ")"
+    palette.push(color)
   }
   return palette
 }
 
-
-
 window.onload = () => {
+  // set up global control event listeners
   $("masterGain").addEventListener("change", e => {
     masterGain.gain.value = e.target.value
   })
@@ -248,6 +288,25 @@ window.onload = () => {
   addOscillator()
   $("add-oscillator").addEventListener("click", addOscillator)
 
+  /*
+    keypress handlers for the (typing) keyboard controls
+    i.e. holding the z key plays middle C
+  */
+  document.addEventListener("keydown", function(e) {
+    if (Object.keys(keyboardKeymap).includes(e.key)) {
+      if (!Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
+        currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
+        noteOn(keyboardKeymap[e.key])
+      }
+    }
+  })
+  document.addEventListener("keyup", function(e) {
+    if (Object.keys(currentlyHeldKeys).includes(e.key)) {
+      delete currentlyHeldKeys[e.key]
+      noteOff(keyboardKeymap[e.key])
+    }
+  })
+
   WebMidi.enable(err => {
     if (err) {
       console.log("WebMidi could not be enabled.", err)
@@ -255,7 +314,7 @@ window.onload = () => {
       console.log("WebMidi enabled!")
 
       updateEnvelope()
-      for (let obj of document.querySelectorAll("#envelope-controls input")) {
+      for (const obj of $$("#envelope-controls input")) {
         obj.addEventListener("change", updateEnvelope)
       }
 
