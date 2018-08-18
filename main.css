@@ -1,36 +1,60 @@
-@keyframes flashyheader {
-  25% { box-shadow: -1vmin 1vmin 2vmin #d2d; }
-  50% { box-shadow: -1vmin -1vmin 2vmin #2dd; }
-  75% { box-shadow: 1vmin -1vmin 2vmin #dd2; }
+:root {
+  --main-bg: #222;
+  --main-font: #ddd;
+  --main-shadow: #888;
+  --neutral: #48d;
+  --attention: #d84;
+  --link: #88d;
+  --highlight: #8ad;
+  --good: #4d6;
+  --bad: #d42;
+  --squish: #a4a;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  margin: 1em;
-  padding: 1em;
+@keyframes flashyheader {
+  25% {
+    box-shadow: -1vmin 1vmin 2vmin magenta;
+  }
+  50% {
+    box-shadow: -1vmin -1vmin 2vmin cyan;
+  }
+  75% {
+    box-shadow: 1vmin -1vmin 2vmin yellow;
+  }
 }
 
 html,
 body {
-  min-height: 60vh;
-  background-color: #222;
-  color: #ddd;
-  font-family: "Aldrich", "Courier New", Courier, monospace;
-  padding-top: 0;
-  margin-top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--main-bg);
+  color: var(--main-font);
+  font-family: "Aldrich", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 h1 {
-  box-shadow: 1vmin 1vmin 2vmin #ddd;
-  border: thin solid #ddd;
+  position: static;
+  box-shadow: 1vmin 1vmin 2vmin var(--main-font);
+  border: thin solid var(--main-font);
+  border-radius: 0.4em;
   margin-left: 2em;
-  padding: 0.2em;
+  padding-bottom: 1.25vmin;
   padding-left: 10vw;
   padding-right: 4vw;
   min-width: 6em;
   width: 20vw;
   animation: 2s infinite flashyheader paused;
+  height: 5vmin;
 }
 h1:hover {
   animation: 2s infinite flashyheader running;
@@ -38,7 +62,8 @@ h1:hover {
 
 input,
 select {
-  margin-right: 1em;
+  margin-right: 0.7em;
+  border-radius: 0.4em;
 }
 
 input[type="number"] {
@@ -48,12 +73,48 @@ input[type="number"] {
 .container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin-right: 1.5vw;
 }
 
 #oscillator-panel {
-  min-width: 400px;
+  min-width: 350px;
+  max-height: 43vh;
   flex: 3;
+  overflow-y: auto;
+}
+button {
+  position: relative;
+  color: var(--main-font);
+  background-color: var(--main-bg);
+  border: 2px solid var(--main-font);
+  border-radius: 5vmin;
+  box-shadow: var(--main-shadow) 0.1em 0.2em 0;
+  min-width: 2ch;
+  min-height: 2ch;
+}
+button:active {
+  color: var(--neutral);
+  border-color: var(--neutral);
+  box-shadow: none;
+  top: 0.2em;
+  left: 0.1em;
+}
+button:focus {
+  outline: none;
+}
+#add-oscillator {
+  position: relative;
+  height: 5vmin;
+  width: 5vmin;
+  margin: 0.5em;
+  border-width: thick;
+  font-size: 1.2em;
+}
+#add-oscillator:active {
+  color: var(--good);
+  border-color: var(--good);
 }
 
 #global-controls {
@@ -61,26 +122,31 @@ input[type="number"] {
 }
 
 .oscillator {
-  border: solid thin #ded;
+  border: solid thin var(--main-shadow);
   padding: 0.2em;
   border-left: none;
   border-right: none;
 }
+.remove-oscillator:active {
+  color: var(--bad);
+  border-color: var(--bad);
+}
 
 #envelope-controls,
-#master-panel {
+#master-panel,
+#info {
   display: flex;
   flex-direction: column;
   padding: 1em;
   margin-top: 1em;
-  border: solid thin #ddd;
+  border: solid thin var(--main-font);
 }
 
 #controller-form {
   padding: 1em;
-  border: solid thick #800;
-  margin-left: 3em;
-  margin-right: 3em;
+  border: solid thick var(--attention);
+  margin-left: 3vw;
+  margin-right: 3vw;
   margin-bottom: 1em;
   display: flex;
   justify-content: center;
@@ -88,13 +154,70 @@ input[type="number"] {
 
 #controller-form > * {
   margin-right: 1em;
+  --neutral: var(--attention);
 }
 
-section.oscillator:only-of-type > button.removeOscillator {
+.invisible,
+.oscillator:only-child > button.remove-oscillator {
   visibility: hidden;
 }
 
 #controller-form.hidden,
 .hidden {
   display: none;
+}
+
+a {
+  color: var(--neutral, #88d);
+}
+a:visited {
+  color: var(--highlight, #a8d);
+}
+
+#keyboard {
+  position: relative;
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+  bottom: 0;
+  max-height: 50vh;
+  padding: .5em;
+  margin-right: 1vw;
+  margin-top: -8vh;
+}
+#ebony,
+#ivory {
+  display: flex;
+  flex-direction: row;
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0;
+  flex: 5;
+}
+#ebony {
+  position: relative;
+  left: -1vw;
+  flex: 3;
+  top: 7vw;
+  margin-top: 5vw;
+}
+
+.key {
+  flex: auto;
+  background-color: white;
+  outline: #999 thin solid;
+  border: outset .2vw;
+  border-top: none;
+  border-bottom-width: 1vw;
+}
+#ebony > .key {
+  background-color: #444;
+  border-color: #000;
+  border-width: .3vw;
+  border-bottom-width: 1vw;
+}
+#keyboard .keypress {
+  border-color: var(--squish);
+  background-color: var(--squish);
+  box-shadow: 0px -1vh 3vw var(--squish);
 }

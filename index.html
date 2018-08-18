@@ -12,8 +12,8 @@
 </head>
 
 <body>
-<h1>Websynth</h1>
 
+<h1>Websynth</h1>
 <form id="controller-form">
 <label for"controller-select">Select your MIDI controller</label>
 <select name="controller-select" id="controller-select"></select>
@@ -23,11 +23,8 @@
 </form>
 
 <div class="container">
-
+<button id="add-oscillator">+</button>
 <section id="oscillator-panel">
-<div>
-<button id="addOscillator">+</button>
-</div>
 </section>
 
 <template id="oscillator-template">
@@ -52,10 +49,10 @@
 <label>Octave
 <input type="number" class="octave" value="0" min="-6" max="6">
 </label>
-<label>Ø
+<label><abbr title="Invert phase">Ø</abbr>
 <input type="checkbox" class="invert-phase">
 </label>
-<button class="removeOscillator">-</button>
+<button class="remove-oscillator">-</button>
 </section>
 </template>
 
@@ -87,5 +84,11 @@
 </section>
 
 </div>
+
+<section id="keyboard">
+<div id="ebony"></div>
+<div id="ivory"></div>
+</section>
+
 </body>
 </html>

@@ -73,16 +73,18 @@ function midiToFreq(_num) {
   return 13.75 * Math.pow(2, (_num - 9) / 12)
 }
 
-function updateEnvelope() {
-  const domObj = $("envelope-controls")
-  envelope.attack = Number(domObj.querySelector("input.attack").value)
-  envelope.decay = Number(domObj.querySelector("input.decay").value)
-  envelope.sustain = Number(domObj.querySelector("input.sustain").value)
-  envelope.release = Number(domObj.querySelector("input.release").value)
+function updateEnvelope(e) {
+  if (e) {
+    envelope[e.target.className] = Number(e.target.value)
+  } else {
+    for (const c of $$("#envelope-controls input")) {
+      envelope[c.className] = Number(c.value)
+    }
+  }
 }
 
 function noteOn(_midiNum, _velocity = 1) {
-  const panels = document.getElementsByClassName("oscillator")
+  const panels = $$(".oscillator")
   const oscParams = []
   for (const panel of panels) {
     oscParams.push({
@@ -108,6 +110,10 @@ function noteOn(_midiNum, _velocity = 1) {
     noteParams.attack *= 1.333
   }
   playingNotes[_midiNum] = new Note(panner, noteParams, oscParams)
+
+  $(
+    "".concat(WebMidi._notes[_midiNum % 12], Math.floor(_midiNum / 12))
+  ).classList.add("keypress")
 }
 
 function noteOff(_midiNum) {
@@ -116,7 +122,10 @@ function noteOff(_midiNum) {
   } else if (playingNotes[_midiNum]) {
     playingNotes[_midiNum].releaseNote()
   }
-  delete playingNotes[_midiNum]
+
+  $(
+    "".concat(WebMidi._notes[_midiNum % 12], Math.floor(_midiNum / 12))
+  ).classList.remove("keypress")
 }
 
 function sustainPedalEvent(_ev) {
@@ -146,21 +155,15 @@ function sostenutoPedalEvent(_ev) {
 }
 
 function addOscillator() {
-  const clone = document.importNode(
-    $("oscillator-template").content,
-    true
-  )
-  clone.querySelector(".removeOscillator").addEventListener("click", e => {
-    removeOscillator(e.target.parentElement)
+  const c = document.importNode($("oscillator-template").content, true)
+  const p = $("oscillator-panel")
+  c.querySelector(".remove-oscillator").addEventListener("click", e => {
+    p.removeChild(e.target.parentElement)
   })
-  clone.querySelector(".gain").addEventListener("dblclick", e => {
+  c.querySelector(".gain").addEventListener("dblclick", e => {
     e.target.value = 0.5
   })
-  $("oscillator-panel").appendChild(clone)
-}
-
-function removeOscillator(_elem) {
-  $("oscillator-panel").removeChild(_elem)
+  p.appendChild(c)
 }
 
 function setupControllerListeners(channel = "all") {
@@ -172,7 +175,79 @@ function setupControllerListeners(channel = "all") {
   controller.addListener("channelmode", channel, e => channelMode(e))
 }
 
+/*
+  CSS keyboard and mouse-control
+*/
+function setupDisplayKeyboard() {
+  const palette = generateColorPalette()
+  const makeShadowKey = () => {
+    const shadowkey = document.createElement("div")
+    shadowkey.classList.add("invisible")
+    shadowkey.classList.add("key")
+    $("ebony").appendChild(shadowkey)
+  }
+  makeShadowKey()
+  for (let i = 9; i < 99; i++) {
+    const elem = document.createElement("div")
+    elem.classList.add("key")
+    elem.id = "".concat(WebMidi._notes[i % 12], Math.floor(i / 12))
+    elem.midiNumber = i
+    elem.onmousedown = e => noteOn(e.target.midiNumber)
+    elem.onmouseleave = e => noteOff(e.target.midiNumber)
+    elem.onmouseup = e => noteOff(e.target.midiNumber)
+    elem.style.setProperty("--squish", palette[i%12])
+    if (elem.id.includes("E") || elem.id.includes("B")) {
+      makeShadowKey()
+    }
+    if (elem.id.includes("#")) {
+      $("ebony").appendChild(elem)
+    } else {
+      $("ivory").appendChild(elem)
+    }
+  }
+}
+
+function generateColorPalette(seed = 0) {
+  const palette = []
+  const j = Math.PI / 6
+  const k = 2 * Math.PI / 6
+  for (let i = 0; i < 12; i++) {
+      let color = "rgb("
+      let f = (i + seed) * j
+      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+      color += ", "
+      f += 4 * j
+      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+      color += ", "
+      f += 4 * j
+      color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+      color += ")"
+      palette.push(color)
+  }
+  return palette
+}
+
+
+
 window.onload = () => {
+  $("masterGain").addEventListener("change", e => {
+    masterGain.gain.value = e.target.value
+  })
+  $("masterGain").addEventListener("dblclick", e => {
+    masterGain.gain.value = 0.5
+    e.target.value = 0.5
+  })
+  $("panning").addEventListener("change", e => {
+    panner.pan.value = e.target.value
+  })
+  $("panning").addEventListener("dblclick", e => {
+    panner.pan.value = 0
+    e.target.value = 0
+  })
+
+  addOscillator()
+  $("add-oscillator").addEventListener("click", addOscillator)
+
   WebMidi.enable(err => {
     if (err) {
       console.log("WebMidi could not be enabled.", err)
@@ -193,10 +268,12 @@ window.onload = () => {
         controller = WebMidi.getInputByName(cs.options[cs.selectedIndex].value)
         setupControllerListeners(chs.options[chs.selectedIndex].value)
         cf.classList.add("hidden")
+        setupDisplayKeyboard()
       })
 
       if (WebMidi.inputs.length === 0) {
-        cf.innerHTML = "<p>No MIDI devices detected.</p>"
+        cf.classList.add("hidden")
+        setupDisplayKeyboard()
       } else {
         let elem
         for (const input of WebMidi.inputs) {
@@ -214,24 +291,6 @@ window.onload = () => {
           chs.add(elem)
         }
       }
-
-      $("masterGain").addEventListener("change", e => {
-        masterGain.gain.value = e.target.value
-      })
-      $("masterGain").addEventListener("dblclick", e => {
-        masterGain.gain.value = 0.5
-        e.target.value = 0.5
-      })
-      $("panning").addEventListener("change", e => {
-          panner.pan.value = e.target.value
-        })
-      $("panning").addEventListener("dblclick", e => {
-          panner.pan.value = 0
-          e.target.value = 0
-        })
-
-      addOscillator()
-      $("addOscillator").addEventListener("click", addOscillator)
     }
   })
 }
