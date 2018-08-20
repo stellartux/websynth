@@ -119,7 +119,7 @@ function updateEnvelope(e) {
     envelope[e.target.className] = Number(e.target.value)
   } else {
     for (const c of $$("#envelope-controls input")) {
-      envelope[c.className] = Number(c.value)
+      envelope[c.id] = Number(c.value)
     }
   }
 }
@@ -219,7 +219,11 @@ function setupControllerListeners(channel = "all") {
 /*
   CSS keyboard and mouse-control
 */
-function setupDisplayKeyboard() {
+function setupDisplayKeyboard(maxkeys = 88, lownote = 21) {
+  const keywidth = (12/7)*(95/maxkeys)
+  console.log(keywidth);
+  $('keyboard').style.setProperty("--key-width", `${keywidth}vw`)
+  $('keyboard').style.setProperty("--half-key", `${keywidth/2}vw`)
   const palette = generateColorPalette()
   const makeShadowKey = () => {
     const shadowkey = document.createElement("div")
@@ -228,7 +232,7 @@ function setupDisplayKeyboard() {
     $("ebony").appendChild(shadowkey)
   }
   makeShadowKey()
-  for (let i = 9; i < 99; i++) {
+  for (let i = lownote; i < lownote + maxkeys; i++) {
     const elem = document.createElement("div")
     elem.classList.add("key")
     elem.id = "".concat(WebMidi._notes[i % 12], Math.floor(i / 12))
@@ -268,30 +272,7 @@ function generateColorPalette(seed = 0) {
   return palette
 }
 
-window.onload = () => {
-  // set up global control event listeners
-  $("masterGain").addEventListener("change", e => {
-    masterGain.gain.value = e.target.value
-  })
-  $("masterGain").addEventListener("dblclick", e => {
-    masterGain.gain.value = 0.5
-    e.target.value = 0.5
-  })
-  $("panning").addEventListener("change", e => {
-    panner.pan.value = e.target.value
-  })
-  $("panning").addEventListener("dblclick", e => {
-    panner.pan.value = 0
-    e.target.value = 0
-  })
-
-  addOscillator()
-  $("add-oscillator").addEventListener("click", addOscillator)
-
-  /*
-    keypress handlers for the (typing) keyboard controls
-    i.e. holding the z key plays middle C
-  */
+function setupKeypressKeymap() {
   document.addEventListener("keydown", function(e) {
     if (Object.keys(keyboardKeymap).includes(e.key)) {
       if (!Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
@@ -306,6 +287,32 @@ window.onload = () => {
       noteOff(keyboardKeymap[e.key])
     }
   })
+}
+
+function setupGlobalEventListeners() {
+  $("master-gain").addEventListener("change", e => {
+    masterGain.gain.value = e.target.value
+  })
+  $("master-gain").addEventListener("dblclick", e => {
+    masterGain.gain.value = 0.5
+    e.target.value = 0.5
+  })
+  $("panning").addEventListener("change", e => {
+    panner.pan.value = e.target.value
+  })
+  $("panning").addEventListener("dblclick", e => {
+    panner.pan.value = 0
+    e.target.value = 0
+  })
+}
+
+window.onload = () => {
+  setupGlobalEventListeners()
+
+  addOscillator()
+  $("add-oscillator").addEventListener("click", addOscillator)
+
+  setupKeypressKeymap()
 
   WebMidi.enable(err => {
     if (err) {

@@ -13,13 +13,13 @@
 </head>
 
 <body>
-
+<main>
 <h1>Websynth</h1>
 <form id="controller-form">
 <label for"controller-select">Select your MIDI controller</label>
-<select name="controller-select" id="controller-select"></select>
+<select id="controller-select"></select>
 <label for="channel-select">Channel</label>
-<select name="channel-select" id="channel-select"></select>
+<select id="channel-select"></select>
 <button type="submit">Select</button>
 </form>
 
@@ -58,33 +58,34 @@
 </template>
 
 <section id="global-controls">
-<section id="envelope-controls">
-<label>Attack
-<input class="attack" type="range" value="0.2" min="0" max="1" step="any">
-</label>
-<label>Decay
-<input class="decay" type="range" value="0.2" min="0" max="1" step="any">
-</label>
-<label>Sustain
-<input class="sustain" type="range" value="0.4" min="0" max="1" step="any">
-</label>
-<label>Release
-<input class="release" type="range" value="0.1" min="0.02" max="1.2" step="any">
-</label>
-</section>
-
-<section id="master-panel">
-<label>Velocity Sensitive
+<section id="note-controls" class="panel">
+<label for="velocity-sensitive">Velocity Sensitive</label>
 <input type="checkbox" checked id="velocity-sensitive">
-</label>
-<label for="panning">Panning</label>
-<input type="range" name="panning" value="0" min="-1" max="1" step="any" id="panning">
-<label for="masterGain">Master Gain</label>
-<input type="range" name="masterGain" value="0.5" min="0" max="1" step="any" id="masterGain">
+<label for="note-offset">Note Offset</label>
+<input id="note-offset" type="number" value="0" min="-11" max="11">
+<label for id="octave">Octave</label>
+<input id="octave" type="number" value="0" min="-6" max="6">
 </section>
+<section id="envelope-controls" class="panel">
+<label for="attack">Attack</label>
+<input id="attack" type="range" value="0.2" min="0" max="1" step="any">
+<label for="decay">Decay</label>
+<input id="decay" type="range" value="0.2" min="0" max="1" step="any">
+<label for="sustain">Sustain</label>
+<input id="sustain" type="range" value="0.4" min="0" max="1" step="any">
+<label for="release">Release</label>
+<input id="release" type="range" value="0.1" min="0.02" max="1.2" step="any">
 </section>
 
+<section id="master-panel" class="panel">
+<label for="panning">Panning</label>
+<input type="range" value="0" min="-1" max="1" step="any" id="panning">
+<label for="master-gain">Gain</label>
+<input type="range" value="0.5" min="0" max="1" step="any" id="master-gain">
+</section>
+</section>
 </div>
+</main>
 
 <section id="keyboard">
 <div id="ebony"></div>
