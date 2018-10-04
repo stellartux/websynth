@@ -1,5 +1,5 @@
 class Note {
-  constructor(_target, _noteParams = {}, _oscParams = []) {
+  constructor (_target, _noteParams = {}, _oscParams = []) {
     this.context = _target.context || _target
     this.attack = _noteParams.attack || 0.02
     this.decay = _noteParams.decay || 0.02
@@ -22,19 +22,19 @@ class Note {
     this.envGain.connect(_target)
     this.oscs = []
     for (let p of _oscParams) {
-      let gainer = new GainNode(this.context)
-      let osc = this.context.createOscillator()
-      gainer.gain.value = p.gain || 0.5
-      osc.type = p.type || "sine"
-      osc.detune.value = p.detune || 0
-      osc.frequency.value = p.frequency || 440.0
+      let gainer = new GainNode(this.context, {gain: p.gain || 0.5})
+      let osc = new OscillatorNode(this.context, {
+        type: p.type || 'sine',
+        detune: p.detune || 0,
+        frequency: p.frequency || 440.0
+      })
       osc.connect(gainer)
       gainer.connect(this.envGain)
       osc.start()
       this.oscs.push(osc)
     }
   }
-  releaseNote() {
+  releaseNote () {
     this.stopNote(this.context.currentTime + this.release * 20)
     if (
       this.context.currentTime >
@@ -53,7 +53,7 @@ class Note {
       )
     }
   }
-  stopNote(_t = this.context.currentTime) {
+  stopNote (_t = this.context.currentTime) {
     for (let o of this.oscs) {
       o.stop(_t)
     }

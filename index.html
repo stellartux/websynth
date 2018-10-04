@@ -14,8 +14,12 @@
 
 <body>
 <main>
-<h1>Websynth</h1>
-<form id="controller-form">
+
+<nav>
+Websynth
+</nav>
+
+<form id="controller-form" class="hidden">
 <label for"controller-select">Select your MIDI controller</label>
 <select id="controller-select"></select>
 <label for="channel-select">Channel</label>
@@ -25,11 +29,10 @@
 
 <div class="container">
 <button id="add-oscillator">+</button>
-<section id="oscillator-panel">
-</section>
+<ol id="oscillator-panel"></ol>
 
 <template id="oscillator-template">
-<section class="oscillator">
+<li class="oscillator">
 <label>Waveform
 <select class="waveform">
 <option value="sine" selected>Sine</option>
@@ -54,7 +57,7 @@
 <input type="checkbox" class="invert-phase">
 </label>
 <button class="remove-oscillator">-</button>
-</section>
+</li>
 </template>
 
 <section id="global-controls">
@@ -63,7 +66,7 @@
 <input type="checkbox" checked id="velocity-sensitive">
 <label for="note-offset">Note Offset</label>
 <input id="note-offset" type="number" value="0" min="-11" max="11">
-<label for id="octave">Octave</label>
+<label for="octave">Octave</label>
 <input id="octave" type="number" value="0" min="-6" max="6">
 </section>
 <section id="envelope-controls" class="panel">
@@ -82,15 +85,21 @@
 <input type="range" value="0" min="-1" max="1" step="any" id="panning">
 <label for="master-gain">Gain</label>
 <input type="range" value="0.5" min="0" max="1" step="any" id="master-gain">
+<label for="show-master-level">Level Meter</label>
+<input type="checkbox" id="show-master-level">
 </section>
 </section>
+<canvas id="master-level" width="40vw" height="45vh" class="hidden"></canvas>
 </div>
+
 </main>
 
 <section id="keyboard">
 <div id="ebony"></div>
 <div id="ivory"></div>
 </section>
+
+
 
 </body>
 </html>

@@ -16,47 +16,32 @@
 body {
   width: 100%;
   max-height: 100vh;
+  height: 100vh;
   background-color: var(--main-bg);
   color: var(--main-font);
   font-family: "Aldrich", "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-rows: 3fr 1fr;
+  grid-template-rows: 4fr 1fr;
   justify-content: stretch;
 }
 main {
   overflow-y: auto;
-  max-height: 100%;
+  max-height: 80vh;
+  position: relative;
 }
 
-@keyframes flashyheader {
-  25% {
-    box-shadow: -1vmin 1vmin 2vmin magenta;
-  }
-  50% {
-    box-shadow: -1vmin -1vmin 2vmin cyan;
-  }
-  75% {
-    box-shadow: 1vmin -1vmin 2vmin yellow;
-  }
-}
-h1 {
-  position: static;
-  box-shadow: 1vmin 1vmin 2vmin var(--main-font);
-  border: thin solid var(--main-font);
-  border-radius: 0.4em;
-  margin-left: 2em;
-  padding-bottom: 1.25vmin;
-  padding-left: 10vw;
-  padding-right: 4vw;
-  min-width: 6em;
-  width: 20vw;
-  animation: 2s infinite flashyheader paused;
-  height: 5vh;
-}
-h1:hover {
-  animation: 2s infinite flashyheader running;
+nav {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  height: 1em;
+  padding: 0.3em 0.5em;
+  margin-bottom: 0.5em;
+  border-bottom: thin solid var(--main-shadow);
 }
 
 input,
@@ -80,10 +65,9 @@ input[type=range] {
   margin-right: 1ch;
 }
 #oscillator-panel {
+  margin-left: 0;
   min-width: 400px;
   flex: 4;
-  max-height: 60vh;
-  overflow-y: auto;
 }
 button {
   position: relative;
@@ -109,7 +93,7 @@ button:focus {
   position: relative;
   height: 5vmin;
   width: 5vmin;
-  margin: 0.5em;
+  margin-left: 0.5em;
   border-width: thick;
   font-size: 1.2em;
 }
@@ -225,4 +209,8 @@ a:visited {
 #keyboard .key.keypress {
   background-color: var(--squish);
   border-color: var(--squish);
+}
+
+#master-level {
+  border: solid thick red;
 }
