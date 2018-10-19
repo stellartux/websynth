@@ -98,17 +98,17 @@ function updateChord () {
       output.value = Note.midiToLetter(notes[0], sf)
       break
     case 2:
-      output.value = Note.midiToLetter(notes[0], sf) + ', ' +
+      output.value = Note.midiToLetter(notes[0], sf) + '–' +
         Note.midiToLetter(notes[1], sf) + ' : ' + Note.midiToInterval(notes)
       break
     case 3:
       if (Note.midiToTriad(notes))
         output.value = Note.midiToTriad(notes, sf) + ' : ' + Note.midiToTriad(notes, sf, true)
       else
-        output.value = notes.map(n => Note.midiToLetter(n, sf)).join(', ')
+        output.value = notes.map(n => Note.midiToLetter(n, sf)).join('–')
       break
     default:
-      output.value = notes.map(n => Note.midiToLetter(n, sf)).join(', ')
+      output.value = notes.map(n => Note.midiToLetter(n, sf)).join('–')
    }
   return output.value
 }
