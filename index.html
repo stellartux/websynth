@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>Websynth</title>
 <script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
-<script src="notewrapper.js" charset="utf-8"></script>
+<script src="note.js" charset="utf-8"></script>
 <script src="main.js" charset="utf-8"></script>
 <link rel="stylesheet" href="main.css">
 <link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
@@ -85,21 +85,18 @@ Websynth
 <input type="range" value="0" min="-1" max="1" step="any" id="panning">
 <label for="master-gain">Gain</label>
 <input type="range" value="0.5" min="0" max="1" step="any" id="master-gain">
-<label for="show-master-level">Level Meter</label>
-<input type="checkbox" id="show-master-level">
+<label for="sharp-or-flat">♯/♭</label>
+<input type="checkbox" id="sharp-or-flat" checked>
 </section>
 </section>
-<canvas id="master-level" width="40vw" height="45vh" class="hidden"></canvas>
 </div>
 
 </main>
-
+<output id="chord-name"></output>
 <section id="keyboard">
 <div id="ebony"></div>
 <div id="ivory"></div>
 </section>
-
-
 
 </body>
 </html>

@@ -21,63 +21,34 @@ masterLevel.connect(audio.destination)
 
 const currentlyHeldKeys = {}
 const keyboardKeymap = {
-  '\\': 59,
-  z: 60,
-  x: 62,
-  c: 64,
-  v: 65,
-  b: 67,
-  n: 69,
-  m: 71,
-  ',': 72,
-  '.': 74,
-  '/': 76,
-  q: 72,
-  w: 74,
-  e: 76,
-  r: 77,
-  t: 79,
-  y: 81,
-  u: 83,
-  i: 84,
-  o: 86,
-  p: 88,
-  '[': 89,
-  ']': 91,
-  s: 61,
-  d: 63,
-  g: 66,
-  h: 68,
-  j: 70,
-  l: 73,
-  ';': 75,
-  2: 73,
-  3: 75,
-  5: 78,
-  6: 80,
-  7: 82,
-  9: 85,
-  0: 87,
-  '=': 90
+  '\\': 59, z: 60, x: 62, c: 64, v: 65, b: 67, n: 69, m: 71, ',': 72, '.': 74,
+  '/': 76, q: 72, w: 74, e: 76, r: 77, t: 79, y: 81, u: 83, i: 84, o: 86,
+  p: 88, '[': 89, ']': 91, s: 61, d: 63, g: 66, h: 68, j: 70, l: 73, ';': 75,
+  2: 73, 3: 75, 5: 78, 6: 80, 7: 82, 9: 85, 0: 87, '=': 90
+}
+
+function stopAllNotes() {
+  for (const n of playingNotes)
+    n.releaseNote()
+  playingNotes = {}
+}
+function stopAllSound() {
+  stopAllNotes()
+  for (const n of sustainingNotes)
+    n.stopNote()
+  for (const n of sostenutoNotes)
+    n.stopNote()
+  sustainingNotes = {}
+  sostenutoNotes = {}
 }
 
 function channelMode (_ev) {
   switch (_ev.controller.number) {
     case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allsoundoff:
-      for (const n of playingNotes)
-        n.stopNote()
-      for (const n of sustainingNotes)
-        n.stopNote()
-      for (const n of sostenutoNotes)
-        n.stopNote()
-      playingNotes = {}
-      sustainingNotes = {}
-      sostenutoNotes = {}
+      stopAllSound()
       break
     case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allnotesoff:
-      for (let n of playingNotes)
-        n.releaseNote()
-      playingNotes = {}
+      stopAllNotes()
       break
     default:
       break
@@ -107,24 +78,6 @@ function controlChange (_ev) {
   }
 }
 
-function midiToFreq (_num) {
-  return 13.75 * Math.pow(2, (_num - 9) / 12)
-}
-function midiToLetter (_num, sharp=true) {
-  const nss = {
-    "C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5,
-    "F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11
-  },
-  nfs = {
-    "C": 0, "Db": 1, "D": 2, "Eb": 3, "E": 4, "F": 5,
-    "Gb": 6, "G": 7, "Ab": 8, "A": 9, "Bb": 10, "B": 11
-  }
-  return sharp ? nss[_num % 12] : nfs[_num % 12]
-}
-function midiToSPN (_num, sharp=true) {
-  return midiToLetter(_num, sharp) + Math.floor(_num / 12)
-}
-
 function updateEnvelope (_ev) {
   if (_ev)
     envelope[_ev.target.id] = Number(_ev.target.value)
@@ -132,11 +85,33 @@ function updateEnvelope (_ev) {
     for (const c of $$('#envelope-controls input'))
       envelope[c.id] = Number(c.value)
 }
-function updateChord (_notes = Object.keys(playingNotes)) {
-  console.log(_notes)
-  return _notes.map(midiToLetter).join(' ')
+function updateChord () {
+  const notes = Object.keys(playingNotes)
+  const output = $('chord-name')
+  const sf = $('sharp-or-flat').checked
+  const chordMatches = (a1,a2) => a1.length === a2.length && a1.every((v,i)=> v === a2[i])
+  switch (notes.length) {
+    case 0:
+      output.value = ''
+      break
+    case 1:
+      output.value = Note.midiToLetter(notes[0], sf)
+      break
+    case 2:
+      output.value = Note.midiToLetter(notes[0], sf) + ', ' +
+        Note.midiToLetter(notes[1], sf) + ' : ' + Note.midiToInterval(notes)
+      break
+    case 3:
+      if (Note.midiToTriad(notes))
+        output.value = Note.midiToTriad(notes, sf) + ' : ' + Note.midiToTriad(notes, sf, true)
+      else
+        output.value = notes.map(n => Note.midiToLetter(n, sf)).join(', ')
+      break
+    default:
+      output.value = notes.map(n => Note.midiToLetter(n, sf)).join(', ')
+   }
+  return output.value
 }
-
 
 function noteOn (_midiNum, _velocity = 1) {
   const panels = $$('.oscillator')
@@ -145,7 +120,7 @@ function noteOn (_midiNum, _velocity = 1) {
     oscParams.push({
       type: panel.querySelector('.waveform').value,
       detune: panel.querySelector('.detune').value,
-      frequency: midiToFreq(
+      frequency: Note.midiToFrequency(
         Number(panel.querySelector('.note-offset').value) +
           _midiNum +
           Number($('note-offset').value) +
@@ -168,9 +143,7 @@ function noteOn (_midiNum, _velocity = 1) {
   }
   playingNotes[_midiNum] = new Note(panner, noteParams, oscParams)
   updateChord()
-  $(
-    ''.concat(WebMidi._notes[_midiNum % 12], Math.floor(_midiNum / 12))
-  ).classList.add('keypress')
+  $(Note.midiToSPN(_midiNum)).classList.add('keypress')
 }
 
 function noteOff (_midiNum) {
@@ -181,10 +154,7 @@ function noteOff (_midiNum) {
   }
   delete playingNotes[_midiNum]
   updateChord()
-
-  $(
-    ''.concat(WebMidi._notes[_midiNum % 12], Math.floor(_midiNum / 12))
-  ).classList.remove('keypress')
+  $(Note.midiToSPN(_midiNum)).classList.remove('keypress')
 }
 
 function sustainPedalEvent (_ev) {
@@ -264,14 +234,12 @@ function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
     elem.onmouseleave = e => noteOff(e.target.midiNumber)
     elem.onmouseup = e => noteOff(e.target.midiNumber)
     elem.style.setProperty('--squish', palette[i % 12])
-    if (elem.id.includes('E') || elem.id.includes('B')) {
+    if (elem.id.includes('E') || elem.id.includes('B'))
       makeShadowKey()
-    }
-    if (elem.id.includes('#')) {
+    if (elem.id.includes('#'))
       $('ebony').appendChild(elem)
-    } else {
+    else
       $('ivory').appendChild(elem)
-    }
   }
 }
 
@@ -320,6 +288,7 @@ function setupGlobalEventListeners () {
     masterGain.gain.value = 0.5
     e.target.value = 0.5
   })
+  /*
   $('show-master-level').addEventListener('change', e => {
     if (e.target.checked) {
       $('master-level').classList.remove('hidden')
@@ -327,6 +296,7 @@ function setupGlobalEventListeners () {
       $('master-level').classList.add('hidden')
     }
   })
+  */
   $('panning').addEventListener('change', e => {
     panner.pan.value = e.target.value
   })
