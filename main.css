@@ -217,3 +217,12 @@ a:visited {
 #chord-name {
   text-align: center;
 }
+#sharp-or-flat::after, #sharp-or-flat:checked::after {
+  content: '♭';
+  color: var(--main-font);
+  position: relative;
+  left: 100%;
+}
+#sharp-or-flat:checked::after {
+  content: '♯';
+}
