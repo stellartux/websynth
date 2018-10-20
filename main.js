@@ -27,12 +27,12 @@ const keyboardKeymap = {
   2: 73, 3: 75, 5: 78, 6: 80, 7: 82, 9: 85, 0: 87, '=': 90
 }
 
-function stopAllNotes() {
+function stopAllNotes () {
   for (const n of playingNotes)
     n.releaseNote()
   playingNotes = {}
 }
-function stopAllSound() {
+function stopAllSound () {
   stopAllNotes()
   for (const n of sustainingNotes)
     n.stopNote()
@@ -216,7 +216,7 @@ function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
   }
 }
 
-function generateColorPalette (seed = 0) {
+function generateColorPalette (seed = Math.PI + Math.PI * Math.floor(Math.random() * 6) / 6) {
   const palette = []
   const j = Math.PI / 6
   const k = (2 * Math.PI) / 6
@@ -238,11 +238,11 @@ function generateColorPalette (seed = 0) {
 
 function setupKeypressKeymap () {
   document.addEventListener('keydown', e => {
-    if (Object.keys(keyboardKeymap).includes(e.key))
-      if (!Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
-        currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
-        noteOn(keyboardKeymap[e.key])
-      }
+    if (Object.keys(keyboardKeymap).includes(e.key) && !e.altKey && !e.shiftKey && !e.ctrlKey
+    && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
+      currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
+      noteOn(keyboardKeymap[e.key])
+    }
   })
   document.addEventListener('keyup', e => {
     if (Object.keys(currentlyHeldKeys).includes(e.key)) {
