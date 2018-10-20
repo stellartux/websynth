@@ -76,6 +76,7 @@ class MIDINumber {
       'minor sixth', 'major sixth', 'minor seventh', 'major seventh'
     ][(nums[1] - nums[0]) % 12]
   }
+
   /** Calculates the chord represented by three MIDI numbers.
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
@@ -207,7 +208,29 @@ class MIDINumber {
     if (nums.length !== 5)
       return ''
     const tl = this.toLetter(nums[0], sharp)
-    const chord = (verbose ? {} : {})[nums.map(n => n - nums[0]).join('')]
+    const chord = (verbose ? {
+      '0471114': ' major ninth',
+      '0471014': ' dominant ninth',
+      '0371114': ' minor major ninth',
+      '0371014': ' minor ninth',
+      '0481114': ' augmented major ninth',
+      '0481014': ' augmented dominant ninth',
+      '0361014': ' half-diminished ninth',
+      '0361013': ' half-diminished minor ninth',
+      '036914': ' diminished ninth',
+      '036913': ' diminished minor ninth'
+    } : {
+      '0471114': 'M9',
+      '0471014': '9',
+      '0371114': 'mM9',
+      '0371014': 'm9',
+      '0481114': '+M9',
+      '0481014': '+9',
+      '0361014': 'ø9',
+      '0361013': 'ø♭9',
+      '036914': 'ᴼ9',
+      '036913': 'ᴼ♭9' 
+    })[nums.map(n => n - nums[0]).join('')]
     if (chord)
       return tl + chord
     const upperChord = this.toPentaChord(nums.slice(1), sharp, verbose, false)
