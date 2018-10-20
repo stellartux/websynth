@@ -85,32 +85,12 @@ function updateEnvelope (_ev) {
     for (const c of $$('#envelope-controls input'))
       envelope[c.id] = Number(c.value)
 }
-function updateChord () {
-  const notes = Object.keys(playingNotes)
-  const output = $('chord-name')
-  const sf = $('sharp-or-flat').checked
-  const chordMatches = (a1,a2) => a1.length === a2.length && a1.every((v,i)=> v === a2[i])
-  switch (notes.length) {
-    case 0:
-      output.value = ''
-      break
-    case 1:
-      output.value = Note.midiToLetter(notes[0], sf)
-      break
-    case 2:
-      output.value = Note.midiToLetter(notes[0], sf) + '–' +
-        Note.midiToLetter(notes[1], sf) + ' : ' + Note.midiToInterval(notes)
-      break
-    case 3:
-      if (Note.midiToTriad(notes))
-        output.value = Note.midiToTriad(notes, sf) + ' : ' + Note.midiToTriad(notes, sf, true)
-      else
-        output.value = notes.map(n => Note.midiToLetter(n, sf)).join('–')
-      break
-    default:
-      output.value = notes.map(n => Note.midiToLetter(n, sf)).join('–')
-   }
-  return output.value
+function updateChordDisplay () {
+  const short = MIDINumber.toChord(Object.keys(playingNotes), $('sharp-or-flat').checked, false)
+  const long = MIDINumber.toChord(Object.keys(playingNotes), $('sharp-or-flat').checked, true)
+  const chord = short === long ? short : short + ' : ' + long
+  $('chord-name').value = chord
+  return chord
 }
 
 function noteOn (_midiNum, _velocity = 1) {
@@ -120,7 +100,7 @@ function noteOn (_midiNum, _velocity = 1) {
     oscParams.push({
       type: panel.querySelector('.waveform').value,
       detune: panel.querySelector('.detune').value,
-      frequency: Note.midiToFrequency(
+      frequency: MIDINumber.toFrequency(
         Number(panel.querySelector('.note-offset').value) +
           _midiNum +
           Number($('note-offset').value) +
@@ -142,8 +122,8 @@ function noteOn (_midiNum, _velocity = 1) {
     noteParams.attack *= 1.333
   }
   playingNotes[_midiNum] = new Note(panner, noteParams, oscParams)
-  updateChord()
-  $(Note.midiToSPN(_midiNum)).classList.add('keypress')
+  updateChordDisplay()
+  $(MIDINumber.toScientificPitch(_midiNum)).classList.add('keypress')
 }
 
 function noteOff (_midiNum) {
@@ -153,8 +133,8 @@ function noteOff (_midiNum) {
     playingNotes[_midiNum].releaseNote()
   }
   delete playingNotes[_midiNum]
-  updateChord()
-  $(Note.midiToSPN(_midiNum)).classList.remove('keypress')
+  updateChordDisplay()
+  $(MIDINumber.toScientificPitch(_midiNum)).classList.remove('keypress')
 }
 
 function sustainPedalEvent (_ev) {
@@ -186,27 +166,20 @@ function sostenutoPedalEvent (_ev) {
 function addOscillator () {
   const c = document.importNode($('oscillator-template').content, true)
   const p = $('oscillator-panel')
-  c.querySelector('.remove-oscillator').addEventListener('click', e => {
-    p.removeChild(e.target.parentElement)
-  })
-  c.querySelector('.gain').addEventListener('dblclick', e => {
-    e.target.value = 0.5
-  })
+  c.querySelector('.remove-oscillator')
+    .addEventListener('click', e => p.removeChild(e.target.parentElement))
+  c.querySelector('.gain')
+    .addEventListener('dblclick', e => e.target.value = 0.5)
   p.appendChild(c)
 }
 
 function setupControllerListeners (channel = 'all') {
-  controller.addListener('noteon', channel, e =>
-    noteOn(e.note.number, e.velocity)
-  )
+  controller.addListener('noteon', channel, e => noteOn(e.note.number, e.velocity))
   controller.addListener('noteoff', channel, e => noteOff(e.note.number))
   controller.addListener('controlchange', channel, e => controlChange(e))
   controller.addListener('channelmode', channel, e => channelMode(e))
 }
 
-/*
-  CSS keyboard and mouse-control
-*/
 function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
   const removeChildren = el => {
     while (el.firstChild)
@@ -228,7 +201,7 @@ function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
   for (let i = lownote; i < lownote + maxkeys; i++) {
     const elem = document.createElement('div')
     elem.classList.add('key')
-    elem.id = ''.concat(WebMidi._notes[i % 12], Math.floor(i / 12))
+    elem.id = MIDINumber.toScientificPitch(i)
     elem.midiNumber = i
     elem.onmousedown = e => noteOn(e.target.midiNumber)
     elem.onmouseleave = e => noteOff(e.target.midiNumber)
@@ -236,7 +209,7 @@ function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
     elem.style.setProperty('--squish', palette[i % 12])
     if (elem.id.includes('E') || elem.id.includes('B'))
       makeShadowKey()
-    if (elem.id.includes('#'))
+    if (elem.id.includes('♯'))
       $('ebony').appendChild(elem)
     else
       $('ivory').appendChild(elem)
@@ -264,15 +237,14 @@ function generateColorPalette (seed = 0) {
 }
 
 function setupKeypressKeymap () {
-  document.addEventListener('keydown', function (e) {
-    if (Object.keys(keyboardKeymap).includes(e.key)) {
+  document.addEventListener('keydown', e => {
+    if (Object.keys(keyboardKeymap).includes(e.key))
       if (!Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
         currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
         noteOn(keyboardKeymap[e.key])
       }
-    }
   })
-  document.addEventListener('keyup', function (e) {
+  document.addEventListener('keyup', e => {
     if (Object.keys(currentlyHeldKeys).includes(e.key)) {
       delete currentlyHeldKeys[e.key]
       noteOff(keyboardKeymap[e.key])
@@ -288,15 +260,6 @@ function setupGlobalEventListeners () {
     masterGain.gain.value = 0.5
     e.target.value = 0.5
   })
-  /*
-  $('show-master-level').addEventListener('change', e => {
-    if (e.target.checked) {
-      $('master-level').classList.remove('hidden')
-    } else {
-      $('master-level').classList.add('hidden')
-    }
-  })
-  */
   $('panning').addEventListener('change', e => {
     panner.pan.value = e.target.value
   })
@@ -315,16 +278,16 @@ window.onload = () => {
   setupKeypressKeymap()
   setupDisplayKeyboard()
 
+  updateEnvelope()
+  for (const obj of $$('#envelope-controls input'))
+    obj.addEventListener('change', updateEnvelope)
+
   WebMidi.enable(err => {
     if (err) {
       console.log('WebMidi could not be enabled.', err)
       setupDisplayKeyboard()
     } else {
       console.log('WebMidi enabled!')
-      updateEnvelope()
-      for (const obj of $$('#envelope-controls input')) {
-        obj.addEventListener('change', updateEnvelope)
-      }
 
       const cf = $('controller-form')
       const cs = $('controller-select')

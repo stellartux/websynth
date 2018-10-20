@@ -1,0 +1,24 @@
+{
+  "name": "keyboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {},
+  "devDependencies": {
+    "jsdoc": "^3.5.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "jsdoc": "jsdoc note.js -d ./docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stellartux/websynth.git"
+  },
+  "author": "Danny Robinson",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/stellartux/websynth/issues"
+  },
+  "homepage": "https://stellartux.github.io/websynth/"
+}
