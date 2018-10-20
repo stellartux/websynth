@@ -1,21 +1,21 @@
-/** Class representing a note composed of one or more oscillators. */
+/** A musical note composed of one or more oscillators and an ADSR envelope. */
 class Note {
   /** Create a note
   * @param {(AudioContext|AudioNode)} target output destination for audio
-  * @param {Object} noteParams options that affect the note as a whole
-  * @param {number} noteParams.attack attack time in seconds, defaults to 20ms
-  * @param {number} noteParams.decay decay time in seconds, defaults to 20ms
-  * @param {number} noteParams.release release time in seconds, defaults to 10ms
-  * @param {number} noteParams.sustain sustain level as proportion of peak level, 0 to 1 inclusive
-  * @param {number} noteParams.triggerTime time to schedule the note (see AudioContext.currentTime)
-  * @param {number} noteParams.velocity note velocity, 0 to 1 inclusive
-  * @param {Object[]} oscParams array of oscillator specific options
-  * @param {number} oscParams[].detune detune amount of the oscillator in cents
-  * @param {number} oscParams[].frequency frequency of the oscillator in Hertz
-  * @param {number} oscParams[].gain gain of the oscillator, 0 to 1 inclusive
-  * @param {string} oscParams[].type waveform shape, options are "sine", "square", "sawtooth", "triangle"
+  * @param {Object} [noteParams] options that affect the note as a whole
+  * @param {number} [noteParams.attack=0.02] attack time in seconds
+  * @param {number} [noteParams.decay=0.02] decay time in seconds
+  * @param {number} [noteParams.release=0.01] release time in seconds
+  * @param {number} [noteParams.sustain=0.04] sustain level as proportion of peak level, 0 to 1 inclusive
+  * @param {number} [noteParams.triggerTime=target.currentTime] time to schedule the note (see AudioContext.currentTime)
+  * @param {number} [noteParams.velocity=1] note velocity, 0 to 1 inclusive
+  * @param {Object[]} [oscParams] array of oscillator specific options
+  * @param {number} [oscParams[].detune=0] detune amount of the oscillator in cents
+  * @param {number} [oscParams[].frequency=440] frequency of the oscillator in Hertz
+  * @param {number} [oscParams[].gain=0.5] gain of the oscillator, 0 to 1 inclusive
+  * @param {string} [oscParams[].type='sine'] waveform shape, options are "sine", "square", "sawtooth", "triangle"
   */
-  constructor (target, noteParams = {} , oscParams = []) {
+  constructor (target, noteParams = {} , oscParams = [{}]) {
     this.context = target.context || target
     this.attack = noteParams.attack || 0.02
     this.decay = noteParams.decay || 0.02
@@ -60,7 +60,7 @@ class Note {
     )
   }
   /** Stop all oscillators
-  * @param {number} time time to stop, relative to AudioContext.currentTime. Defaults to now.
+  * @param {number} [time=AudioContext.currentTime] When to stop playing the notes.
   */
   stopNote (time = this.context.currentTime) {
     for (const o of this.oscs)
