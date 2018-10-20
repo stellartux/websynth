@@ -1,6 +1,6 @@
 {
-  "name": "keyboard",
-  "version": "1.0.0",
+  "name": "Websynth",
+  "version": "0.1.0",
   "description": "",
   "main": "main.js",
   "dependencies": {},
@@ -16,7 +16,7 @@
     "url": "git+https://github.com/stellartux/websynth.git"
   },
   "author": "Danny Robinson",
-  "license": "GPLv3",
+  "license": "GPL-3.0-or-later ",
   "bugs": {
     "url": "https://github.com/stellartux/websynth/issues"
   },
