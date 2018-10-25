@@ -398,12 +398,8 @@ window.onload = () => {
   for (const obj of $$('#envelope-controls input')) {
     obj.addEventListener('change', updateEnvelope)
   }
-<<<<<<< HEAD
   customPresets = window.localStorage.customPresets ?
     JSON.parse(window.localStorage.customPresets) : {}
-=======
-  customPresets = JSON.parse(window.localStorage.customPresets)
->>>>>>> 667384f43eec10654c3fff170c85fce3984e2b5c
   loadPreset(JSON.parse(window.localStorage.persistentSettings)
     || factoryPresets[0])
   removeChildren($('factory-presets'))
