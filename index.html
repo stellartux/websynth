@@ -64,16 +64,15 @@ Websynth
 <section id="global-controls">
 
 <section id="preset-panel" class="panel">
-<div>Presets</div>
-<button id="load-preset">Load</button>
 <select id="preset-list">
 <optgroup label="Factory Presets" id="factory-presets">
 <option value="0">Simple Sine</option>
 <option value="1">Organ</option>
 </optgroup>
-<optgroup label="Custom Presets" id="custom-presets">
+<optgroup label="Custom Presets" id="custom-presets" class="hidden">
 </optgroup>
 </select>
+<button id="load-preset">Load</button>
 <button id="add-preset" class="add hidden">+</button>
 <input type="text" id="preset-name" placeholder="Preset Name" class="hidden">
 <button id="remove-preset" class="remove hidden">-</button>

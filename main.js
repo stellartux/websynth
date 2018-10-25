@@ -337,6 +337,7 @@ function generateColorPalette (seed = Math.random() * Math.PI * 2) {
     for (let k = 0; k < 3; k++) {
       c.push(magic(f += j))
     }
+    f -= j
     palette.push('rgb(' + c.join() + ')')
   }
   return palette
