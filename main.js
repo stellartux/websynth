@@ -1,45 +1,103 @@
-let controller
-const $ = x => document.getElementById(x)
-const $$ = x => Array.from(document.querySelectorAll(x))
-const audio = new (window.AudioContext || window.webkitAudioContext)()
-let playingNotes = {}
-let sustainingNotes = {}
-let sostenutoNotes = {}
-let pitchBend = 0
-const pedals = {
-  sustain: false,
-  sostenuto: false,
-  soft: false
-}
-const envelope = {}
-const panner = new StereoPannerNode(audio)
-const masterGain = new GainNode(audio, {gain: 0.5})
-const masterLevel = new AnalyserNode(audio)
-panner.connect(masterGain)
-masterGain.connect(masterLevel)
-masterLevel.connect(audio.destination)
-
-const currentlyHeldKeys = {}
-const keyboardKeymap = {
-  '\\': 59, z: 60, x: 62, c: 64, v: 65, b: 67, n: 69, m: 71, ',': 72, '.': 74,
-  '/': 76, q: 72, w: 74, e: 76, r: 77, t: 79, y: 81, u: 83, i: 84, o: 86,
-  p: 88, '[': 89, ']': 91, s: 61, d: 63, g: 66, h: 68, j: 70, l: 73, ';': 75,
-  2: 73, 3: 75, 5: 78, 6: 80, 7: 82, 9: 85, 0: 87, '=': 90
+class Preset {
+  constructor(name, envelope, oscillators) {
+    if (!(envelope && oscillators)) {
+      throw 'Preset: Missing init params'
+    }
+    this.name = name
+    this.envelope = envelope
+    this.oscillators = oscillators
+  }
 }
 
-function stopAllNotes () {
-  for (const n of playingNotes)
+let controller,
+  playingNotes = {},
+  sustainingNotes = {},
+  sostenutoNotes = {},
+  currentlyHeldKeys = {},
+  envelope = {},
+  pitchBend = 0,
+  customPresets
+const $ = x => document.getElementById(x),
+  $$ = x => Array.from(document.querySelectorAll(x)),
+  removeChildren = el => {while (el.firstChild) el.removeChild(el.firstChild)},
+  audio = new (window.AudioContext || window.webkitAudioContext)(),
+  pedals = { sustain: false, sostenuto: false, soft: false },
+  panner = new StereoPannerNode(audio),
+  masterGain = new GainNode(audio, {gain: 0.5}),
+  masterLevel = new AnalyserNode(audio),
+  keyboardKeymap = {
+    '\\': 59, z: 60, x: 62, c: 64, v: 65, b: 67, n: 69, m: 71, ',': 72, '.': 74,
+    '/': 76, q: 72, w: 74, e: 76, r: 77, t: 79, y: 81, u: 83, i: 84, o: 86,
+    p: 88, '[': 89, ']': 91, s: 61, d: 63, g: 66, h: 68, j: 70, l: 73, ';': 75,
+    2: 73, 3: 75, 5: 78, 6: 80, 7: 82, 9: 85, 0: 87, '=': 90
+  },
+  factoryPresets = [
+    new Preset(
+      'Sinewave',
+      { 'attack': 0.2, 'decay': 0.2, 'sustain': 0.4, 'release': 0.3 },
+      [{ 'gain': 0.7 }]
+    ),
+    new Preset(
+      'Bowed Glass',
+      { 'attack': 0.62, 'decay': 0.15, 'sustain': 0.42, 'release': 0.32 },
+      [
+        { 'detune': -5 },
+        { 'detune': 5, 'invert-phase': true },
+        { 'waveform': 'triangle', 'octave': 1, 'gain': 0.2 }
+      ]
+    ),
+    new Preset(
+      'Church Organ',
+      { 'attack': 0.28, 'decay': 0.35, 'sustain': 0.29, 'release': 0.18 },
+      [
+        { 'octave': -1, 'gain': 0.35 },
+        { 'detune': 2, 'note-offset': 7, 'gain': 0.25 },
+        { 'gain': 0.2},
+        { 'octave': 1, 'gain': 0.2 },
+        { 'detune': 2, 'note-offset': 7, 'octave': 1, 'gain': 0.2 },
+        { 'octave': 2, 'gain': 0.15},
+        { 'detune': -14, 'note-offset': 4, 'octave': 2, 'gain': 0.15},
+        { 'detune': 2, 'note-offset': 7, 'octave': 2, 'gain': 0.15},
+        { 'octave': 3, 'gain': 0.12 }
+      ]
+    )
+  ]
+
+function getPresetInfo() {
+  const oscs = []
+  for (const osc of $$('.oscillator')) {
+    let o = {}
+    o.waveform = osc.querySelector('.waveform').value
+    for (const param of osc.querySelectorAll('input')) {
+      o[param.className] = param.value
+    }
+    o['invert-phase'] = osc.querySelector('.invert-phase').checked
+    oscs.push(o)
+  }
+  return new Preset($('preset-name').value, Object.assign({}, envelope), oscs)
+}
+
+
+/** Release all currently playing notes */
+function releaseAllNotes () {
+  for (const n of playingNotes) {
     n.releaseNote()
+  }
   playingNotes = {}
+  updateChordDisplay()
 }
+
+/** Stop all sound immediately */
 function stopAllSound () {
-  stopAllNotes()
-  for (const n of sustainingNotes)
-    n.stopNote()
-  for (const n of sostenutoNotes)
-    n.stopNote()
+  for (const ns of [playingNotes, sustainingNotes, sostenutoNotes]) {
+    for (const n of ns) {
+      n.stopNote()
+    }
+  }
+  playingNotes = {}
   sustainingNotes = {}
   sostenutoNotes = {}
+  updateChordDisplay()
 }
 
 function channelMode (_ev) {
@@ -48,7 +106,7 @@ function channelMode (_ev) {
       stopAllSound()
       break
     case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allnotesoff:
-      stopAllNotes()
+      releaseAllNotes()
       break
     default:
       break
@@ -66,11 +124,7 @@ function controlChange (_ev) {
       sostenutoPedalEvent(_ev)
       break
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.softpedal:
-      if (_ev.value < 64) {
-        pedals.soft = false
-      } else {
-        pedals.soft = true
-      }
+      pedals.soft = _ev.value > 63
       break
     default:
       console.log(_ev)
@@ -78,127 +132,172 @@ function controlChange (_ev) {
   }
 }
 
+/** Sync the envelope object to the UI */
 function updateEnvelope (_ev) {
-  if (_ev)
+  if (_ev) {
     envelope[_ev.target.id] = Number(_ev.target.value)
-  else
-    for (const c of $$('#envelope-controls input'))
+  } else {
+    for (const c of $$('#envelope-controls input')) {
       envelope[c.id] = Number(c.value)
+    }
+  }
 }
+
+/** Sync the UI to a modified envelope object */
+function updateEnvelopeControls (newEnv) {
+  if (newEnv) envelope = newEnv
+  for (const c of $$('#envelope-controls input')) {
+    c.value = envelope[c.id]
+  }
+}
+
+/** Sync the chord displayed in the UI with the currently playing notes */
 function updateChordDisplay () {
-  const short = MIDINumber.toChord(Object.keys(playingNotes), $('sharp-or-flat').checked, false)
-  const long = MIDINumber.toChord(Object.keys(playingNotes), $('sharp-or-flat').checked, true)
-  const chord = short === long ? short : short + ' : ' + long
+  const notes = Object.keys(playingNotes),
+    sharp = $('sharp-or-flat').checked,
+    short = MIDINumber.toChord(notes, sharp, false),
+    long = MIDINumber.toChord(notes, sharp, true),
+    chord = short === long ? short : short + ' : ' + long
   $('chord-name').value = chord
   return chord
 }
 
-function noteOn (_midiNum, _velocity = 1) {
-  const panels = $$('.oscillator')
-  const oscParams = []
-  for (const panel of panels)
+function noteOn (midiNum, velocity = 1) {
+  const panels = $$('.oscillator'),
+    oscParams = []
+  for (const panel of panels) {
     oscParams.push({
       type: panel.querySelector('.waveform').value,
       detune: panel.querySelector('.detune').value,
       frequency: MIDINumber.toFrequency(
         Number(panel.querySelector('.note-offset').value) +
-          _midiNum +
-          Number($('note-offset').value) +
-          (Number(panel.querySelector('.octave').value) +
-          Number($('octave').value)) * 12
+        midiNum +
+        Number($('note-offset').value) +
+        (Number(panel.querySelector('.octave').value) +
+        Number($('octave').value)) * 12
       ),
       gain:
         panel.querySelector('.gain').value *
         (panel.querySelector('.invert-phase').checked ? -1 : 1)
     })
-
+  }
   let noteParams = Object.assign({}, envelope)
   noteParams.triggerTime = audio.currentTime
-  if ($('velocity-sensitive').checked)
-    noteParams.velocity = _velocity
-
+  if ($('velocity-sensitive').checked) {
+    noteParams.velocity = velocity
+  }
   if (pedals.soft) {
     noteParams.velocity *= 0.66
     noteParams.attack *= 1.333
   }
-  playingNotes[_midiNum] = new Note(panner, noteParams, oscParams)
+  playingNotes[midiNum] = new Note(panner, noteParams, oscParams)
   updateChordDisplay()
-  $(MIDINumber.toScientificPitch(_midiNum)).classList.add('keypress')
+  $(MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
 }
 
-function noteOff (_midiNum) {
-  if (pedals.sustain && !sustainingNotes[_midiNum]) {
-    sustainingNotes[_midiNum] = playingNotes[_midiNum]
-  } else if (playingNotes[_midiNum]) {
-    playingNotes[_midiNum].releaseNote()
+function noteOff (midiNum) {
+  if (pedals.sustain && !sustainingNotes[midiNum]) {
+    sustainingNotes[midiNum] = playingNotes[midiNum]
+  } else if (playingNotes[midiNum]) {
+    playingNotes[midiNum].releaseNote()
   }
-  delete playingNotes[_midiNum]
+  delete playingNotes[midiNum]
   updateChordDisplay()
-  $(MIDINumber.toScientificPitch(_midiNum)).classList.remove('keypress')
+  $(MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
 }
 
-function sustainPedalEvent (_ev) {
-  if (pedals.sustain && _ev.value < 64) {
+function sustainPedalEvent (ev) {
+  if (pedals.sustain && ev.value < 64) {
     pedals.sustain = false
     for (let n in sustainingNotes) {
       sustainingNotes[n].releaseNote()
       delete sustainingNotes[n]
     }
-  } else if (!pedals.sustain && _ev.value > 63) {
+  } else if (!pedals.sustain && ev.value > 63) {
     pedals.sustain = true
   }
 }
 
-function sostenutoPedalEvent (_ev) {
-  if (pedals.sostenuto && _ev.value < 64) {
+function sostenutoPedalEvent (ev) {
+  if (pedals.sostenuto && ev.value < 64) {
     pedals.sostenuto = false
     for (let n in sostenutoNotes) {
       sostenutoNotes[n].releaseNote()
       delete sostenutoNotes[n]
     }
-  } else if (!pedals.sostenuto && _ev.value > 63) {
+  } else if (!pedals.sostenuto && ev.value > 63) {
     pedals.sostenuto = true
     sostenutoNotes = playingNotes
     playingNotes = {}
   }
 }
 
-function addOscillator () {
-  const c = document.importNode($('oscillator-template').content, true)
-  const p = $('oscillator-panel')
+/** Adds a new oscillator panel to the UI window
+* @param {Preset} [preset]
+*/
+function addOscillator (preset) {
+  const c = document.importNode($('oscillator-template').content, true),
+    p = $('oscillator-panel')
   c.querySelector('.remove-oscillator')
     .addEventListener('click', e => p.removeChild(e.target.parentElement))
   c.querySelector('.gain')
     .addEventListener('dblclick', e => e.target.value = 0.5)
+  if (preset) {
+    for (const pp in preset) {
+      if (pp === 'invert-phase') c.querySelector('.invert-phase').checked = true
+      else c.querySelector('.' + pp).value = preset[pp]
+    }
+  }
   p.appendChild(c)
 }
 
+function addPreset () {
+  if (!$('preset-name').value) throw "Unnamed preset can't be saved"
+  customPresets.push(getPresetInfo())
+}
+
+/** Remove a named preset */
+function removePreset () {
+  if (customPresets[name]) {
+    delete customPresets[name]
+  }
+}
+
+/** Load the settings of a preset to the page
+* @param {Preset} preset The preset to load
+*/
+function loadPreset (preset) {
+  removeChildren($("oscillator-panel"))
+  for (const osc of preset.oscillators) addOscillator(osc)
+  updateEnvelopeControls(preset.envelope)
+}
+
+/**
+* Sets up event listeners to link MIDI events with the appropriate actions
+* @param {string|number} [channel='any'] MIDI channel to listen for events on
+*/
 function setupControllerListeners (channel = 'all') {
   controller.addListener('noteon', channel, e => noteOn(e.note.number, e.velocity))
   controller.addListener('noteoff', channel, e => noteOff(e.note.number))
-  controller.addListener('controlchange', channel, e => controlChange(e))
-  controller.addListener('channelmode', channel, e => channelMode(e))
+  controller.addListener('controlchange', channel, controlChange)
+  controller.addListener('channelmode', channel, channelMode)
 }
 
-function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
-  const removeChildren = el => {
-    while (el.firstChild)
-      el.removeChild(el.firstChild)
-  }
+function setupDisplayKeyboard (maxKeys = 88, lowNote = 21) {
   removeChildren($('ebony'))
   removeChildren($('ivory'))
-  const keywidth = (12 / 7) * (95 / maxkeys)
-  $('keyboard').style.setProperty('--key-width', `${keywidth}vw`)
-  $('keyboard').style.setProperty('--half-key', `${keywidth / 2}vw`)
+  const keyWidth = (12 / 7) * (95 / maxKeys)
+  $('keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
+  $('keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
   const palette = generateColorPalette()
   const makeShadowKey = () => {
-    const shadowkey = document.createElement('div')
-    shadowkey.classList.add('invisible')
-    shadowkey.classList.add('key')
-    $('ebony').appendChild(shadowkey)
+    const shadowKey = document.createElement('div')
+    shadowKey.classList.add('invisible')
+    shadowKey.classList.add('key')
+    $('ebony').appendChild(shadowKey)
   }
   makeShadowKey()
-  for (let i = lownote; i < lownote + maxkeys; i++) {
+  for (let i = lowNote; i < lowNote + maxKeys; i++) {
     const elem = document.createElement('div')
     elem.classList.add('key')
     elem.id = MIDINumber.toScientificPitch(i)
@@ -206,39 +305,47 @@ function setupDisplayKeyboard (maxkeys = 88, lownote = 21) {
     elem.onmousedown = e => noteOn(e.target.midiNumber)
     elem.onmouseleave = e => noteOff(e.target.midiNumber)
     elem.onmouseup = e => noteOff(e.target.midiNumber)
+    elem.addEventListener('touchstart', e => {
+      e.preventDefault()
+      noteOn(e.target.midiNumber)
+    })
+    elem.addEventListener('touchend', e => {
+      e.preventDefault()
+      noteOff(e.target.midiNumber)
+    })
+    elem.addEventListener('touchcancel', e => {
+      e.preventDefault()
+      noteOff(e.target.midiNumber)
+    })
     elem.style.setProperty('--squish', palette[i % 12])
-    if (elem.id.includes('E') || elem.id.includes('B'))
+    if (elem.id.includes('E') || elem.id.includes('B')) {
       makeShadowKey()
-    if (elem.id.includes('♯'))
+    }
+    if (elem.id.includes('♯')) {
       $('ebony').appendChild(elem)
-    else
+    } else {
       $('ivory').appendChild(elem)
+    }
   }
 }
 
-function generateColorPalette (seed = Math.PI + Math.PI * Math.floor(Math.random() * 6) / 6) {
-  const palette = []
-  const j = Math.PI / 6
-  const k = (2 * Math.PI) / 6
+function generateColorPalette (seed = Math.random() * Math.PI * 2) {
+  const palette = [], j = 2 * Math.PI / 3,
+    magic = f => (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
   for (let i = 0; i < 12; i++) {
-    let color = 'rgb('
-    let f = (i + seed) * j
-    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-    color += ', '
-    f += 4 * j
-    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-    color += ', '
-    f += 4 * j
-    color += (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-    color += ')'
-    palette.push(color)
+    let f = i + seed, c = []
+    for (let k = 0; k < 3; k++) {
+      c.push(magic(f += j))
+    }
+    palette.push('rgb(' + c.join() + ')')
   }
   return palette
 }
 
 function setupKeypressKeymap () {
   document.addEventListener('keydown', e => {
-    if (Object.keys(keyboardKeymap).includes(e.key) && !e.altKey && !e.shiftKey && !e.ctrlKey
+    if (Object.keys(keyboardKeymap).includes(e.key)
+    && !e.altKey && !e.shiftKey && !e.ctrlKey
     && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
       currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
       noteOn(keyboardKeymap[e.key])
@@ -269,19 +376,49 @@ function setupGlobalEventListeners () {
   })
 }
 
+/** Attach custom preset <option>s to <select>. */
+function updateCustomPresets () {
+  removeChildren($('custom-presets'))
+  for (const preset of customPresets) {
+    let el = document.createElement('option')
+    el.value = preset.name
+    $('custom-presets').appendChild(el)
+  }
+}
+
 window.onload = () => {
+  panner.connect(masterGain)
+  masterGain.connect(masterLevel)
+  masterLevel.connect(audio.destination)
   setupGlobalEventListeners()
-
-  addOscillator()
-  $('add-oscillator').addEventListener('click', addOscillator)
-
+  $('add-oscillator').addEventListener('click', () => addOscillator())
   setupKeypressKeymap()
   setupDisplayKeyboard()
-
   updateEnvelope()
-  for (const obj of $$('#envelope-controls input'))
+  for (const obj of $$('#envelope-controls input')) {
     obj.addEventListener('change', updateEnvelope)
-
+  }
+  customPresets = window.localStorage.customPresets ?
+    JSON.parse(window.localStorage.customPresets) : {}
+  loadPreset(JSON.parse(window.localStorage.persistentSettings)
+    || factoryPresets[0])
+  removeChildren($('factory-presets'))
+  factoryPresets.forEach((preset, index) => {
+    let el = document.createElement('option')
+    el.innerText = preset.name
+    el.value = index
+    $('factory-presets').appendChild(el)
+  })
+  updateCustomPresets()
+  $('load-preset').addEventListener('click', () => {
+    const selected = $('preset-list').selectedOptions[0],
+      storage = selected.parentElement.label === "Factory Presets" ?
+      factoryPresets : JSON.parse(window.localStorage.customPresets),
+      currentPreset = storage[selected.value]
+    if (currentPreset) loadPreset(currentPreset)
+  })
+  $('add-preset').addEventListener('click', addPreset)
+  $('remove-preset').addEventListener('click', removePreset)
   WebMidi.enable(err => {
     if (err) {
       console.log('WebMidi could not be enabled.', err)
@@ -311,7 +448,6 @@ window.onload = () => {
           elem.text = input.name
           cs.add(elem)
         }
-
         elem = document.createElement('option')
         elem.text = 'all'
         chs.add(elem)
@@ -323,4 +459,9 @@ window.onload = () => {
       }
     }
   })
+}
+
+window.onunload = () => {
+  window.localStorage.persistentSettings = JSON.stringify(getPresetInfo())
+  window.localStorage.customPresets = JSON.stringify(customPresets)
 }

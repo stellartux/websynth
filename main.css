@@ -86,6 +86,14 @@ button:active {
   top: 0.2em;
   left: 0.1em;
 }
+button:active.add {
+  color: var(--good);
+  border-color: var(--good);
+}
+button:active.remove {
+  color: var(--bad);
+  border-color: var(--bad);
+}
 button:focus {
   outline: none;
 }
@@ -96,10 +104,6 @@ button:focus {
   margin-left: 0.5em;
   border-width: thick;
   font-size: 1.2em;
-}
-#add-oscillator:active {
-  color: var(--good);
-  border-color: var(--good);
 }
 
 #global-controls {
@@ -113,14 +117,11 @@ button:focus {
   border-right: none;
   text-align: center;
 }
-.remove-oscillator:active {
-  color: var(--bad);
-  border-color: var(--bad);
-}
 
 .panel {
-  padding: 1em;
-  margin-top: 1em;
+  padding: 0.7em;
+  margin-top: 0.5em;
+  margin-bottom: 0px;
   border: solid thin var(--main-shadow);
   display: grid;
   grid-template-columns: max-content min-content;
