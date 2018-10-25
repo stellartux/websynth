@@ -69,8 +69,7 @@ class MIDINumber {
   * @returns {string} The interval between the notes.
   */
   static toInterval (nums) {
-    if (nums.length !== 2) return ''
-    return [
+    return (nums.length !== 2) ? '' : [
       'octave', 'minor second', 'major second', 'minor third',
       'major third', 'perfect fourth', 'diminished fifth', 'perfect fifth',
       'minor sixth', 'major sixth', 'minor seventh', 'major seventh'
@@ -84,8 +83,7 @@ class MIDINumber {
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toTriad (nums, sharp = true , verbose = false) {
-    if (nums.length !== 3)
-      return ''
+    if (nums.length !== 3) return ''
     const tl = l => this.toLetter(nums[l], sharp)
     return (verbose ? {
         '047': tl(0) + ' major',
@@ -148,12 +146,11 @@ class MIDINumber {
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
   * @param {boolean} [verbose=false] Format as short or verbose form of chord names
-  * @param {boolean} [slashOkay=true] Whether to return a slash chord if no tetrachord is found.
+  * @param {boolean} [slashOkay=true] Return a slash chord if no tetrachord is found.
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toTetrachord (nums, sharp = true , verbose = false, slashOkay = true) {
-    if (nums.length !== 4)
-      return ''
+    if (nums.length !== 4) return ''
     const tl = this.toLetter(nums[0], sharp)
     const chord = (verbose ? {
         '04710': ' dominant seventh',
@@ -201,7 +198,7 @@ class MIDINumber {
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
   * @param {boolean} [verbose=false] Format as short or verbose form of chord names
-  * @param {boolean} [slashOkay=true] Whether to return a slash chord if no pentachord is found.
+  * @param {boolean} [slashOkay=true] Return a slash chord if no pentachord is found.
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toPentaChord(nums, sharp = true, verbose = false, slashOkay = true) {
@@ -229,14 +226,16 @@ class MIDINumber {
       '0361014': 'ø9',
       '0361013': 'ø♭9',
       '036914': 'ᴼ9',
-      '036913': 'ᴼ♭9' 
+      '036913': 'ᴼ♭9'
     })[nums.map(n => n - nums[0]).join('')]
-    if (chord)
+    if (chord) {
       return tl + chord
-    const upperChord = this.toPentaChord(nums.slice(1), sharp, verbose, false)
-    if (slashOkay && upperChord)
+    }
+    const upperChord = this.toTetrachord(nums.slice(1), sharp, verbose, false)
+    if (slashOkay && upperChord) {
       return upperChord + (verbose ? ' over ' : '/') + tl
-    else
+    } else {
       return ''
+    }
   }
 }
