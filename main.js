@@ -16,7 +16,7 @@ let controller,
   currentlyHeldKeys = {},
   envelope = {},
   pitchBend = 0,
-  customPresets
+  customPresets = []
 const $ = x => document.getElementById(x),
   $$ = x => Array.from(document.querySelectorAll(x)),
   removeChildren = el => {while (el.firstChild) el.removeChild(el.firstChild)},
@@ -399,8 +399,9 @@ window.onload = () => {
   for (const obj of $$('#envelope-controls input')) {
     obj.addEventListener('change', updateEnvelope)
   }
-  customPresets = window.localStorage.customPresets ?
-    JSON.parse(window.localStorage.customPresets) : {}
+  if (window.localStorage.customPresets) {
+    customPresets = JSON.parse(window.localStorage.customPresets)
+  }
   loadPreset(JSON.parse(window.localStorage.persistentSettings)
     || factoryPresets[0])
   removeChildren($('factory-presets'))
