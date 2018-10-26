@@ -1,4 +1,32 @@
-/** Type for storing envelope and oscillator preset information for recalling
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: main.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: main.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** Type for storing envelope and oscillator preset information for recalling
 * user defined presets and UI persistence between sessions.
 * @param {string} name
 * @param {object} envelope
@@ -17,7 +45,7 @@
 */
 class Preset {
   constructor(name, envelope, oscillators) {
-    if (!(envelope && oscillators)) {
+    if (!(envelope &amp;&amp; oscillators)) {
       throw 'Preset: Missing init params'
     }
     this.name = name
@@ -213,7 +241,7 @@ function noteOn (midiNum, velocity = 1) {
 }
 
 function noteOff (midiNum) {
-  if (pedals.sustain && !sustainingNotes[midiNum]) {
+  if (pedals.sustain &amp;&amp; !sustainingNotes[midiNum]) {
     sustainingNotes[midiNum] = playingNotes[midiNum]
   } else if (playingNotes[midiNum]) {
     playingNotes[midiNum].releaseNote()
@@ -224,25 +252,25 @@ function noteOff (midiNum) {
 }
 
 function sustainPedalEvent (ev) {
-  if (pedals.sustain && ev.value < 64) {
+  if (pedals.sustain &amp;&amp; ev.value &lt; 64) {
     pedals.sustain = false
     for (let n in sustainingNotes) {
       sustainingNotes[n].releaseNote()
       delete sustainingNotes[n]
     }
-  } else if (!pedals.sustain && ev.value > 63) {
+  } else if (!pedals.sustain &amp;&amp; ev.value > 63) {
     pedals.sustain = true
   }
 }
 
 function sostenutoPedalEvent (ev) {
-  if (pedals.sostenuto && ev.value < 64) {
+  if (pedals.sostenuto &amp;&amp; ev.value &lt; 64) {
     pedals.sostenuto = false
     for (let n in sostenutoNotes) {
       sostenutoNotes[n].releaseNote()
       delete sostenutoNotes[n]
     }
-  } else if (!pedals.sostenuto && ev.value > 63) {
+  } else if (!pedals.sostenuto &amp;&amp; ev.value > 63) {
     pedals.sostenuto = true
     sostenutoNotes = playingNotes
     playingNotes = {}
@@ -317,7 +345,7 @@ function setupDisplayKeyboard (maxKeys = 88, lowNote = 21) {
     $('ebony').appendChild(shadowKey)
   }
   makeShadowKey()
-  for (let i = lowNote; i < lowNote + maxKeys; i++) {
+  for (let i = lowNote; i &lt; lowNote + maxKeys; i++) {
     const elem = document.createElement('div')
     elem.classList.add('key')
     elem.id = MIDINumber.toScientificPitch(i)
@@ -352,9 +380,9 @@ function setupDisplayKeyboard (maxKeys = 88, lowNote = 21) {
 function generateColorPalette (seed = Math.random() * Math.PI * 2) {
   const palette = [], j = 2 * Math.PI / 3,
     magic = f => (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i &lt; 12; i++) {
     let f = i + seed, c = []
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k &lt; 3; k++) {
       c.push(magic(f += j))
     }
     f -= j
@@ -366,8 +394,8 @@ function generateColorPalette (seed = Math.random() * Math.PI * 2) {
 function setupKeypressKeymap () {
   document.addEventListener('keydown', e => {
     if (Object.keys(keyboardKeymap).includes(e.key)
-    && !e.altKey && !e.shiftKey && !e.ctrlKey
-    && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
+    &amp;&amp; !e.altKey &amp;&amp; !e.shiftKey &amp;&amp; !e.ctrlKey
+    &amp;&amp; !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
       currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
       noteOn(keyboardKeymap[e.key])
     }
@@ -397,7 +425,7 @@ function setupGlobalEventListeners () {
   })
 }
 
-/** Attach custom preset <option>s to <select>. */
+/** Attach custom preset &lt;option>s to &lt;select>. */
 function updateCustomPresets () {
   removeChildren($('custom-presets'))
   for (const preset of customPresets) {
@@ -473,7 +501,7 @@ window.onload = () => {
         elem = document.createElement('option')
         elem.text = 'all'
         chs.add(elem)
-        for (let i = 1; i < 17; i++) {
+        for (let i = 1; i &lt; 17; i++) {
           elem = document.createElement('option')
           elem.text = i
           chs.add(elem)
@@ -487,3 +515,26 @@ window.onunload = () => {
   window.localStorage.persistentSettings = JSON.stringify(getPresetInfo())
   window.localStorage.customPresets = JSON.stringify(customPresets)
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MIDINumber.html">MIDINumber</a></li><li><a href="Note.html">Note</a></li><li><a href="Preset.html">Preset</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addOscillator">addOscillator</a></li><li><a href="global.html#addPreset">addPreset</a></li><li><a href="global.html#loadPreset">loadPreset</a></li><li><a href="global.html#releaseAllNotes">releaseAllNotes</a></li><li><a href="global.html#removePreset">removePreset</a></li><li><a href="global.html#setupControllerListeners">setupControllerListeners</a></li><li><a href="global.html#stopAllSound">stopAllSound</a></li><li><a href="global.html#updateChordDisplay">updateChordDisplay</a></li><li><a href="global.html#updateCustomPresets">updateCustomPresets</a></li><li><a href="global.html#updateEnvelope">updateEnvelope</a></li><li><a href="global.html#updateEnvelopeControls">updateEnvelopeControls</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Oct 26 2018 07:56:17 GMT+0100 (GMT Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

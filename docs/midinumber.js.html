@@ -97,13 +97,13 @@ class MIDINumber {
   * @returns {string} The interval between the notes.
   */
   static toInterval (nums) {
-    if (nums.length !== 2) return ''
-    return [
+    return (nums.length !== 2) ? '' : [
       'octave', 'minor second', 'major second', 'minor third',
       'major third', 'perfect fourth', 'diminished fifth', 'perfect fifth',
       'minor sixth', 'major sixth', 'minor seventh', 'major seventh'
     ][(nums[1] - nums[0]) % 12]
   }
+
   /** Calculates the chord represented by three MIDI numbers.
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
@@ -111,8 +111,7 @@ class MIDINumber {
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toTriad (nums, sharp = true , verbose = false) {
-    if (nums.length !== 3)
-      return ''
+    if (nums.length !== 3) return ''
     const tl = l => this.toLetter(nums[l], sharp)
     return (verbose ? {
         '047': tl(0) + ' major',
@@ -175,12 +174,11 @@ class MIDINumber {
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
   * @param {boolean} [verbose=false] Format as short or verbose form of chord names
-  * @param {boolean} [slashOkay=true] Whether to return a slash chord if no tetrachord is found.
+  * @param {boolean} [slashOkay=true] Return a slash chord if no tetrachord is found.
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toTetrachord (nums, sharp = true , verbose = false, slashOkay = true) {
-    if (nums.length !== 4)
-      return ''
+    if (nums.length !== 4) return ''
     const tl = this.toLetter(nums[0], sharp)
     const chord = (verbose ? {
         '04710': ' dominant seventh',
@@ -228,21 +226,45 @@ class MIDINumber {
   * @param {number[]} nums The MIDI numbers to find the chord of.
   * @param {boolean} [sharp=true] Format accidentals as sharp or flat.
   * @param {boolean} [verbose=false] Format as short or verbose form of chord names
-  * @param {boolean} [slashOkay=true] Whether to return a slash chord if no pentachord is found.
+  * @param {boolean} [slashOkay=true] Return a slash chord if no pentachord is found.
   * @returns {string} The calculated chord, or an empty string if no chord is found.
   */
   static toPentaChord(nums, sharp = true, verbose = false, slashOkay = true) {
     if (nums.length !== 5)
       return ''
     const tl = this.toLetter(nums[0], sharp)
-    const chord = (verbose ? {} : {})[nums.map(n => n - nums[0]).join('')]
-    if (chord)
+    const chord = (verbose ? {
+      '0471114': ' major ninth',
+      '0471014': ' dominant ninth',
+      '0371114': ' minor major ninth',
+      '0371014': ' minor ninth',
+      '0481114': ' augmented major ninth',
+      '0481014': ' augmented dominant ninth',
+      '0361014': ' half-diminished ninth',
+      '0361013': ' half-diminished minor ninth',
+      '036914': ' diminished ninth',
+      '036913': ' diminished minor ninth'
+    } : {
+      '0471114': 'M9',
+      '0471014': '9',
+      '0371114': 'mM9',
+      '0371014': 'm9',
+      '0481114': '+M9',
+      '0481014': '+9',
+      '0361014': 'ø9',
+      '0361013': 'ø♭9',
+      '036914': 'ᴼ9',
+      '036913': 'ᴼ♭9'
+    })[nums.map(n => n - nums[0]).join('')]
+    if (chord) {
       return tl + chord
-    const upperChord = this.toPentaChord(nums.slice(1), sharp, verbose, false)
-    if (slashOkay &amp;&amp; upperChord)
+    }
+    const upperChord = this.toTetrachord(nums.slice(1), sharp, verbose, false)
+    if (slashOkay &amp;&amp; upperChord) {
       return upperChord + (verbose ? ' over ' : '/') + tl
-    else
+    } else {
       return ''
+    }
   }
 }
 </code></pre>
@@ -255,13 +277,13 @@ class MIDINumber {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MIDINumber.html">MIDINumber</a></li><li><a href="Note.html">Note</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MIDINumber.html">MIDINumber</a></li><li><a href="Note.html">Note</a></li><li><a href="Preset.html">Preset</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addOscillator">addOscillator</a></li><li><a href="global.html#addPreset">addPreset</a></li><li><a href="global.html#loadPreset">loadPreset</a></li><li><a href="global.html#releaseAllNotes">releaseAllNotes</a></li><li><a href="global.html#removePreset">removePreset</a></li><li><a href="global.html#setupControllerListeners">setupControllerListeners</a></li><li><a href="global.html#stopAllSound">stopAllSound</a></li><li><a href="global.html#updateChordDisplay">updateChordDisplay</a></li><li><a href="global.html#updateCustomPresets">updateCustomPresets</a></li><li><a href="global.html#updateEnvelope">updateEnvelope</a></li><li><a href="global.html#updateEnvelopeControls">updateEnvelopeControls</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Oct 21 2018 00:15:11 GMT+0100 (GMT Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Oct 26 2018 07:56:17 GMT+0100 (GMT Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>
