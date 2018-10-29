@@ -42,6 +42,7 @@ const $ = x => document.getElementById(x),
   panner = new StereoPannerNode(audio),
   masterGain = new GainNode(audio, {gain: 0.5}),
   masterLevel = new AnalyserNode(audio),
+  metronome = new Metronome(masterGain),
   keyboardKeymap = {
     '\\': 59, z: 60, x: 62, c: 64, v: 65, b: 67, n: 69, m: 71, ',': 72, '.': 74,
     '/': 76, q: 72, w: 74, e: 76, r: 77, t: 79, y: 81, u: 83, i: 84, o: 86,
@@ -394,6 +395,12 @@ function setupGlobalEventListeners () {
   $('panning').addEventListener('dblclick', e => {
     panner.pan.value = 0
     e.target.value = 0
+  })
+  $('metronome').addEventListener('change', e => {
+    e.target.checked ? metronome.start() : metronome.stop()
+  })
+  $('tempo').addEventListener('change', e => {
+    metronome.tempo = e.target.value
   })
 }
 

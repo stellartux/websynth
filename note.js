@@ -50,6 +50,7 @@ class Note {
       this.oscs.push(osc)
     }
   }
+  
   /** Trigger the release of the envelope */
   releaseNote () {
     this.stopNote(this.context.currentTime + this.release * 20)
@@ -59,6 +60,7 @@ class Note {
       this.release
     )
   }
+
   /** Stop all oscillators
   * @param {number} [time=AudioContext.currentTime] When to stop playing the notes.
   */

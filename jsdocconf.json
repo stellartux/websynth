@@ -2,7 +2,7 @@
     "plugins": [],
     "recurseDepth": 10,
     "source": {
-        "include": ["note.js", "midinumber.js", "main.js"],
+        "include": ["."],
         "includePattern": ".+\\.js(doc|x)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
@@ -13,6 +13,9 @@
     },
     "templates": {
         "cleverLinks": false,
+        "default": {
+            "outputSourceFiles": false
+        },
         "monospaceLinks": false
     }
 }
