@@ -127,6 +127,7 @@ button:focus {
   grid-template-columns: max-content min-content;
   grid-column-gap: 1ch;
   text-align: right;
+  font-size: 0.85rem;
 }
 
 #controller-form {
@@ -226,4 +227,9 @@ a:visited {
 }
 #sharp-or-flat:checked::after {
   content: '♯';
+}
+
+.flexrow {
+  display: flex;
+  flex-direction: row;
 }

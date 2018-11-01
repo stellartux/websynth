@@ -67,12 +67,14 @@ Websynth
 <section id="preset-panel" class="panel">
 <select id="preset-list">
 <optgroup label="Factory Presets" id="factory-presets"></optgroup>
-<optgroup label="Custom Presets" id="custom-presets" class="hidden"></optgroup>
+<optgroup label="Custom Presets" id="custom-presets"></optgroup>
 </select>
 <button id="load-preset">Load</button>
-<button id="add-preset" class="add hidden">+</button>
-<input type="text" id="preset-name" placeholder="Preset Name" class="hidden">
-<button id="remove-preset" class="remove hidden">-</button>
+<input type="text" id="preset-name" placeholder="Preset Name">
+<div class="flexrow">
+<button id="add-preset" class="add">+</button>
+<button id="remove-preset" class="remove">-</button>
+</div>
 </section>
 
 <section id="note-controls" class="panel">

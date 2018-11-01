@@ -280,7 +280,11 @@ function addPreset (preset) {
 
 /** Remove a named preset */
 function removePreset () {
-  // TODO
+  const selected = $('preset-list').selectedOptions[0]
+  if (selected.parentElement.label === 'Custom Presets') {
+    delete customPresets[selected.value]
+    updateCustomPresets(customPresets, $('custom-presets'))
+  }
 }
 
 /** Load the settings of a preset to the page
@@ -404,14 +408,18 @@ function setupGlobalEventListeners () {
   })
 }
 
-/** Attach custom preset <option>s to <select>. */
-function updateCustomPresets () {
-  removeChildren($('custom-presets'))
-  for (const preset of customPresets) {
+/** Attach preset <option>s to <select>.
+* @param {Preset[]} presets
+* @param {DOMElement} target
+*/
+function updateCustomPresets (presets, target) {
+  removeChildren(target)
+  presets.forEach((preset, index) => {
     let el = document.createElement('option')
-    el.value = preset.name
-    $('custom-presets').appendChild(el)
-  }
+    el.innerText = preset.name
+    el.value = index
+    target.appendChild(el)
+  })
 }
 
 window.onload = () => {
@@ -431,18 +439,12 @@ window.onload = () => {
   }
   loadPreset(JSON.parse(window.localStorage.persistentSettings)
     || factoryPresets[0])
-  removeChildren($('factory-presets'))
-  factoryPresets.forEach((preset, index) => {
-    let el = document.createElement('option')
-    el.innerText = preset.name
-    el.value = index
-    $('factory-presets').appendChild(el)
-  })
-  updateCustomPresets()
+  updateCustomPresets(factoryPresets, $('factory-presets'))
+  updateCustomPresets(customPresets, $('custom-presets'))
   $('load-preset').addEventListener('click', () => {
     const selected = $('preset-list').selectedOptions[0],
       storage = selected.parentElement.label === "Factory Presets" ?
-      factoryPresets : JSON.parse(window.localStorage.customPresets),
+      factoryPresets : customPresets,
       currentPreset = storage[selected.value]
     if (currentPreset) loadPreset(currentPreset)
   })
