@@ -13,9 +13,11 @@ class Note {
   * @param {number} [oscParams[].detune=0] detune amount of the oscillator in cents
   * @param {number} [oscParams[].frequency=440] frequency of the oscillator in Hertz
   * @param {number} [oscParams[].gain=0.5] gain of the oscillator, 0 to 1 inclusive
-  * @param {string} [oscParams[].type='sine'] waveform shape, options are "sine", "square", "sawtooth", "triangle"
+  * @param {string} [oscParams[].type='sine'] waveform shape, options are "sine", "square", "sawtooth", "triangle", "custom"
+  * @param {number[]} [oscParams[].real] the real part of the custom waveform
+  * @param {number[]} [oscParams[].imag] the imaginary part of the custom waveform
   */
-  constructor (target, noteParams = {} , oscParams = [{}]) {
+  constructor (target, noteParams = {}, oscParams = [{}]) {
     this.context = target.context || target
     this.attack = noteParams.attack || 0.02
     this.decay = noteParams.decay || 0.02
@@ -38,19 +40,26 @@ class Note {
     this.envGain.connect(target)
     this.oscs = []
     for (const p of oscParams) {
-      let gainer = new GainNode(this.context, {gain: p.gain || 0.5})
-      let osc = new OscillatorNode(this.context, {
-        type: p.type || 'sine',
-        detune: p.detune || 0,
-        frequency: p.frequency || 440.0
-      })
+      let gainer = this.context.createGain()
+      gainer.gain.value = p.gain || 0.5
+      let osc = this.context.createOscillator()
+      osc.detune.value = p.detune || 0,
+      osc.frequency.value = p.frequency || 440.0
+      if (p.type === 'custom') {
+        osc.setPeriodicWave(this.context.createPeriodicWave(
+          new Float32Array(p.real || [0, 1]),
+          new Float32Array(p.imag || [0, 0]))
+        )
+      } else {
+        osc.type = p.type || 'sine'
+      }
       osc.connect(gainer)
       gainer.connect(this.envGain)
       osc.start()
       this.oscs.push(osc)
     }
   }
-  
+
   /** Trigger the release of the envelope */
   releaseNote () {
     this.stopNote(this.context.currentTime + this.release * 20)
@@ -65,7 +74,8 @@ class Note {
   * @param {number} [time=AudioContext.currentTime] When to stop playing the notes.
   */
   stopNote (time = this.context.currentTime) {
-    for (const o of this.oscs)
+    for (const o of this.oscs) {
       o.stop(time)
+    }
   }
 }
