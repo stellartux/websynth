@@ -20,12 +20,12 @@ class BytebeatProcessor extends AudioWorkletProcessor {
     this.frequency = options.processorOptions.frequency || 440
     this.tDelta = this.frequency / this.sampleRate
     this.t = 0
-    this.continuePlaying = true
     this.startedPlaying = false
+    this.stopTime = Infinity
     this.port.onmessage = event => {
       switch (event.data.message) {
         case 'stop':
-          this.continuePlaying = false
+          this.stopTime = event.data.stopTime
           break
         case 'start':
           this.startedPlaying = true
@@ -45,7 +45,7 @@ class BytebeatProcessor extends AudioWorkletProcessor {
         }
       }
     }
-    return this.continuePlaying
+    return currentTime < this.stopTime
   }
 }
 registerProcessor('bytebeat-processor', BytebeatProcessor)

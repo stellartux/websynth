@@ -14,8 +14,8 @@ class BytebeatNode extends AudioWorkletNode {
         sampleRate: context.sampleRate
       }
     })
-    this.stop = () => this.port.postMessage({ message: 'stop' })
-    this.start = () => this.port.postMessage({ message: 'start' })
+    this.stop = p => this.port.postMessage({ message: 'stop', stopTime: p })
+    this.start = p => this.port.postMessage({ message: 'start', params: p })
   }
 }
 

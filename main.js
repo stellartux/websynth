@@ -410,13 +410,14 @@ function setupKeypressKeymap () {
     }
   })
   const bb = $('bytebeat-code')
-  bb.isValid = true
+  bb.checkValidity = () => typeof(eval('let t = 1; ' + bb.value)) === 'number'
+  bb.isValid = bb.checkValidity()
   bb.onkeydown = e => {
     e.stopPropagation()
   }
   bb.onkeyup = e => {
     try {
-      if (typeof(eval('let t = 1; ' + bb.value)) === 'number') {
+      if (bb.checkValidity()) {
         bb.classList.remove('invalid')
         bb.isValid = true
       } else {
