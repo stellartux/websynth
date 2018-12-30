@@ -152,7 +152,7 @@ button:focus {
 
 #controller-form.hidden,
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 a {
@@ -232,4 +232,18 @@ a:visited {
 .flexrow {
   display: flex;
   flex-direction: row;
+}
+#audio-sources {
+  min-width: 70%;
+}
+#additive-oscillators {
+  display: flex;
+}
+#bytebeat-code {
+  display: inline;
+  width: 80ch;
+  border-color: var(--good);
+}
+#bytebeat-code.invalid {
+  border-color: var(--bad);
 }

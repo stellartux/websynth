@@ -8,6 +8,7 @@
 <script src="midinumber.js" charset="utf-8"></script>
 <script src="note.js" charset="utf-8"></script>
 <script src="metronome.js" charset="utf-8"></script>
+<script src="bytebeat.js" charset="utf-8"></script>
 <script src="main.js" charset="utf-8"></script>
 <link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
 <link rel="stylesheet" href="main.css">
@@ -18,11 +19,16 @@
 <main>
 
 <nav>
-Websynth
+Mode:
+<select id="source-select">
+<option value="additive-oscillators">Additive</option>
+<!--<option value="harmonic-series">Harmonics</option> -->
+<option value="bytebeat">Bytebeat</option>
+</select>
 </nav>
 
 <form id="controller-form" class="hidden">
-<label for"controller-select">Select your MIDI controller</label>
+<label for="controller-select">Select your MIDI controller</label>
 <select id="controller-select"></select>
 <label for="channel-select">Channel</label>
 <select id="channel-select"></select>
@@ -30,8 +36,21 @@ Websynth
 </form>
 
 <div class="container">
+<div id="audio-sources">
+<div id="additive-oscillators">
 <button id="add-oscillator" class="add">+</button>
 <ol id="oscillator-panel"></ol>
+</div>
+<div id="harmonic-series" class="hidden panel">
+<ol id="harmonic-panel" class="panel"></ol>
+<canvas id="fourier-canvas" width="400" height="300"></canvas>
+</div>
+<div id="bytebeat" class="hidden panel">
+<div class="panel">
+t => {<input type="text" id="bytebeat-code" value="">}
+</div>
+</div>
+</div>
 
 <template id="oscillator-template">
 <li class="oscillator">
@@ -60,6 +79,12 @@ Websynth
 </label>
 <button class="remove-oscillator remove">-</button>
 </li>
+</template>
+
+<template id="harmonic-template">
+<label>
+<input type="" name="" value="">
+</label>
 </template>
 
 <section id="global-controls">
