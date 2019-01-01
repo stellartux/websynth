@@ -10,16 +10,19 @@ class BytebeatProcessor extends AudioWorkletProcessor {
     if (!options.processorOptions.hasOwnProperty('bytebeat')) {
       throw 'BytebeatProcessorConstructor: Bytebeat function definition cannot be empty'
     }
-    this.beatcode = new Function('t', 'return ' + options.processorOptions.bytebeat)
+    this.beatcode = new Function('t=0, tt=0', 'return ' + options.processorOptions.bytebeat)
     if (typeof (this.beatcode) !== 'function') {
       throw 'BytebeatProcessorConstructor: Bytebeat function definition must be a function'
-    } else if (typeof (this.beatcode(0)) !== 'number') {
+    } else if (typeof (this.beatcode()) !== 'number') {
       throw 'BytebeatProcessorConstructor: Bytebeat function must return a number'
     }
     this.sampleRate = options.processorOptions.sampleRate || 44100
     this.frequency = options.processorOptions.frequency || 440
     this.tDelta = this.frequency / this.sampleRate
     this.t = 0
+    this.tt = 0
+    this.tempo = options.processorOptions.tempo
+    this.ttDelta = this.tempo / this.sampleRate
     this.startedPlaying = false
     this.stopTime = Infinity
     this.port.onmessage = event => {
@@ -40,8 +43,9 @@ class BytebeatProcessor extends AudioWorkletProcessor {
       const output = outputs[0]
       for (let channel = 0; channel < output.length; ++channel) {
         for (let i = 0; i < output[channel].length; ++i) {
-          output[channel][i] = (this.beatcode(Math.floor(this.t)) % 256) / 128 - 1
+          output[channel][i] = (this.beatcode(Math.floor(this.t), Math.floor(this.tt)) % 256) / 128 - 1
           this.t += this.tDelta
+          this.tt += this.ttDelta
         }
       }
     }

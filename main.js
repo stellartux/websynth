@@ -221,7 +221,7 @@ function noteOn (midiNum, velocity = 1) {
     noteParams.attack *= 1.333
   }
   if ($('source-select').value !== 'bytebeat') {
-    playingNotes[midiNum] = new OscillatorNote(panner, noteParams, oscParams)
+    playingNotes[midiNum] = new OscillatorNote(panner, noteParams, oscParams, Number($('tempo').value))
   } else {
     if ($('bytebeat-code').isValid) {
       playingNotes[midiNum] = new BytebeatNote(panner, noteParams, {
@@ -231,6 +231,7 @@ function noteOn (midiNum, velocity = 1) {
           Number($('note-offset').value) +
           (Number($('octave').value) + 8) * 12
         ),
+        tempo: Number($('tempo').value)
       })
     }
   }
@@ -398,7 +399,8 @@ function setupKeypressKeymap () {
   document.addEventListener('keydown', e => {
     if (Object.keys(keyboardKeymap).includes(e.key)
     && !e.altKey && !e.shiftKey && !e.ctrlKey
-    && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])) {
+    && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])
+    && e.target.tagName !== 'INPUT') {
       currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
       noteOn(keyboardKeymap[e.key])
     }
@@ -410,25 +412,21 @@ function setupKeypressKeymap () {
     }
   })
   const bb = $('bytebeat-code')
-  bb.checkValidity = () => typeof(eval('let t = 1; ' + bb.value)) === 'number'
-  bb.isValid = bb.checkValidity()
-  bb.onkeydown = e => {
-    e.stopPropagation()
-  }
-  bb.onkeyup = e => {
+  bb.checkValidity = () => {
     try {
-      if (bb.checkValidity()) {
+      return typeof(eval('let t=1,tt=1; ' + bb.value)) === 'number'
+    } catch (e) {
+      return false
+    }
+  }
+  bb.isValid = bb.checkValidity()
+  bb.oninput = e => {
+      bb.isValid = bb.checkValidity()
+      if (bb.isValid) {
         bb.classList.remove('invalid')
-        bb.isValid = true
       } else {
         bb.classList.add('invalid')
-        bb.isValid = false
       }
-    } catch (e) {
-      bb.classList.add('invalid')
-      bb.isValid = false
-    }
-    e.stopPropagation()
   }
 }
 
