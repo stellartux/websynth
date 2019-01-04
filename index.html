@@ -10,7 +10,7 @@
 <script src="metronome.js" charset="utf-8"></script>
 <script src="bytebeat.js" charset="utf-8"></script>
 <script src="main.js" charset="utf-8"></script>
-<link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
+<link href="https://fonts.googleapis.com/css?family=Aldrich" rel="stylesheet">
 <link rel="stylesheet" href="main.css">
 <link rel="shortcut icon" href="favicon.ico">
 </head>
@@ -45,11 +45,14 @@ Mode:
 <ol id="harmonic-panel" class="panel"></ol>
 <canvas id="fourier-canvas" width="400" height="300"></canvas>
 </div>
-<div id="bytebeat" class="hidden panel">
+<div id="bytebeat" class="hidden">
 <div class="panel">
-(t, tt) ⟹ {<br />
-<input type="text" id="bytebeat-code" value="t & t >> 9">
-}
+<code>(t, tt) ⟹ </code> <input type="text" id="bytebeat-code" value="t & t >> (8 + 3 & tt >> 4)">
+<label for="bytebeat-mode">Bytebeat Mode:</label>
+<select id="bytebeat-mode">
+<option value="byte">Bytebeat</option>
+<option value="float">Floatbeat</option>
+</select>
 </div>
 </div>
 </div>

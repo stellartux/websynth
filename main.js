@@ -231,7 +231,8 @@ function noteOn (midiNum, velocity = 1) {
           Number($('note-offset').value) +
           (Number($('octave').value) + 8) * 12
         ),
-        tempo: Number($('tempo').value)
+        tempo: Number($('tempo').value),
+        floatMode: $('bytebeat-mode').value === 'float'
       })
     }
   }
@@ -412,21 +413,14 @@ function setupKeypressKeymap () {
     }
   })
   const bb = $('bytebeat-code')
-  bb.checkValidity = () => {
-    try {
-      return typeof(eval('let t=1,tt=1; ' + bb.value)) === 'number'
-    } catch (e) {
-      return false
-    }
-  }
-  bb.isValid = bb.checkValidity()
+  bb.isValid = BytebeatNote.validateBytebeat(bb.value)
   bb.oninput = e => {
-      bb.isValid = bb.checkValidity()
-      if (bb.isValid) {
-        bb.classList.remove('invalid')
-      } else {
-        bb.classList.add('invalid')
-      }
+    bb.isValid = BytebeatNote.validateBytebeat(bb.value)
+    if (bb.isValid) {
+      bb.classList.remove('invalid')
+    } else {
+      bb.classList.add('invalid')
+    }
   }
 }
 
@@ -475,17 +469,17 @@ function updateCustomPresets (presets, target) {
   removeChildren(target)
   presets.forEach((preset, index) => {
     let el = document.createElement('option')
-    el.innerText = preset.name
+    el.textContent = preset.name
     el.value = index
     target.appendChild(el)
   })
 }
 
 /** Reload data from the previous session, if it exists */
-function loadPersistentState() {
+function loadPersistentState () {
   if (window.localStorage.previousView !== undefined) {
     $('source-select').value = JSON.parse(window.localStorage.previousView)
-    changeCurrentView(JSON.parse(window.localStorage.previousView))
+    changeCurrentView($('source-select').value)
   }
   if (window.localStorage.customPresets !== undefined) {
     customPresets = JSON.parse(window.localStorage.customPresets)
@@ -518,7 +512,7 @@ window.onload = () => {
   $('load-preset').addEventListener('click', () => {
     const selected = $('preset-list').selectedOptions[0],
       storage = selected.parentElement.label === 'Factory Presets' ?
-      factoryPresets : customPresets,
+        factoryPresets : customPresets,
       currentPreset = storage[selected.value]
     if (currentPreset) loadPreset(currentPreset)
   })
@@ -527,14 +521,14 @@ window.onload = () => {
   audio.audioWorklet.addModule('bytebeat-processor.js')
   WebMidi.enable(err => {
     if (err) {
-      console.log('WebMidi could not be enabled.', err)
+      console.error('WebMidi could not be enabled.', err)
       setupDisplayKeyboard()
     } else {
       console.log('WebMidi enabled!')
 
-      const cf = $('controller-form')
-      const cs = $('controller-select')
-      const chs = $('channel-select')
+      const cf = $('controller-form'),
+        cs = $('controller-select'),
+        chs = $('channel-select')
 
       cf.addEventListener('submit', e => {
         e.preventDefault()
