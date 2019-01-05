@@ -224,7 +224,7 @@ function noteOn (midiNum, velocity = 1) {
     playingNotes[midiNum] = new OscillatorNote(panner, noteParams, oscParams, Number($('tempo').value))
   } else {
     if ($('bytebeat-code').isValid) {
-      playingNotes[midiNum] = new BytebeatNote(panner, noteParams, {
+      playingNotes[midiNum] = new BytebeatNote(panner, noteParams, [{
         bytebeat: $('bytebeat-code').value,
         frequency: MIDINumber.toFrequency(
           midiNum +
@@ -233,7 +233,7 @@ function noteOn (midiNum, velocity = 1) {
         ),
         tempo: Number($('tempo').value),
         floatMode: $('bytebeat-mode').value === 'float'
-      })
+      }])
     }
   }
 
@@ -413,9 +413,9 @@ function setupKeypressKeymap () {
     }
   })
   const bb = $('bytebeat-code')
-  bb.isValid = BytebeatNote.validateBytebeat(bb.value)
+  bb.isValid = BytebeatNode.validateBytebeat(bb.value)
   bb.oninput = e => {
-    bb.isValid = BytebeatNote.validateBytebeat(bb.value)
+    bb.isValid = BytebeatNode.validateBytebeat(bb.value)
     if (bb.isValid) {
       bb.classList.remove('invalid')
     } else {
@@ -567,3 +567,6 @@ window.onunload = () => {
   window.localStorage.previousView = JSON.stringify($('source-select').value)
   window.localStorage.bytebeatCode = JSON.stringify($('bytebeat-code').value)
 }
+
+// TODO: Change the persistence function
+// store all objects in $$('input') as input.id: input.value in localStorage

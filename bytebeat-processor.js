@@ -1,33 +1,28 @@
 /**
 * BytebeatProcessor runs in the AudioWorkletScope
 * @param {object} options
-* @param {string} options.processorOptions.beatcode String representing an audio generation function with parameter t
-* @param {number} options.processorOptions.sampleRate The sample rate the beat should be played at
+* @param {string} options.processorOptions.beatcode
+* Main block of the bytebeat function and its execution
+* @param {number} options.processorOptions.frequency
+* The frequency at which 't' will be incremented
+* @param {number} options.processorOptions.sampleRate
+* The sample rate of the audio context
 * @param {number} options.processorOptions.tempo
-* @param {boolean} [options.processorOptions.floatMode=false] Whether the bytebeat function expects an output between 0:255 (default) or -1:1
+* The tempo which the speed that tt will be incremented depends on
+* @param {boolean} [options.processorOptions.floatMode=false]
+* Whether the function expects an output between 0:255 (default) or -1:1
 */
 class BytebeatProcessor extends AudioWorkletProcessor {
   constructor (options) {
     super(options)
-    if (!options.processorOptions.hasOwnProperty('bytebeat')) {
-      throw 'BytebeatProcessorConstructor: Bytebeat function definition cannot be empty'
-    }
-    this.beatcode = new Function(
-      `t=0,tt=0,sin=Math.sin,cos=Math.cos,PI=Math.PI,ceil=Math.ceil,
-      int=floor=Math.floor,tan=Math.tan,E=Math.E,exp=Math.exp,TAU=2*PI`,
-      'return ' + options.processorOptions.bytebeat)
-    if (typeof (this.beatcode) !== 'function') {
-      throw 'BytebeatProcessorConstructor: Bytebeat function definition must be a function'
-    } else if (typeof (this.beatcode()) !== 'number') {
-      throw 'BytebeatProcessorConstructor: Bytebeat function must return a number'
-    }
-    this.sampleRate = options.processorOptions.sampleRate || 44100
-    this.frequency = options.processorOptions.frequency || 440
+    this.beatcode = new Function('t,tt', options.processorOptions.beatcode)
+    this.sampleRate = options.processorOptions.sampleRate
+    this.frequency = options.processorOptions.frequency
     this.tDelta = this.frequency / this.sampleRate
     this.t = 0
     this.tt = 0
     this.tempo = options.processorOptions.tempo
-    this.ttDelta = this.tempo / this.sampleRate
+    this.ttDelta = this.tempo * 8192 / 120 / this.sampleRate
     this.startTime = Infinity
     this.stopTime = Infinity
     this.port.onmessage = event => {
