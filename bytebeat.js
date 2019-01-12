@@ -14,7 +14,7 @@ class BytebeatNode extends AudioWorkletNode {
       numberOfInputs: 0,
       numberOfOutputs: 1,
       processorOptions: {
-        beatcode: BytebeatNode.functionPrefix + bytebeat,
+        beatcode: BytebeatNode.wrapFunction(bytebeat),
         frequency: frequency,
         sampleRate: context.sampleRate,
         tempo: tempo,
@@ -37,12 +37,12 @@ class BytebeatNode extends AudioWorkletNode {
       stopTime: this.forceNum(stopTime)
     })
   }
-  static get functionPrefix () {
-    return `const sin=Math.sin,cos=Math.cos,PI=Math.PI,ceil=Math.ceil,
-    floor=Math.floor,tan=Math.tan,E=Math.E,exp=Math.exp,TAU=2*PI,
-    int=(x,i=0)=>typeof(x)==='number'?floor(x):x.charCodeAt(i)
-    return `
+  static wrapFunction (f) {
+    return `with (Math) {
+    const int=(x,i=0)=>typeof(x)==='number'?floor(x):x.charCodeAt(i)
+    return ${f}}`
   }
+
   /** Easy way of checking whether a bytebeat code is valid
   * @param {string} bytebeat
   * @return {boolean} Whether the string represents a valid bytebeat code
@@ -60,7 +60,7 @@ class BytebeatNode extends AudioWorkletNode {
   * @returns {function}
   */
   static evaluateBytebeat (bytebeat) {
-    const beatcode = new Function('t=0,tt=0', BytebeatNode.functionPrefix + bytebeat)
+    const beatcode = new Function('t=0,tt=0', this.wrapFunction(bytebeat))
     if (typeof (beatcode) !== 'function') {
       throw new SyntaxError('Bytebeat function definition must be a function')
     } else if (typeof (beatcode(0)) !== 'number') {

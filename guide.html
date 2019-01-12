@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+<meta charset="utf-8">
+<title>A Guide To Bytebeat</title>
+<script src="note.js" charset="utf-8"></script>
+<script src="bytebeat.js" charset="utf-8"></script>
+<script type="text/javascript">
+const audio = new (window.AudioContext || window.webkitAudioContext)(),
+  masterGain = new GainNode(audio, {gain: 0.5}).connect(audio.destination)
+let playingBytebeat
+</script>
+<style media="screen">
+body {
+  font-family: Carlito, sans-serif;
+  background-color: #10101d;
+  color: #e4dfd0;
+}
+h1, h2 {
+  font-family: Fira Code;
+}
+h2 {
+  font-size: 14pt;
+}
+code, output {
+  font-family: Fira Code, monospace;
+  color: #eff;
+}
+a {
+  color: #e4cf00;
+}
+a:hover {
+  color: #fb0;
+}
+a:visited {
+  color: #a7e;
+}
+canvas {
+  position: fixed;
+  top: 0;
+  z-index: -1;
+}
+main {
+  display: table;
+  margin: 0 auto;
+  margin-top: 290px;
+  padding-left: 2ch;
+  padding-right: 2ch;
+  background-color: #10101dcc;
+}
+p {
+  max-width: 80ch;
+}
+</style>
+</head>
+
+<body>
+
+<template id="bytebeat-player">
+<div class="bytebeat-player">
+  <input type="text" name="bytebeat" value="t & t >> 11">
+  <button type="button" name="play">▶</button>
+  <button type="button" name="stop">■</button>
+</div>
+</template>
+<script type="text/javascript">
+window.customElements.define('bytebeat-player',
+  class extends HTMLElement {
+    constructor () {
+      super()
+      let template = document.getElementById('bytebeat-player')
+      let templateContent = template.content
+      console.log(this)
+
+      const shadowRoot = this.attachShadow({mode: 'open'})
+        .appendChild(templateContent.cloneNode(true)
+    }
+  }
+)
+</script>
+
+<canvas id="notewave" width="600" height="400"></canvas>
+<script type="text/javascript">
+let canvas = document.getElementById('notewave'),
+  ctx = canvas.getContext('2d'),
+  emoji = '🎵'
+function resize () {
+  canvas.width = window.innerWidth
+  ctx.font = '48px serif'
+}
+resize()
+window.addEventListener('resize', resize)
+function draw (p) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  for (let i = -50; i<canvas.width+50; i+=50)
+  for (let j = 150; j<canvas.height-200; j+=50) {
+    let n = p / 800
+    ctx.save()
+    ctx.translate(i, j + 100 * Math.sin(i + n))
+    ctx.rotate(n * j / 70)
+    ctx.fillText(emoji, -24, 2)
+    ctx.restore()
+  }
+  window.requestAnimationFrame(draw)
+}
+draw()
+</script>
+<main>
+<h1>Bytebeat</h1>
+<article>
+<nav>
+<ul>
+<li><a href="#what">What is bytebeat?</a></li>
+<li><a href="#pwm">How is audio representated on computers?</a></li>
+<li><a href="#integers">Binary representation of integers</a></li>
+<li><a href="#arithmetic">Arithmetic operators</a></li>
+<li><a href="#logic">Logical operators</a></li>
+<li><a href="#oscillators">Oscillators</a></li>
+<li><a href="#music">Making music</a></li>
+<li><a href="#helpers">Helper functions</a></li>
+</ul>
+<a href="http://stellartux.github.io/websynth">&lt; Back</a>
+</nav>
+<section id="what">
+<h2>What is bytebeat?</h2>
+<bytebeat-player></bytebeat-player>
+
+</section>
+<section id="integers">
+<h2>Binary Integers</h2>
+<p></p>
+</section>
+<section id="arithmetic"><p>
+You know these ones already. Addition <code>+</code>, subtraction <code>-</code>, multiplication <code>*</code>, division <code>/</code>.
+Technically in "proper" integer arithmetic, division is truncated, so for example, <code>9 / 4</code> would return <output>2</output> as opposed to the
+<output>2.25</output> you might expect. That's how it works in C, and in most programming languages, but JavaScript automatically converts the integer to
+a floating point number for you, giving the answer that you'd normally expect. So</p>
+</section>
+<section id="logic">
+<h2>Logical operators</h2>
+<p></p>
+</section>
+<section id="oscillators">
+<h2>Oscillators</h2>
+</section>
+<section id="music">
+<h2>Making Music</h2>
+</section>
+<section id="helpers">
+<h2>Helper Functions</h2>
+<p>The <a href="https://mdn.io/math" target="_blank"><code>Math</code> object</a> is included, so <code>sin</code> calls <code>Math.sin</code>, <code>cos</code> calls <code>Math.cos</code>, etc.
+</p>
+<p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[(t>>10)%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
+</p><p>
+To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings, so that the above C behaviour can be imitated, for example the C code <code>"HEADACHE"[(t>>10)%8]*(0x70&t)</code> could be written as <code>int("HEADACHE",(t>>10)%8)*(0x70&t)</code>.
+</p>
+</section>
+</article>
+</main>
+
+</body>
+
+</html>

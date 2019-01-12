@@ -195,6 +195,7 @@ a:visited {
   box-sizing: border-box;
   border-radius: 8%;
 }
+
 #ebony .key {
   background-color: #333;
   z-index: 1;
@@ -246,4 +247,9 @@ a:visited {
 }
 #bytebeat-code.invalid {
   border-color: var(--bad);
+}
+
+details {
+  max-width: 60ch;
+  padding: 1ch; 
 }
