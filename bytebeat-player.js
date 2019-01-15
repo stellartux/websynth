@@ -14,7 +14,9 @@ customElements.define('bytebeat-player',
       shadow.appendChild(bytebeatInput)
 
       this.context = new (window.AudioContext || window.webkitAudioContext)()
-      this.context.audioWorklet.addModule('bytebeat-processor.js')
+      if (!!this.context.audioWorklet) {
+        this.context.audioWorklet.addModule('bytebeat-processor.js')
+      }
 
       const rate = document.createElement('input')
       rate.setAttribute('name', 'rate')

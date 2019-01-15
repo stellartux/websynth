@@ -18,7 +18,7 @@ h1, h2 {
 h2 {
   font-size: 14pt;
 }
-code, output {
+code {
   font-family: "Fira Code", monospace;
   color: #eff;
 }
@@ -43,9 +43,8 @@ main {
   padding-left: 2ch;
   padding-right: 2ch;
   background-color: #10101dcc;
-}
-p {
   max-width: 80ch;
+  width: 88vw;
 }
 </style>
 </head>
@@ -97,7 +96,11 @@ draw()
 </nav>
 <section id="what">
 <h2>What is bytebeat?</h2>
-Bytebeat is music generated
+<p>
+Bytebeat is music generated from short programs. Specifically, these programs generate PCM audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>.
+
+
+</p>
 <bytebeat-player>t & t >> 11</bytebeat-player>
 
 </section>
@@ -105,10 +108,13 @@ Bytebeat is music generated
 <h2>Binary Integers</h2>
 <p></p>
 </section>
-<section id="arithmetic"><p>
-You know these ones already. Addition <code>+</code>, subtraction <code>-</code>, multiplication <code>*</code>, division <code>/</code>.
-Technically in "proper" integer arithmetic, division is truncated, so for example, <code>9 / 4</code> would return <output>2</output> as opposed to the
-<output>2.25</output> you might expect. That's how it works in C, and in most programming languages, but JavaScript automatically converts the integer to
+<section id="arithmetic">
+<h2>Arithmetic Operators</h2>
+<p>
+You know these ones already. Addition <code>+</code>, subtraction <code>-</code>,
+multiplication <code>*</code>, division <code>/</code>.</p><p>
+Technically in "proper" integer arithmetic, division is truncated, so for example, <code>9 / 4</code> would return <code>2</code> as opposed to the
+<code>2.25</code> you might expect. That's how it works in C, and in most programming languages, but JavaScript automatically converts the integer to
 a float for you, giving the answer that you'd normally expect. </p>
 </section>
 <section id="logic">
