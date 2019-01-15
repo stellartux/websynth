@@ -1,4 +1,7 @@
 /**
+* A polyfill for BytebeatNode in systems that don't have AudioWorkletNode.
+* Instead of real time generation, a thirty second sample is generated
+*
 * BytebeatNode runs in the main scope. Error checking is performed in the main
 * scope before attempting to instantiate the function in the AudioWorkletScope
 * @param {AudioContext} context
@@ -7,36 +10,54 @@
 * @param {number} [tempo=120] The tempo that will be translated to counter 'tt'
 * @param {boolean} [floatMode=false] Whether the bytebeat function expects an output between 0:255 (default) or -1:1
 */
-class BytebeatNode extends AudioWorkletNode {
+class BytebeatNode {
   constructor (context, bytebeat, frequency = 8000, tempo = 120, floatMode = false) {
-    BytebeatNode.evaluateBytebeat(bytebeat)
-    super(context, 'bytebeat-processor', {
-      numberOfInputs: 0,
-      numberOfOutputs: 1,
-      processorOptions: {
-        beatcode: BytebeatNode.wrapFunction(bytebeat),
-        frequency: frequency,
-        sampleRate: context.sampleRate,
-        tempo: tempo,
-        floatMode: floatMode
-      }
+    this.context = context
+    this.beatcode = BytebeatNode.evaluateBytebeat(bytebeat)
+    this.sampleRate = this.context.sampleRate
+    this.timeDelta = frequency / this.sampleRate
+    this.time = 0
+    this.tempoTime = 0
+    this.tempoTimeDelta = tempo * 8192 / 120 / this.sampleRate
+    if (floatMode) {
+      this.postprocess = t => Math.min(1, Math.max(-1, t))
+    } else {
+      this.postprocess = t => (t % 256) / 128 - 1
+    }
+    this.buffer = this.context.createBuffer(1, this.sampleRate * 30, this.sampleRate)
+    this.buffer.getChannelData(0).forEach((v, i, p) => {
+      p[i] = this.postprocess(this.beatcode(this.time, this.tempoTime))
+      this.time += this.timeDelta
+      this.tempoTime += this.tempoTimeDelta
     })
+    this.connected = false
+    this.source = this.context.createBufferSource()
+    this.source.buffer = this.buffer
   }
+
   forceNum (value) {
     return typeof (value) === 'number' ? value : 0
   }
+
   start (startTime) {
-    this.port.postMessage({
-      message: 'start',
-      startTime: this.forceNum(startTime)
-    })
+    if (!this.connected) {
+      this.connect()
+    }
+    this.source.start(startTime)
   }
+
   stop (stopTime) {
-    this.port.postMessage({
-      message: 'stop',
-      stopTime: this.forceNum(stopTime)
-    })
+    if (this.source) {
+      this.source.stop(stopTime)
+      this.source = undefined
+    }
   }
+
+  connect (destination) {
+    this.source.connect(destination ? destination : this.context.destination)
+    this.connected = true
+  }
+
   static wrapFunction (f) {
     return `with (Math) {
     const int=(x,i=0)=>typeof(x)==='number'?floor(x):x.charCodeAt(i)
