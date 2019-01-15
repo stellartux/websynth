@@ -14,7 +14,7 @@ customElements.define('bytebeat-player',
       shadow.appendChild(bytebeatInput)
 
       this.context = new (window.AudioContext || window.webkitAudioContext)()
-      if (!!this.context.audioWorklet) {
+      if (this.context.audioWorklet) {
         this.context.audioWorklet.addModule('bytebeat-processor.js')
       }
 
@@ -22,39 +22,45 @@ customElements.define('bytebeat-player',
       rate.setAttribute('name', 'rate')
       rate.setAttribute('type', 'number')
       rate.setAttribute('min', '4000')
-      rate.setAttribute('max', this.context.sampleRate)
+      rate.setAttribute('max', '96000')
       rate.value = this.hasAttribute('samplerate')
         ? this.getAttribute('samplerate')
         : 8000
       shadow.appendChild(rate)
       this.rate = rate
 
+      this.lastValue = ''
       const playButton = document.createElement('button')
-      playButton.addEventListener('click', () => this.play())
-      playButton.textContent = '▶'
+      playButton.addEventListener('click', () => {
+        if (this.currentPlayingBytebeat && this.value !== this.lastValue) {
+          this.play()
+          this.lastValue = this.value
+        } else if (this.currentPlayingBytebeat) {
+          this.stop()
+        } else {
+          this.play()
+          this.lastValue = this.value
+        }
+      })
+      playButton.textContent = 'Play/Pause'
       shadow.appendChild(playButton)
-
-      const stopButton = document.createElement('button')
-      stopButton.addEventListener('click', () => this.stop())
-      stopButton.textContent = '■'
-      shadow.appendChild(stopButton)
 
     }
     get value () {
-      console.log(this.input.value);
       return this.input.value
     }
 
     play () {
-      if (this.currentPlayingBytebeat) {
-        this.stop()
-      }
+      this.stop()
       this.currentPlayingBytebeat = new BytebeatNode(this.context, this.value, this.rate.value)
       this.currentPlayingBytebeat.connect(this.context.destination)
       this.currentPlayingBytebeat.start()
     }
     stop () {
-      this.currentPlayingBytebeat.stop()
+      if (this.currentPlayingBytebeat) {
+        this.currentPlayingBytebeat.stop()
+        this.currentPlayingBytebeat = undefined
+      }
     }
   }
 )

@@ -518,7 +518,9 @@ window.onload = () => {
   })
   $('add-preset').addEventListener('click', addPreset)
   $('remove-preset').addEventListener('click', removePreset)
-  audio.audioWorklet.addModule('bytebeat-processor.js')
+  if (audio.audioWorklet) {
+    audio.audioWorklet.addModule('bytebeat-processor.js')
+  }
   WebMidi.enable(err => {
     if (err) {
       console.error('WebMidi could not be enabled.', err)
