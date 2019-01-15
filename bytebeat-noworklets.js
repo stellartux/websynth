@@ -4,6 +4,7 @@
 *
 * BytebeatNode runs in the main scope. Error checking is performed in the main
 * scope before attempting to instantiate the function in the AudioWorkletScope
+* @variation no AudioWorkletNode
 * @param {AudioContext} context
 * @param {string} bytebeat The bytebeat function to be played
 * @param {number} [frequency=8000] The fundamental frequency of the note to be played, used by 't'
