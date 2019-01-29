@@ -245,11 +245,11 @@ a:visited {
   width: 80ch;
   border-color: var(--good);
 }
-#bytebeat-code.invalid {
+#bytebeat-code:invalid {
   border-color: var(--bad);
 }
 
 details {
   max-width: 60ch;
-  padding: 1ch; 
+  padding: 1ch;
 }

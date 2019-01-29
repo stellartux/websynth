@@ -4,7 +4,6 @@
 <head>
 <meta charset="utf-8">
 <title>A Guide To Bytebeat</title>
-<script src="note.js" charset="utf-8"></script>
 <script src="bytebeat-compat.js" charset="utf-8"></script>
 <style media="screen">
 body {
@@ -40,6 +39,7 @@ main {
   display: table;
   margin: 0 auto;
   margin-top: 290px;
+  margin-bottom: 60px;
   padding-left: 2ch;
   padding-right: 2ch;
   background-color: #10101dcc;
@@ -104,18 +104,22 @@ Bytebeat is music generated from short programs. Specifically, these programs ge
 <bytebeat-player>t & t >> 11</bytebeat-player>
 
 </section>
+<section id="pwm">
+<h2>How is audio represented on computers?</h2>
+<p>
+
+</p>
+</section>
 <section id="integers">
 <h2>Binary Integers</h2>
-<p></p>
+<p>
+</p>
 </section>
 <section id="arithmetic">
 <h2>Arithmetic Operators</h2>
 <p>
-You know these ones already. Addition <code>+</code>, subtraction <code>-</code>,
-multiplication <code>*</code>, division <code>/</code>.</p><p>
-Technically in "proper" integer arithmetic, division is truncated, so for example, <code>9 / 4</code> would return <code>2</code> as opposed to the
-<code>2.25</code> you might expect. That's how it works in C, and in most programming languages, but JavaScript automatically converts the integer to
-a float for you, giving the answer that you'd normally expect. </p>
+You know these ones already. Addition <code>+</code>, subtraction <code>-</code>, multiplication <code>*</code>, division <code>/</code>.</p>
+<p> Technically in "proper" integer arithmetic, division is truncated, so for example, <code>9 / 4</code> would return <code>2</code> as opposed to the <code>2.25</code> you might expect. That's how it works in C, and in most programming languages, but JavaScript automatically converts the integer to a float for you, giving the answer that you'd normally expect. </p>
 </section>
 <section id="logic">
 <h2>Logical operators</h2>
@@ -129,13 +133,13 @@ a float for you, giving the answer that you'd normally expect. </p>
 </section>
 <section id="helpers">
 <h2>Helper Functions</h2>
-<p>The <a href="https://mdn.io/math" target="_blank"><code>Math</code> object</a> is included, so <code>sin</code> calls <code>Math.sin</code>, <code>cos</code> calls <code>Math.cos</code>, etc.
+<p>The <a href="https://mdn.io/math"><code>Math</code> object</a> is included, so <code>sin</code> calls <code>Math.sin</code>, <code>cos</code> calls <code>Math.cos</code>, etc.
 </p>
-<p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[(t>>10)%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
+<p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[(t>>11)%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
 </p><p>
-To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>10)%8]*(0x70&t)</code> could be written as <code>int("HEADACHE",(t>>10)%8)*(0x70&t)</code>.
+To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]*(0x70&t)</code> could be written as <code>int("HEADACHE",(t>>11)%8)*(0x70&t)</code>.
 </p>
-<bytebeat-player samplerate="11000">int("HEADACHE",(t>>10)%8)*(0x70&t)</bytebeat-player>
+<bytebeat-player samplerate="11000">int("HEADACHE",(t>>11)%8)*(0x70&t)</bytebeat-player>
 </section>
 </article>
 </main>

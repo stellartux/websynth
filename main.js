@@ -8,22 +8,108 @@
 * @param {number} [envelope.release=0.1]
 * @param {object[]} oscillators
 * @param {string} [oscillators.waveform='sine']
-* Options are 'sine', 'square', 'triangle', 'sawtooth'
+* Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
 * @param {number} [oscillators.gain=0.5]
 * @param {number} [oscillators.detune=0]
 * @param {number} [oscillators.note-offset=0]
 * @param {number} [oscillators.octave=0]
 * @param {boolean} [oscillators.invert-phase=false]
+* @param {string} [oscillators.bytebeatCode='']
+* @param {string} type='additive-oscillators'
+* Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
 */
 class Preset {
-  constructor (name, envelope, oscillators) {
+  constructor (name, envelope, oscillators, type = 'additive-oscillators') {
     if (!(envelope && oscillators)) {
-      throw 'Preset: Missing init params'
+      throw 'Preset: Constructor is missing necessary initialization parameters'
     }
     this.name = name
     this.envelope = envelope
     this.oscillators = oscillators
+    this.type = type
   }
+}
+
+/** Marshall the UI information
+* @return {Preset}
+*/
+function getPresetInfo () {
+  const type = $('source-select').value
+  let oscs = []
+  if (type === 'harmonic-series') {
+    // TODO
+  } else if (type === 'bytebeat') {
+    oscs.push({
+      bytebeatCode: $('bytebeat-code').value,
+      bytebeatMode: $('bytebeat-mode').value
+    })
+  } else {
+    for (const osc of $$('.oscillator')) {
+      let o = {}
+      o.waveform = osc.querySelector('.waveform').value
+      for (const param of osc.querySelectorAll('input')) {
+        o[param.className] = param.value
+      }
+      o['invert-phase'] = osc.querySelector('.invert-phase').checked
+      oscs.push(o)
+    }
+  }
+  return new Preset($('preset-name').value, Object.assign({}, envelope), oscs, type)
+}
+
+/** Adds a new oscillator panel to the UI window
+* @param {Preset} [preset]
+*/
+function addOscillator (preset) {
+  const c = document.importNode($('oscillator-template').content, true),
+    p = $('oscillator-panel')
+  c.querySelector('.remove-oscillator')
+    .addEventListener('click', e => p.removeChild(e.target.parentElement))
+  c.querySelector('.gain')
+    .addEventListener('dblclick', e => e.target.value = 0.5)
+  if (preset) {
+    for (const pp in preset) {
+      if (pp === 'invert-phase') c.querySelector('.invert-phase').checked = true
+      else c.querySelector('.' + pp).value = preset[pp]
+    }
+  }
+  p.appendChild(c)
+}
+
+/** Saves a preset to the custom presets list.
+* @param {Preset} preset The preset to be saved
+* @throws Unnamed presets can't be saved
+*/
+function addPreset (preset) {
+  if (!$('preset-name').value) throw "Unnamed preset can't be saved"
+  customPresets.push(getPresetInfo())
+  updateCustomPresets(customPresets, $('custom-presets'))
+}
+
+/** Remove the currently selected preset */
+function removePreset () {
+  const selected = $('preset-list').selectedOptions[0]
+  if (selected.parentElement.label === 'Custom Presets') {
+    customPresets.splice(selected.value, 1)
+    updateCustomPresets(customPresets, $('custom-presets'))
+  }
+}
+
+/** Load the settings of a preset to the page
+* @param {Preset} preset The preset to load
+*/
+function loadPreset (preset) {
+  changeCurrentView(preset.type || 'additive-oscillators')
+  switch (preset.type) {
+    case 'bytebeat':
+      $('bytebeat-code').value = preset.oscillators[0].bytebeatCode
+      $('bytebeat-mode').value = preset.oscillators[0].bytebeatMode
+      break
+    default:
+      removeChildren($('oscillator-panel'))
+      for (const osc of preset.oscillators) addOscillator(osc)
+  }
+  updateEnvelopeControls(preset.envelope)
 }
 
 let controller,
@@ -78,22 +164,41 @@ const $ = x => document.getElementById(x),
         { 'detune': 2, 'note-offset': 7, 'octave': 2, 'gain': 0.15 },
         { 'octave': 3, 'gain': 0.12 }
       ]
+    ),
+    new Preset(
+      'Sierpinski Harmony',
+      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      [
+        {
+          bytebeatCode: 't & t >> 8',
+          bytebeatMode: 'byte'
+        }
+      ],
+      'bytebeat'
+    ),
+    new Preset(
+      'Synced Sierpinski',
+      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      [
+        {
+          bytebeatCode: 't & tt >> 8',
+          bytebeatMode: 'byte'
+        }
+      ],
+      'bytebeat'
+    ),
+    new Preset(
+      'Headachegoldfish',
+      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      [
+        {
+          bytebeatCode: 'int("HEADACHEGOLDFISH",(tt>>10)%16)*(t&~7&0x1e70>>((tt>>15)%8))',
+          bytebeatMode: 'byte'
+        }
+      ],
+      'bytebeat'
     )
   ]
-
-function getPresetInfo () {
-  const oscs = []
-  for (const osc of $$('.oscillator')) {
-    let o = {}
-    o.waveform = osc.querySelector('.waveform').value
-    for (const param of osc.querySelectorAll('input')) {
-      o[param.className] = param.value
-    }
-    o['invert-phase'] = osc.querySelector('.invert-phase').checked
-    oscs.push(o)
-  }
-  return new Preset($('preset-name').value, Object.assign({}, envelope), oscs)
-}
 
 /** Release all currently playing notes */
 function releaseAllNotes () {
@@ -223,7 +328,7 @@ function noteOn (midiNum, velocity = 1) {
   if ($('source-select').value !== 'bytebeat') {
     playingNotes[midiNum] = new OscillatorNote(panner, noteParams, oscParams, Number($('tempo').value))
   } else {
-    if ($('bytebeat-code').isValid) {
+    if ($('bytebeat-code').validity.valid) {
       playingNotes[midiNum] = new BytebeatNote(panner, noteParams, [{
         bytebeat: $('bytebeat-code').value,
         frequency: MIDINumber.toFrequency(
@@ -276,52 +381,6 @@ function sostenutoPedalEvent (ev) {
     sostenutoNotes = playingNotes
     playingNotes = {}
   }
-}
-
-/** Adds a new oscillator panel to the UI window
-* @param {Preset} [preset]
-*/
-function addOscillator (preset) {
-  const c = document.importNode($('oscillator-template').content, true),
-    p = $('oscillator-panel')
-  c.querySelector('.remove-oscillator')
-    .addEventListener('click', e => p.removeChild(e.target.parentElement))
-  c.querySelector('.gain')
-    .addEventListener('dblclick', e => e.target.value = 0.5)
-  if (preset) {
-    for (const pp in preset) {
-      if (pp === 'invert-phase') c.querySelector('.invert-phase').checked = true
-      else c.querySelector('.' + pp).value = preset[pp]
-    }
-  }
-  p.appendChild(c)
-}
-
-/** Saves a preset to the custom presets list.
-* @param {Preset} preset The preset to be saved
-* @throws Unnamed presets can't be saved
-*/
-function addPreset (preset) {
-  if (!$('preset-name').value) throw "Unnamed preset can't be saved"
-  customPresets.push(getPresetInfo())
-}
-
-/** Remove the currently selected preset */
-function removePreset () {
-  const selected = $('preset-list').selectedOptions[0]
-  if (selected.parentElement.label === 'Custom Presets') {
-    delete customPresets[selected.value]
-    updateCustomPresets(customPresets, $('custom-presets'))
-  }
-}
-
-/** Load the settings of a preset to the page
-* @param {Preset} preset The preset to load
-*/
-function loadPreset (preset) {
-  removeChildren($('oscillator-panel'))
-  for (const osc of preset.oscillators) addOscillator(osc)
-  updateEnvelopeControls(preset.envelope)
 }
 
 /**
@@ -412,16 +471,13 @@ function setupKeypressKeymap () {
       noteOff(keyboardKeymap[e.key])
     }
   })
-  const bb = $('bytebeat-code')
-  bb.isValid = BytebeatNode.validateBytebeat(bb.value)
-  bb.oninput = e => {
-    bb.isValid = BytebeatNode.validateBytebeat(bb.value)
-    if (bb.isValid) {
-      bb.classList.remove('invalid')
-    } else {
-      bb.classList.add('invalid')
+  const bb = $('bytebeat-code'),
+    validate = () => {
+      bb.setCustomValidity(
+      BytebeatNode.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat')
     }
-  }
+  validate()
+  bb.oninput = validate
 }
 
 function setupGlobalEventListeners () {
@@ -452,6 +508,9 @@ function setupGlobalEventListeners () {
 * @param {string} viewId
 */
 function changeCurrentView (viewId) {
+  if ($('source-select').value !== viewId) {
+    $('source-select').value = viewId
+  }
   for (const el of $$('#audio-sources')[0].children) {
     if (el.id === viewId) {
       el.classList.remove('hidden')
@@ -477,10 +536,6 @@ function updateCustomPresets (presets, target) {
 
 /** Reload data from the previous session, if it exists */
 function loadPersistentState () {
-  if (window.localStorage.previousView !== undefined) {
-    $('source-select').value = JSON.parse(window.localStorage.previousView)
-    changeCurrentView($('source-select').value)
-  }
   if (window.localStorage.customPresets !== undefined) {
     customPresets = JSON.parse(window.localStorage.customPresets)
   }
@@ -488,9 +543,6 @@ function loadPersistentState () {
     loadPreset(JSON.parse(window.localStorage.persistentSettings))
   } else {
     loadPreset(factoryPresets[0])
-  }
-  if (window.localStorage.bytebeatCode !== undefined) {
-    $('bytebeat-code').value = JSON.parse(window.localStorage.bytebeatCode)
   }
 }
 
@@ -566,9 +618,4 @@ window.onload = () => {
 window.onunload = () => {
   window.localStorage.persistentSettings = JSON.stringify(getPresetInfo())
   window.localStorage.customPresets = JSON.stringify(customPresets)
-  window.localStorage.previousView = JSON.stringify($('source-select').value)
-  window.localStorage.bytebeatCode = JSON.stringify($('bytebeat-code').value)
 }
-
-// TODO: Change the persistence function
-// store all objects in $$('input') as input.id: input.value in localStorage
