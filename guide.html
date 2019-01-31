@@ -99,10 +99,12 @@ draw()
 <p>
 Bytebeat is music generated from short programs. Specifically, these programs generate PCM audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>, and every page I've seen mention bytebeat links back to it too, so I'll carry on the tradition.
 </p><p>
-To summarise that page, a bytebeat program is a piece of code, which when put in a loop that increments a value <code>t</code>, generates a piece of music. Below is Crowd, the first piece of bytebeat music.
-</p>
-<bytebeat-player>((t&lt;&lt;1)^((t&lt;&lt;1)+(t&gt;&gt;7)&t&gt;&gt;12))|t&gt;&gt;(4-(1^7&amp;(t&gt;&gt;19)))|t&gt;&gt;7</bytebeat-player>
+To summarise that page, a bytebeat program is a piece of code, which when put in a loop that increments a value <code>t</code>, generates a piece of music. Below is Crowd, one of the first pieces of bytebeat music discovered.
+</p><bytebeat-player>((t&lt;&lt;1)^((t&lt;&lt;1)+(t&gt;&gt;7)&t&gt;&gt;12))|t&gt;&gt;(4-(1^7&amp;(t&gt;&gt;19)))|t&gt;&gt;7</bytebeat-player>
 <sub>Crowd by Kragen, CC-BY</sub>
+<p>
+
+</p>
 </section>
 <section id="pcm">
 <h2>How is audio represented on computers?</h2>
@@ -137,9 +139,10 @@ You know these ones already. Addition <code>+</code>, subtraction <code>-</code>
 </p>
 <p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[(t>>11)%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
 </p><p>
-To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]*(0x70&t)</code> could be written as <code>int("HEADACHE",(t>>11)%8)*(0x70&t)</code>.
+To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]</code> could be written as <code>int("HEADACHE",(t>>11)%8)</code>.
 </p>
-<bytebeat-player samplerate="11000" length="6">int("HEADACHE",(t>>11)%8)*(0x70&t)</bytebeat-player>
+<bytebeat-player samplerate="14080" length="16">int("HEADACHEGOLDFISH",(tt>>10)%(8+(8&amp;((tt>>14)|(tt>>15)))))*(2**(n=2+((tt>>15-(3&tt>>18))%4))/3**n*n*t&amp;~7&0x1e70>>((tt>>16)%8))</bytebeat-player>
+<sub>Headache Goldfish by Stellartux, CC-BY</sub>
 </section>
 </article>
 </main>

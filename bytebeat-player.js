@@ -119,6 +119,12 @@ div {
   display: flex;
   justify-content: space-evenly;
 }
+[type="number"] {
+  width: 5ch;
+}
+[name="rate"] {
+  min-width: 8ch;
+}
       `
       shadow.appendChild(style)
       shadow.appendChild(main)

@@ -74,7 +74,7 @@ class BytebeatNode {
   static wrapFunction (f) {
     return `with (Math) {
     const int=(x,i=0)=>typeof(x)==='number'?floor(x):x.charCodeAt(i)
-    return ${f}}`
+    return (${f})}`
   }
 
   /** Easy way of checking whether a bytebeat code is valid
