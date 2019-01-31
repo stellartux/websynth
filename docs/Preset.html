@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Preset<span class="signature">(name, envelope, oscillators)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>Preset<span class="signature">(name, envelope, oscillators, type)</span><span class="type-signature"></span></h2>
         
             <div class="class-description">Type for storing envelope and oscillator preset information for recallinguser defined presets and UI persistence between sessions.</div>
         
@@ -45,7 +45,7 @@
     
 
     
-    <h4 class="name" id="Preset"><span class="type-signature"></span>new Preset<span class="signature">(name, envelope, oscillators)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Preset"><span class="type-signature"></span>new Preset<span class="signature">(name, envelope, oscillators, type)</span><span class="type-signature"></span></h4>
     
 
     
@@ -75,6 +75,8 @@
         
 
         
+        <th>Default</th>
+        
 
         <th class="last">Description</th>
     </tr>
@@ -100,6 +102,10 @@
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
             <td class="description last"></td>
         </tr>
@@ -122,6 +128,10 @@
 
             
 
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last">
@@ -332,6 +342,10 @@
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
             <td class="description last">
                 <h6>Properties</h6>
@@ -395,7 +409,7 @@
                 </td>
             
 
-            <td class="description last">Options are 'sine', 'square', 'triangle', 'sawtooth'</td>
+            <td class="description last">Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'</td>
         </tr>
 
     
@@ -594,10 +608,78 @@
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>bytebeatCode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
             </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    'additive-oscillators'
+                
+                </td>
+            
+
+            <td class="description last">Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'</td>
         </tr>
 
     
@@ -693,13 +775,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BytebeatNode.html">BytebeatNode</a></li><li><a href="BytebeatNode_.html">BytebeatNode</a></li><li><a href="BytebeatNote.html">BytebeatNote</a></li><li><a href="BytebeatProcessor.html">BytebeatProcessor</a></li><li><a href="Metronome.html">Metronome</a></li><li><a href="MIDINumber.html">MIDINumber</a></li><li><a href="Note.html">Note</a></li><li><a href="OscillatorNote.html">OscillatorNote</a></li><li><a href="Preset.html">Preset</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addOscillator">addOscillator</a></li><li><a href="global.html#addPreset">addPreset</a></li><li><a href="global.html#changeCurrentView">changeCurrentView</a></li><li><a href="global.html#loadPersistentState">loadPersistentState</a></li><li><a href="global.html#loadPreset">loadPreset</a></li><li><a href="global.html#releaseAllNotes">releaseAllNotes</a></li><li><a href="global.html#removePreset">removePreset</a></li><li><a href="global.html#setupControllerListeners">setupControllerListeners</a></li><li><a href="global.html#stopAllSound">stopAllSound</a></li><li><a href="global.html#updateChordDisplay">updateChordDisplay</a></li><li><a href="global.html#updateCustomPresets">updateCustomPresets</a></li><li><a href="global.html#updateEnvelope">updateEnvelope</a></li><li><a href="global.html#updateEnvelopeControls">updateEnvelopeControls</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BytebeatNode.html">BytebeatNode</a></li><li><a href="BytebeatNode_.html">BytebeatNode</a></li><li><a href="BytebeatNote.html">BytebeatNote</a></li><li><a href="BytebeatProcessor.html">BytebeatProcessor</a></li><li><a href="Metronome.html">Metronome</a></li><li><a href="MIDINumber.html">MIDINumber</a></li><li><a href="Note.html">Note</a></li><li><a href="OscillatorNote.html">OscillatorNote</a></li><li><a href="Preset.html">Preset</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addOscillator">addOscillator</a></li><li><a href="global.html#addPreset">addPreset</a></li><li><a href="global.html#changeCurrentView">changeCurrentView</a></li><li><a href="global.html#getPresetInfo">getPresetInfo</a></li><li><a href="global.html#loadPersistentState">loadPersistentState</a></li><li><a href="global.html#loadPreset">loadPreset</a></li><li><a href="global.html#releaseAllNotes">releaseAllNotes</a></li><li><a href="global.html#removePreset">removePreset</a></li><li><a href="global.html#setupControllerListeners">setupControllerListeners</a></li><li><a href="global.html#stopAllSound">stopAllSound</a></li><li><a href="global.html#updateChordDisplay">updateChordDisplay</a></li><li><a href="global.html#updateCustomPresets">updateCustomPresets</a></li><li><a href="global.html#updateEnvelope">updateEnvelope</a></li><li><a href="global.html#updateEnvelopeControls">updateEnvelopeControls</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 15 2019 15:33:08 GMT+0000 (GMT Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jan 31 2019 06:09:09 GMT+0000 (GMT Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
