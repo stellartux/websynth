@@ -10,9 +10,10 @@
 * @param {number} [frequency=8000] The fundamental frequency of the note to be played, used by 't'
 * @param {number} [tempo=120] The tempo that will be translated to counter 'tt'
 * @param {boolean} [floatMode=false] Whether the bytebeat function expects an output between 0:255 (default) or -1:1
+* @param {number} [bufferLength=2] Length of the buffer to render in seconds
 */
 class BytebeatNode {
-  constructor (context, bytebeat, frequency = 8000, tempo = 120, floatMode = false) {
+  constructor (context, bytebeat, frequency = 8000, tempo = 120, floatMode = false, bufferLength = 2) {
     this.context = context
     this.beatcode = BytebeatNode.evaluateBytebeat(bytebeat)
     this.sampleRate = this.context.sampleRate
@@ -25,9 +26,13 @@ class BytebeatNode {
     } else {
       this.postprocess = t => (t % 256) / 128 - 1
     }
-    this.buffer = this.context.createBuffer(1, this.sampleRate * 30, this.sampleRate)
+    this.buffer = this.context.createBuffer(1,
+      this.sampleRate * bufferLength,
+      this.sampleRate)
     this.buffer.getChannelData(0).forEach((v, i, p) => {
-      p[i] = this.postprocess(this.beatcode(this.time, this.tempoTime))
+      p[i] = this.postprocess(this.beatcode(
+        floatMode ? this.time : this.time | 0,
+        floatMode ? this.tempoTime : this.tempoTime | 0))
       this.time += this.timeDelta
       this.tempoTime += this.tempoTimeDelta
     })
@@ -54,8 +59,15 @@ class BytebeatNode {
     }
   }
 
-  connect (destination) {
-    this.source.connect(destination ? destination : this.context.destination)
+  restart (time = 0) {
+    this.source = this.context.createBufferSource()
+    this.source.buffer = this.buffer
+    this.connect()
+    this.start(time)
+  }
+
+  connect (destination = this.context.destination) {
+    this.source.connect(destination)
     this.connected = true
   }
 

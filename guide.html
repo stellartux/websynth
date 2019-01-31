@@ -84,7 +84,7 @@ draw()
 <nav>
 <ul>
 <li><a href="#what">What is bytebeat?</a></li>
-<li><a href="#pwm">How is audio represented on computers?</a></li>
+<li><a href="#pcm">How is audio represented on computers?</a></li>
 <li><a href="#integers">Binary representation of integers</a></li>
 <li><a href="#arithmetic">Arithmetic operators</a></li>
 <li><a href="#logic">Logical operators</a></li>
@@ -97,17 +97,17 @@ draw()
 <section id="what">
 <h2>What is bytebeat?</h2>
 <p>
-Bytebeat is music generated from short programs. Specifically, these programs generate PCM audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>.
-
-
+Bytebeat is music generated from short programs. Specifically, these programs generate PCM audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>, and every page I've seen mention bytebeat links back to it too, so I'll carry on the tradition.
+</p><p>
+To summarise that page, a bytebeat program is a piece of code, which when put in a loop that increments a value <code>t</code>, generates a piece of music. Below is Crowd, the first piece of bytebeat music.
 </p>
-<bytebeat-player>t & t >> 11</bytebeat-player>
-
+<bytebeat-player>((t&lt;&lt;1)^((t&lt;&lt;1)+(t&gt;&gt;7)&t&gt;&gt;12))|t&gt;&gt;(4-(1^7&amp;(t&gt;&gt;19)))|t&gt;&gt;7</bytebeat-player>
+<sub>Crowd by Kragen, CC-BY</sub>
 </section>
-<section id="pwm">
+<section id="pcm">
 <h2>How is audio represented on computers?</h2>
 <p>
-
+As a list of numbers, just like everything else. There are many different ways of
 </p>
 </section>
 <section id="integers">
@@ -139,7 +139,7 @@ You know these ones already. Addition <code>+</code>, subtraction <code>-</code>
 </p><p>
 To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]*(0x70&t)</code> could be written as <code>int("HEADACHE",(t>>11)%8)*(0x70&t)</code>.
 </p>
-<bytebeat-player samplerate="11000">int("HEADACHE",(t>>11)%8)*(0x70&t)</bytebeat-player>
+<bytebeat-player samplerate="11000" length="6">int("HEADACHE",(t>>11)%8)*(0x70&t)</bytebeat-player>
 </section>
 </article>
 </main>
