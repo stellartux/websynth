@@ -9,6 +9,7 @@ customElements.define('bytebeat-player',
       this.input = document.createElement('textarea')
       this.input.setAttribute('name', 'bytebeat')
       this.input.setAttribute('placeholder', 't => { // bytebeat }')
+      this.input.setAttribute('spellcheck', false)
       this.input.cols = 40
       this.input.rows = 1
       this.input.innerText = this.textContent
