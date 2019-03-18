@@ -30,16 +30,9 @@ a:hover {
 a:visited {
   color: #a7e;
 }
-canvas {
-  position: fixed;
-  top: 0;
-  z-index: -1;
-}
 main {
   display: table;
   margin: 0 auto;
-  margin-top: 290px;
-  margin-bottom: 60px;
   padding-left: 2ch;
   padding-right: 2ch;
   background-color: #10101dcc;
@@ -51,33 +44,6 @@ main {
 
 <body>
 
-<canvas id="notewave" width="600" height="400"></canvas>
-<script type="text/javascript">
-let canvas = document.getElementById('notewave'),
-  ctx = canvas.getContext('2d'),
-  emoji = '🎵'
-function resize () {
-  canvas.width = window.innerWidth
-  ctx.font = '48px serif'
-}
-resize()
-window.addEventListener('resize', resize)
-function draw (p) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  for (let i = -50; i<canvas.width+50; i+=50)
-  for (let j = 150; j<canvas.height-200; j+=50) {
-    let n = p / 800
-    ctx.save()
-    ctx.translate(i, j + 100 * Math.sin(i + n))
-    ctx.rotate(n * j / 70)
-    ctx.fillText(emoji, -24, 2)
-    ctx.restore()
-  }
-  window.requestAnimationFrame(draw)
-}
-draw()
-
-</script>
 <main>
 <h1>Bytebeat</h1>
 <article>
@@ -97,7 +63,7 @@ draw()
 <section id="what">
 <h2>What is bytebeat?</h2>
 <p>
-Bytebeat is music generated from short programs. Specifically, these programs generate PCM audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>, and every page I've seen mention bytebeat links back to it too, so I'll carry on the tradition.
+Bytebeat is music generated from short programs. Specifically, these programs generate <abbr title="pulse code modulation">PCM</abbr> audio as a function of time. The first explanation I ever read of bytebeat was <a href="http://canonical.org/~kragen/bytebeat/">this web page</a>, and every page I've seen mention bytebeat links back to it too, so I'll carry on the tradition.
 </p><p>
 To summarise that page, a bytebeat program is a piece of code, which when put in a loop that increments a value <code>t</code>, generates a piece of music. Below is Crowd, one of the first pieces of bytebeat music discovered.
 </p><bytebeat-player>((t&lt;&lt;1)^((t&lt;&lt;1)+(t&gt;&gt;7)&t&gt;&gt;12))|t&gt;&gt;(4-(1^7&amp;(t&gt;&gt;19)))|t&gt;&gt;7</bytebeat-player>
@@ -109,8 +75,14 @@ To summarise that page, a bytebeat program is a piece of code, which when put in
 <section id="pcm">
 <h2>How is audio represented on computers?</h2>
 <p>
-As a list of numbers, just like everything else. There are many different ways of
+As a list of numbers, just like everything else. The most common way of representing a waveform on a computer is called Linear Pulse Code Modulation, where the list of numbers are called samples and they represent discrete amplitude levels. The samples are spaced evenly in time.
+</p><p>
+The most common audio sampling encoding is signed integer 16-bit 44.1kHz, meaning that each sample lasts 1/44100 seconds (about 22 microseconds), and is an integer between -32768 and 32767. Larger bitdepths are typically represented with samples as floats between -1 and 1, allowing the signal to be described independently of the quantization step. The size of the quantization step is <code>0.5**(n-1)</code> where n is the bitdepth (0.000030517578125 for 16-bit).
+</p><p>
+The typical encoding used in bytebeat is unsigned integer 8-bit 8kHz, i.e. each sample is a value between 0 and 255, and is played for 1/8000th of a second (125 microseconds). This encoding is used because it is the default encoding used by aout on Linux, as it was the standard encoding when PCM sound cards first came to market.
 </p>
+<canvas id="canvas" width="300" height="300"></canvas>
+
 </section>
 <section id="integers">
 <h2>Binary Integers</h2>
@@ -141,7 +113,7 @@ You know these ones already. Addition <code>+</code>, subtraction <code>-</code>
 </p><p>
 To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]</code> could be written as <code>int("HEADACHE",(t>>11)%8)</code>.
 </p>
-<bytebeat-player samplerate="14080" length="16">int("HEADACHEGOLDFISH",(tt>>10)%(8+(8&amp;((tt>>14)|(tt>>15)))))*(2**(n=2+((tt>>15-(3&tt>>18))%4))/3**n*n*t&amp;~7&0x1e70>>((tt>>16)%8))</bytebeat-player>
+<bytebeat-player samplerate="14080" length="136">int("HEADACHEGOLDFISH",(tt>>10)%(8+(8&amp;((tt>>14)|(tt>>15)))))*(2**(n=2+((tt>>15-(3&tt>>18))%4))/3**n*n*t&amp;~7&0x1e70>>((tt>>16)%8))</bytebeat-player>
 <sub>Headache Goldfish by Stellartux, CC-BY</sub>
 </section>
 </article>
