@@ -57,8 +57,21 @@ Mode:
 </div>
 <details>
 <summary>?</summary>
-
-<p><a href="guide.html">More info on bytebeat</a></p>
+<p>If you're already familiar with bytebeat, this keyboard mode works similarly
+  to other JS bytebeat software, except <code>t</code> is incremented at a rate relative to
+  the note played on the keyboard, such that the bytebeat function <code>t</code> plays the same
+  pitch as the equivalent sawtooth wave in additive mode.
+</p>
+<p>There is also a second counter, <code>tt</code>, which is incremented so that
+  <code>1 & tt >> 11</code> produces quarter notes at the set tempo. This can be
+  used to produce rhythms that will be at the same tempo across all notes.
+  <code>tt</code> is incremented at 8kHz about 113bpm, 11kHz and multiples of
+  it about 163bpm.
+</p>
+<p>The <code>Math</code> object is included, as well as the function
+  <code>int(string, index)</code> for C-style char-to-int indexing and conversion.
+</p>
+<p>If you still have no idea what's going on, <a href="guide.html">here's a more in-depth guide.</a></p>
 </details>
 
 </div>
