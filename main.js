@@ -1,27 +1,29 @@
 /** Type for storing envelope and oscillator preset information for recalling
-* user defined presets and UI persistence between sessions.
-* @param {string} name
-* @param {object} envelope
-* @param {number} [envelope.attack=0.2]
-* @param {number} [envelope.decay=0.2]
-* @param {number} [envelope.sustain=0.4]
-* @param {number} [envelope.release=0.1]
-* @param {object[]} oscillators
-* @param {string} [oscillators.waveform='sine']
-* Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
-* @param {number} [oscillators.gain=0.5]
-* @param {number} [oscillators.detune=0]
-* @param {number} [oscillators.note-offset=0]
-* @param {number} [oscillators.octave=0]
-* @param {boolean} [oscillators.invert-phase=false]
-* @param {string} [oscillators.bytebeatCode='']
-* @param {string} type='additive-oscillators'
-* Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
-*/
+ * user defined presets and UI persistence between sessions.
+ * @param {string} name
+ * @param {object} envelope
+ * @param {number} [envelope.attack=0.2]
+ * @param {number} [envelope.decay=0.2]
+ * @param {number} [envelope.sustain=0.4]
+ * @param {number} [envelope.release=0.1]
+ * @param {object[]} oscillators
+ * @param {string} [oscillators.waveform='sine']
+ * Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
+ * @param {number} [oscillators.gain=0.5]
+ * @param {number} [oscillators.detune=0]
+ * @param {number} [oscillators.note-offset=0]
+ * @param {number} [oscillators.octave=0]
+ * @param {boolean} [oscillators.invert-phase=false]
+ * @param {string} [oscillators.bytebeatCode='']
+ * @param {string} type='additive-oscillators'
+ * Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
+ */
 class Preset {
-  constructor (name, envelope, oscillators, type = 'additive-oscillators') {
+  constructor(name, envelope, oscillators, type = 'additive-oscillators') {
     if (!(envelope && oscillators)) {
-      throw 'Preset: Constructor is missing necessary initialization parameters'
+      throw Error(
+        'Preset: Constructor is missing necessary initialization parameters'
+      )
     }
     this.name = name
     this.envelope = envelope
@@ -31,21 +33,21 @@ class Preset {
 }
 
 /** Marshall the UI information
-* @return {Preset}
-*/
-function getPresetInfo () {
+ * @return {Preset}
+ */
+function getPresetInfo() {
   const type = $('source-select').value
-  let oscs = []
+  const oscs = []
   if (type === 'harmonic-series') {
     // TODO
   } else if (type === 'bytebeat') {
     oscs.push({
       bytebeatCode: $('bytebeat-code').value,
-      bytebeatMode: $('bytebeat-mode').value
+      bytebeatMode: $('bytebeat-mode').value,
     })
   } else {
     for (const osc of $$('.oscillator')) {
-      let o = {}
+      const o = {}
       o.waveform = osc.querySelector('.waveform').value
       for (const param of osc.querySelectorAll('input')) {
         o[param.className] = param.value
@@ -54,19 +56,26 @@ function getPresetInfo () {
       oscs.push(o)
     }
   }
-  return new Preset($('preset-name').value, Object.assign({}, envelope), oscs, type)
+  return new Preset(
+    $('preset-name').value,
+    Object.assign({}, envelope),
+    oscs,
+    type
+  )
 }
 
 /** Adds a new oscillator panel to the UI window
-* @param {Preset} [preset]
-*/
-function addOscillator (preset) {
-  const c = document.importNode($('oscillator-template').content, true),
-    p = $('oscillator-panel')
-  c.querySelector('.remove-oscillator')
-    .addEventListener('click', e => p.removeChild(e.target.parentElement))
-  c.querySelector('.gain')
-    .addEventListener('dblclick', e => e.target.value = 0.5)
+ * @param {Preset} [preset]
+ */
+function addOscillator(preset) {
+  const c = document.importNode($('oscillator-template').content, true)
+  const p = $('oscillator-panel')
+  c.querySelector('.remove-oscillator').addEventListener('click', e =>
+    p.removeChild(e.target.parentElement)
+  )
+  c.querySelector('.gain').addEventListener('dblclick', e => {
+    e.target.value = 0.5
+  })
   if (preset) {
     for (const pp in preset) {
       if (pp === 'invert-phase') c.querySelector('.invert-phase').checked = true
@@ -77,17 +86,17 @@ function addOscillator (preset) {
 }
 
 /** Saves a preset to the custom presets list.
-* @param {Preset} preset The preset to be saved
-* @throws Unnamed presets can't be saved
-*/
-function addPreset (preset) {
-  if (!$('preset-name').value) throw "Unnamed preset can't be saved"
+ * @param {Preset} preset The preset to be saved
+ * @throws Unnamed presets can't be saved
+ */
+function addPreset(preset) {
+  if (!$('preset-name').value) throw Error("Unnamed preset can't be saved")
   customPresets.push(getPresetInfo())
   updateCustomPresets(customPresets, $('custom-presets'))
 }
 
 /** Remove the currently selected preset */
-function removePreset () {
+function removePreset() {
   const selected = $('preset-list').selectedOptions[0]
   if (selected.parentElement.label === 'Custom Presets') {
     customPresets.splice(selected.value, 1)
@@ -96,9 +105,9 @@ function removePreset () {
 }
 
 /** Load the settings of a preset to the page
-* @param {Preset} preset The preset to load
-*/
-function loadPreset (preset) {
+ * @param {Preset} preset The preset to load
+ */
+function loadPreset(preset) {
   changeCurrentView(preset.type || 'additive-oscillators')
   switch (preset.type) {
     case 'bytebeat':
@@ -112,117 +121,185 @@ function loadPreset (preset) {
   updateEnvelopeControls(preset.envelope)
 }
 
+/** an extension of the built-in Map object for keeping track of groups of pressed keys */
+class NoteMap extends Map {
+  release(num) {
+    const note = this.get(num)
+    note.releaseNote()
+    this.delete(num)
+    return note
+  }
+
+  releaseAll() {
+    this.forEach(n => n.releaseNote())
+    this.clear()
+  }
+
+  stop(num) {
+    this.get(num).stopNote()
+    this.delete(num)
+  }
+
+  stopAll() {
+    this.forEach(n => n.stopNote())
+    this.clear()
+  }
+
+  sustain(num) {
+    const note = this.get(num)
+    this.delete(num)
+    return note
+  }
+
+  sustainAll() {
+    const notes = []
+    this.forEach(n => {
+      notes.push(n)
+    })
+    this.clear()
+  }
+}
+
 let controller,
-  playingNotes = {},
-  sustainingNotes = {},
-  sostenutoNotes = {},
-  currentlyHeldKeys = {},
+  playingNotes = new NoteMap(),
+  sustainingNotes = new NoteMap(),
+  sostenutoNotes = new NoteMap(),
+  currentlyHeldKeys = new NoteMap(),
   envelope = {},
   pitchBend = 0,
   customPresets = []
 const $ = x => document.getElementById(x),
   $$ = x => Array.from(document.querySelectorAll(x)),
-  removeChildren = el => { while (el.firstChild) el.removeChild(el.firstChild) },
+  removeChildren = el => {
+    while (el.firstChild) el.removeChild(el.firstChild)
+  },
   audio = new (window.AudioContext || window.webkitAudioContext)(),
   pedals = { sustain: false, sostenuto: false, soft: false },
   panner = new StereoPannerNode(audio),
-  masterGain = new GainNode(audio, {gain: 0.5}),
+  masterGain = new GainNode(audio, { gain: 0.5 }),
   masterLevel = new AnalyserNode(audio),
   metronome = new Metronome(masterGain),
   keyboardKeymap = {
-    '\\': 59, z: 60, x: 62, c: 64, v: 65, b: 67, n: 69, m: 71, ',': 72, '.': 74,
-    '/': 76, q: 72, w: 74, e: 76, r: 77, t: 79, y: 81, u: 83, i: 84, o: 86,
-    p: 88, '[': 89, ']': 91, s: 61, d: 63, g: 66, h: 68, j: 70, l: 73, ';': 75,
-    2: 73, 3: 75, 5: 78, 6: 80, 7: 82, 9: 85, 0: 87, '=': 90
+    '\\': 59,
+    z: 60,
+    x: 62,
+    c: 64,
+    v: 65,
+    b: 67,
+    n: 69,
+    m: 71,
+    ',': 72,
+    '.': 74,
+    '/': 76,
+    q: 72,
+    w: 74,
+    e: 76,
+    r: 77,
+    t: 79,
+    y: 81,
+    u: 83,
+    i: 84,
+    o: 86,
+    p: 88,
+    '[': 89,
+    ']': 91,
+    s: 61,
+    d: 63,
+    g: 66,
+    h: 68,
+    j: 70,
+    l: 73,
+    ';': 75,
+    2: 73,
+    3: 75,
+    5: 78,
+    6: 80,
+    7: 82,
+    9: 85,
+    0: 87,
+    '=': 90,
   },
   factoryPresets = [
     new Preset(
       'Sinewave',
-      { 'attack': 0.2, 'decay': 0.2, 'sustain': 0.4, 'release': 0.3 },
-      [{ 'gain': 0.7 }]
+      { attack: 0.2, decay: 0.2, sustain: 0.4, release: 0.3 },
+      [{ gain: 0.7 }]
     ),
     new Preset(
       'Bowed Glass',
-      { 'attack': 0.62, 'decay': 0.15, 'sustain': 0.42, 'release': 0.32 },
+      { attack: 0.62, decay: 0.15, sustain: 0.42, release: 0.32 },
       [
-        { 'detune': -5 },
-        { 'detune': 5, 'invert-phase': true },
-        { 'waveform': 'triangle', 'octave': 1, 'gain': 0.2 }
+        { detune: -5 },
+        { detune: 5, 'invert-phase': true },
+        { waveform: 'triangle', octave: 1, gain: 0.2 },
       ]
     ),
     new Preset(
       'Church Organ',
-      { 'attack': 0.28, 'decay': 0.35, 'sustain': 0.29, 'release': 0.18 },
+      { attack: 0.28, decay: 0.35, sustain: 0.29, release: 0.18 },
       [
-        { 'octave': -1, 'gain': 0.35 },
-        { 'detune': 2, 'note-offset': 7, 'gain': 0.25 },
-        { 'gain': 0.2 },
-        { 'octave': 1, 'gain': 0.2 },
-        { 'detune': 2, 'note-offset': 7, 'octave': 1, 'gain': 0.2 },
-        { 'octave': 2, 'gain': 0.15 },
-        { 'detune': -14, 'note-offset': 4, 'octave': 2, 'gain': 0.15 },
-        { 'detune': 2, 'note-offset': 7, 'octave': 2, 'gain': 0.15 },
-        { 'octave': 3, 'gain': 0.12 }
+        { octave: -1, gain: 0.35 },
+        { detune: 2, 'note-offset': 7, gain: 0.25 },
+        { gain: 0.2 },
+        { octave: 1, gain: 0.2 },
+        { detune: 2, 'note-offset': 7, octave: 1, gain: 0.2 },
+        { octave: 2, gain: 0.15 },
+        { detune: -14, 'note-offset': 4, octave: 2, gain: 0.15 },
+        { detune: 2, 'note-offset': 7, octave: 2, gain: 0.15 },
+        { octave: 3, gain: 0.12 },
       ]
     ),
     new Preset(
       'Sierpinski Harmony',
-      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
       [
         {
           bytebeatCode: 't & t >> 8',
-          bytebeatMode: 'byte'
-        }
+          bytebeatMode: 'byte',
+        },
       ],
       'bytebeat'
     ),
     new Preset(
       'Synced Sierpinski',
-      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
       [
         {
           bytebeatCode: 't & tt >> 8',
-          bytebeatMode: 'byte'
-        }
+          bytebeatMode: 'byte',
+        },
       ],
       'bytebeat'
     ),
     new Preset(
       'Headachegoldfish',
-      {attack: 0, decay: 0.15, sustain: 0.75, release: 0.04},
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
       [
         {
-          bytebeatCode: 'int("HEADACHEGOLDFISH",(tt>>10)%16)*(t&~7&0x1e70>>((tt>>15)%8))',
-          bytebeatMode: 'byte'
-        }
+          bytebeatCode:
+            'int("HEADACHEGOLDFISH",(tt>>10)%16)*(t&~7&0x1e70>>((tt>>15)%8))',
+          bytebeatMode: 'byte',
+        },
       ],
       'bytebeat'
-    )
+    ),
   ]
 
 /** Release all currently playing notes */
-function releaseAllNotes () {
-  for (const n of playingNotes) {
-    n.releaseNote()
-  }
-  playingNotes = {}
+function releaseAllNotes() {
+  playingNotes.releaseAll()
   updateChordDisplay()
 }
 
 /** Stop all sound immediately */
-function stopAllSound () {
+function stopAllSound() {
   for (const ns of [playingNotes, sustainingNotes, sostenutoNotes]) {
-    for (const n of ns) {
-      n.stopNote()
-    }
+    ns.stopAll()
   }
-  playingNotes = {}
-  sustainingNotes = {}
-  sostenutoNotes = {}
   updateChordDisplay()
 }
 
-function channelMode (_ev) {
+function channelMode(_ev) {
   switch (_ev.controller.number) {
     case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allsoundoff:
       stopAllSound()
@@ -235,7 +312,7 @@ function channelMode (_ev) {
   }
 }
 
-function controlChange (_ev) {
+function controlChange(_ev) {
   switch (_ev.controller.number) {
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.holdpedal:
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.hold2pedal:
@@ -255,7 +332,7 @@ function controlChange (_ev) {
 }
 
 /** Sync the envelope object to the UI */
-function updateEnvelope (_ev) {
+function updateEnvelope(_ev) {
   if (_ev) {
     envelope[_ev.target.id] = Number(_ev.target.value)
   } else {
@@ -266,7 +343,7 @@ function updateEnvelope (_ev) {
 }
 
 /** Sync the UI to a modified envelope object */
-function updateEnvelopeControls (newEnv) {
+function updateEnvelopeControls(newEnv) {
   if (newEnv) envelope = newEnv
   for (const c of $$('#envelope-controls input')) {
     c.value = envelope[c.id]
@@ -274,8 +351,8 @@ function updateEnvelopeControls (newEnv) {
 }
 
 /** Sync the chord displayed in the UI with the currently playing notes */
-function updateChordDisplay () {
-  const notes = Object.keys(playingNotes),
+function updateChordDisplay() {
+  const notes = [...playingNotes.keys()].sort(),
     sharp = $('sharp-or-flat').checked,
     short = MIDINumber.toChord(notes, sharp, false),
     long = MIDINumber.toChord(notes, sharp, true),
@@ -284,39 +361,76 @@ function updateChordDisplay () {
   return chord
 }
 
-function noteOn (midiNum, velocity = 1) {
-  const oscParams = []
-  if ($('source-select').value === 'additive-oscillators') {
-    for (const panel of $$('.oscillator')) {
+/** Audio source functions for different audio generation techniques */
+const noteSources = {
+  'additive-oscillators': {
+    class: OscillatorNote,
+    oscParams: midiNum => {
+      const oscParams = []
+      for (const panel of $$('.oscillator')) {
+        oscParams.push({
+          type: panel.querySelector('.waveform').value,
+          detune: panel.querySelector('.detune').value,
+          frequency: MIDINumber.toFrequency(
+            Number(panel.querySelector('.note-offset').value) +
+              midiNum +
+              Number($('note-offset').value) +
+              (Number(panel.querySelector('.octave').value) +
+                Number($('octave').value)) *
+                12
+          ),
+          gain:
+            panel.querySelector('.gain').value *
+            (panel.querySelector('.invert-phase').checked ? -1 : 1),
+        })
+      }
+      return oscParams
+    },
+  },
+  'harmonic-series': {
+    class: OscillatorNote,
+    oscParams: midiNum => {
+      const oscParams = [],
+        reals = [],
+        imags = []
       oscParams.push({
-        type: panel.querySelector('.waveform').value,
-        detune: panel.querySelector('.detune').value,
+        type: 'custom',
+        real: [0, 1, 0.5, 0.25, 0.125, 0.0125],
+        imag: [0, 0, 0, 0, 0, 0],
         frequency: MIDINumber.toFrequency(
-          Number(panel.querySelector('.note-offset').value) +
           midiNum +
-          Number($('note-offset').value) +
-          (Number(panel.querySelector('.octave').value) +
-          Number($('octave').value)) * 12
+            Number($('note-offset').value) +
+            Number($('octave').value) * 12
         ),
-        gain: panel.querySelector('.gain').value *
-          (panel.querySelector('.invert-phase').checked ? -1 : 1)
+        gain: 1,
       })
-    }
-  } else if ($('source-select').value === 'harmonic-series') {
-    oscParams.push({
-      type: 'custom',
-      real: [0, 1, 0.5, 0.25, 0.125, 0.0125],
-      imag: [0, 0, 0, 0, 0, 0],
-      frequency: MIDINumber.toFrequency(
-        midiNum +
-        Number($('note-offset').value) +
-        Number($('octave').value) * 12
-      ),
-      gain: 1
-    })
-  }
+      return oscParams
+    },
+  },
+  bytebeat: {
+    class: BytebeatNote,
+    oscParams: midiNum => {
+      return [
+        {
+          bytebeat: $('bytebeat-code').value,
+          frequency: MIDINumber.toFrequency(
+            midiNum +
+              Number($('note-offset').value) +
+              (Number($('octave').value) + 8) * 12
+          ),
+          tempo: Number($('tempo').value),
+          floatMode: $('bytebeat-mode').value === 'float',
+        },
+      ]
+    },
+  },
+}
 
-  let noteParams = Object.assign({}, envelope)
+function noteOn(midiNum, velocity = 1) {
+  const source = $('source-select').value
+  if (source === 'bytebeat' && !$('bytebeat-code').validity.valid) return
+  let noteParams = Object.assign({}, envelope),
+    oscParams = noteSources[source].oscParams(midiNum)
   noteParams.triggerTime = audio.currentTime
   if ($('velocity-sensitive').checked) {
     noteParams.velocity = velocity
@@ -325,54 +439,38 @@ function noteOn (midiNum, velocity = 1) {
     noteParams.velocity *= 0.66
     noteParams.attack *= 1.333
   }
-  if ($('source-select').value !== 'bytebeat') {
-    playingNotes[midiNum] = new OscillatorNote(panner, noteParams, oscParams, Number($('tempo').value))
-  } else {
-    if ($('bytebeat-code').validity.valid) {
-      playingNotes[midiNum] = new BytebeatNote(panner, noteParams, [{
-        bytebeat: $('bytebeat-code').value,
-        frequency: MIDINumber.toFrequency(
-          midiNum +
-          Number($('note-offset').value) +
-          (Number($('octave').value) + 8) * 12
-        ),
-        tempo: Number($('tempo').value),
-        floatMode: $('bytebeat-mode').value === 'float'
-      }])
-    }
-  }
-
+  playingNotes.set(
+    midiNum,
+    new noteSources[source].class(panner, noteParams, oscParams)
+  )
   updateChordDisplay()
   $(MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
 }
 
-function noteOff (midiNum) {
-  if (pedals.sustain && !sustainingNotes[midiNum]) {
-    sustainingNotes[midiNum] = playingNotes[midiNum]
-  } else if (playingNotes[midiNum]) {
-    playingNotes[midiNum].releaseNote()
+function noteOff(midiNum) {
+  if (pedals.sustain && !sustainingNotes.has(midiNum)) {
+    sustainingNotes.set(midiNum, playingNotes.release(midiNum))
+  } else if (playingNotes.has(midiNum)) {
+    playingNotes.release(midiNum)
   }
-  delete playingNotes[midiNum]
   updateChordDisplay()
   $(MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
 }
 
-function sustainPedalEvent (ev) {
+function sustainPedalEvent(ev) {
   if (pedals.sustain && ev.value < 64) {
     pedals.sustain = false
-    for (let n in sustainingNotes) {
-      sustainingNotes[n].releaseNote()
-      delete sustainingNotes[n]
-    }
+    sustainingNotes.forEach(n => n.releaseNote())
+    sustainingNotes.clear()
   } else if (!pedals.sustain && ev.value > 63) {
     pedals.sustain = true
   }
 }
 
-function sostenutoPedalEvent (ev) {
+function sostenutoPedalEvent(ev) {
   if (pedals.sostenuto && ev.value < 64) {
     pedals.sostenuto = false
-    for (let n in sostenutoNotes) {
+    for (const n in sostenutoNotes) {
       sostenutoNotes[n].releaseNote()
       delete sostenutoNotes[n]
     }
@@ -384,18 +482,19 @@ function sostenutoPedalEvent (ev) {
 }
 
 /**
-* Sets up event listeners to link MIDI events with the appropriate actions
-* @param {string|number} [channel='all'] MIDI channel to listen for events on
-*/
-function setupControllerListeners (channel = 'all') {
-  controller.addListener('noteon', channel,
-    e => noteOn(e.note.number, e.velocity))
+ * Sets up event listeners to link MIDI events with the appropriate actions
+ * @param {string|number} [channel='all'] MIDI channel to listen for events on
+ */
+function setupControllerListeners(channel = 'all') {
+  controller.addListener('noteon', channel, e =>
+    noteOn(e.note.number, e.velocity)
+  )
   controller.addListener('noteoff', channel, e => noteOff(e.note.number))
   controller.addListener('controlchange', channel, controlChange)
   controller.addListener('channelmode', channel, channelMode)
 }
 
-function setupDisplayKeyboard (maxKeys = 88, lowNote = 21) {
+function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
   removeChildren($('ebony'))
   removeChildren($('ivory'))
   const keyWidth = (12 / 7) * (95 / maxKeys)
@@ -441,13 +540,16 @@ function setupDisplayKeyboard (maxKeys = 88, lowNote = 21) {
   }
 }
 
-function generateColorPalette (seed = Math.random() * Math.PI * 2) {
-  const palette = [], j = 2 * Math.PI / 3,
-    magic = f => (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
+function generateColorPalette(seed = Math.random() * Math.PI * 2) {
+  const palette = [],
+    j = (2 * Math.PI) / 3
+  const magic = f =>
+    (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
   for (let i = 0; i < 12; i++) {
-    let f = i + seed, c = []
+    let f = i + seed,
+      c = []
     for (let k = 0; k < 3; k++) {
-      c.push(magic(f += j))
+      c.push(magic((f += j)))
     }
     f -= j
     palette.push('rgb(' + c.join() + ')')
@@ -455,12 +557,16 @@ function generateColorPalette (seed = Math.random() * Math.PI * 2) {
   return palette
 }
 
-function setupKeypressKeymap () {
+function setupKeypressKeymap() {
   document.addEventListener('keydown', e => {
-    if (Object.keys(keyboardKeymap).includes(e.key)
-    && !e.altKey && !e.shiftKey && !e.ctrlKey
-    && !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key])
-    && e.target.tagName !== 'INPUT') {
+    if (
+      Object.keys(keyboardKeymap).includes(e.key) &&
+      !e.altKey &&
+      !e.shiftKey &&
+      !e.ctrlKey &&
+      !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key]) &&
+      e.target.tagName !== 'INPUT'
+    ) {
       currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
       noteOn(keyboardKeymap[e.key])
     }
@@ -474,13 +580,14 @@ function setupKeypressKeymap () {
   const bb = $('bytebeat-code'),
     validate = () => {
       bb.setCustomValidity(
-      BytebeatNode.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat')
+        BytebeatNode.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat'
+      )
     }
   validate()
   bb.oninput = validate
 }
 
-function setupGlobalEventListeners () {
+function setupGlobalEventListeners() {
   $('master-gain').addEventListener('change', e => {
     masterGain.gain.value = e.target.value
   })
@@ -501,13 +608,15 @@ function setupGlobalEventListeners () {
   $('tempo').addEventListener('change', e => {
     metronome.tempo = e.target.value
   })
-  $('source-select').addEventListener('change', e => changeCurrentView(e.target.value))
+  $('source-select').addEventListener('change', e =>
+    changeCurrentView(e.target.value)
+  )
 }
 
 /** Hides all audio source UI except the one with the matching ID
-* @param {string} viewId
-*/
-function changeCurrentView (viewId) {
+ * @param {string} viewId
+ */
+function changeCurrentView(viewId) {
   if ($('source-select').value !== viewId) {
     $('source-select').value = viewId
   }
@@ -521,13 +630,13 @@ function changeCurrentView (viewId) {
 }
 
 /** Attach preset <option>s to <select>.
-* @param {Preset[]} presets
-* @param {DOMElement} target
-*/
-function updateCustomPresets (presets, target) {
+ * @param {Preset[]} presets
+ * @param {DOMElement} target
+ */
+function updateCustomPresets(presets, target) {
   removeChildren(target)
   presets.forEach((preset, index) => {
-    let el = document.createElement('option')
+    const el = document.createElement('option')
     el.textContent = preset.name
     el.value = index
     target.appendChild(el)
@@ -535,7 +644,7 @@ function updateCustomPresets (presets, target) {
 }
 
 /** Reload data from the previous session, if it exists */
-function loadPersistentState () {
+function loadPersistentState() {
   if (window.localStorage.customPresets !== undefined) {
     customPresets = JSON.parse(window.localStorage.customPresets)
   }
@@ -563,8 +672,10 @@ window.onload = () => {
   updateCustomPresets(customPresets, $('custom-presets'))
   $('load-preset').addEventListener('click', () => {
     const selected = $('preset-list').selectedOptions[0],
-      storage = selected.parentElement.label === 'Factory Presets' ?
-        factoryPresets : customPresets,
+      storage =
+        selected.parentElement.label === 'Factory Presets'
+          ? factoryPresets
+          : customPresets,
       currentPreset = storage[selected.value]
     if (currentPreset) loadPreset(currentPreset)
   })

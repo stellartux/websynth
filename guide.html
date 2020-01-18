@@ -68,9 +68,6 @@ Bytebeat is music generated from short programs. Specifically, these programs ge
 To summarise that page, a bytebeat program is a piece of code, which when put in a loop that increments a value <code>t</code>, generates a piece of music. Below is Crowd, one of the first pieces of bytebeat music discovered.
 </p><bytebeat-player>((t&lt;&lt;1)^((t&lt;&lt;1)+(t&gt;&gt;7)&t&gt;&gt;12))|t&gt;&gt;(4-(1^7&amp;(t&gt;&gt;19)))|t&gt;&gt;7</bytebeat-player>
 <sub>Crowd by Kragen, CC-BY</sub>
-<p>
-
-</p>
 </section>
 <section id="pcm">
 <h2>How is audio represented on computers?</h2>
@@ -81,8 +78,6 @@ The most common audio sampling encoding is signed integer 16-bit 44.1kHz, meanin
 </p><p>
 The typical encoding used in bytebeat is unsigned integer 8-bit 8kHz, i.e. each sample is a value between 0 and 255, and is played for 1/8000th of a second (125 microseconds). This encoding is used because it is the default encoding used by aout on Linux, as it was the standard encoding when PCM sound cards first came to market.
 </p>
-<canvas id="canvas" width="300" height="300"></canvas>
-
 </section>
 <section id="integers">
 <h2>Binary Integers</h2>

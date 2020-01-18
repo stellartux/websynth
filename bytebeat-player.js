@@ -1,8 +1,9 @@
-customElements.define('bytebeat-player',
+customElements.define(
+  'bytebeat-player',
   class extends HTMLElement {
-    constructor () {
+    constructor() {
       super()
-      const shadow = this.attachShadow({mode: 'open'})
+      const shadow = this.attachShadow({ mode: 'open' })
       const main = document.createElement('main')
       this.hasChanged = false
 
@@ -31,7 +32,7 @@ customElements.define('bytebeat-player',
       rate.value = this.hasAttribute('samplerate')
         ? this.getAttribute('samplerate')
         : 8000
-      rate.onchange = () => this.hasChanged = true
+      rate.onchange = () => (this.hasChanged = true)
       rateLabel.appendChild(rate)
       options.appendChild(rateLabel)
       this.rate = rate
@@ -46,7 +47,7 @@ customElements.define('bytebeat-player',
       tempo.value = this.hasAttribute('tempo')
         ? this.getAttribute('tempo')
         : 120
-      tempo.onchange = () => this.hasChanged = true
+      tempo.onchange = () => (this.hasChanged = true)
       tempoLabel.appendChild(tempo)
       options.appendChild(tempoLabel)
       this.tempo = tempo
@@ -62,11 +63,11 @@ customElements.define('bytebeat-player',
       beatType.appendChild(optFloat)
       beatLabel.appendChild(beatType)
       options.appendChild(beatLabel)
-      beatType.onchange = () => this.hasChanged = true
+      beatType.onchange = () => (this.hasChanged = true)
       this.beatType = beatType
 
       this.context = new (window.AudioContext || window.webkitAudioContext)()
-      this.usingPolyfill = !(this.context.audioWorklet)
+      this.usingPolyfill = !this.context.audioWorklet
       if (this.usingPolyfill) {
         const lengthLabel = document.createElement('label')
         lengthLabel.innerText = 'Length: '
@@ -74,13 +75,18 @@ customElements.define('bytebeat-player',
         length.setAttribute('name', 'length')
         length.setAttribute('type', 'number')
         length.setAttribute('min', 1)
-        length.value = this.hasAttribute('length') ?
-          this.getAttribute('length') : 30
-        length.onchange = () => this.hasChanged = true
+        length.value = this.hasAttribute('length')
+          ? this.getAttribute('length')
+          : 30
+        length.onchange = () => (this.hasChanged = true)
         options.appendChild(lengthLabel).appendChild(length)
         Object.defineProperty(this, 'renderLength', {
-          get () { return length.value },
-          set (v) { length.value = v }
+          get() {
+            return length.value
+          },
+          set(v) {
+            length.value = v
+          },
         })
       } else {
         this.context.audioWorklet.addModule('bytebeat-processor.js')
@@ -130,22 +136,26 @@ div {
       shadow.appendChild(style)
       shadow.appendChild(main)
     }
-    get value () {
+    get value() {
       return this.input.value
     }
-    set value (v) {
+    set value(v) {
       this.input.value = v
     }
-    get isPlaying () {
+    get isPlaying() {
       return this._isPlaying
     }
-    set isPlaying (v) {
+    set isPlaying(v) {
       this._isPlaying = v
       this.speakerIcon.style.visibility = v ? '' : 'hidden'
     }
 
-    play () {
-      if (this.usingPolyfill && !this.hasChanged && this.currentPlayingBytebeat) {
+    play() {
+      if (
+        this.usingPolyfill &&
+        !this.hasChanged &&
+        this.currentPlayingBytebeat
+      ) {
         this.currentPlayingBytebeat.restart()
         this.currentPlayingBytebeat.source.onended = () => {
           this.isPlaying = false
@@ -171,15 +181,16 @@ div {
       this.hasChanged = false
       this.isPlaying = true
     }
-    stop () {
+    stop() {
       if (this.currentPlayingBytebeat) {
         this.currentPlayingBytebeat.stop()
       }
       this.isPlaying = false
     }
-    validate () {
+    validate() {
       this.input.setCustomValidity(
-        BytebeatNode.validateBytebeat(this.value) ? '' : 'Invalid bytebeat')
+        BytebeatNode.validateBytebeat(this.value) ? '' : 'Invalid bytebeat'
+      )
     }
   }
 )
