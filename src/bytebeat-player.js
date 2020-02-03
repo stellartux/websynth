@@ -1,3 +1,5 @@
+import { BytebeatNode, BytebeatNote } from './bytebeat-note.js'
+
 customElements.define(
   'bytebeat-player',
   class extends HTMLElement {
@@ -67,6 +69,14 @@ customElements.define(
       this.beatType = beatType
 
       this.context = new (window.AudioContext || window.webkitAudioContext)()
+      this.limiter = new DynamicsCompressorNode(this.context, {
+        attack: 0,
+        knee: 0,
+        ratio: 20,
+        release: 0,
+        threshold: -0.3,
+      })
+      this.limiter.connect(this.context.destination)
       this.usingPolyfill = !this.context.audioWorklet
       if (this.usingPolyfill) {
         const lengthLabel = document.createElement('label')
@@ -175,7 +185,7 @@ div {
             this.isPlaying = false
           }
         }
-        this.currentPlayingBytebeat.connect(this.context.destination)
+        this.currentPlayingBytebeat.connect(this.limiter)
         this.currentPlayingBytebeat.start()
       }
       this.hasChanged = false

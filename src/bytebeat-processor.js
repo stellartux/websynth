@@ -46,21 +46,26 @@ class BytebeatProcessor extends AudioWorkletProcessor {
   process(inputs, outputs) {
     const output = outputs[0]
     if (currentTime >= this.startTime) {
+      let lastT
+      let lastTt
+      let data
       for (let i = 0; i < output[0].length; ++i) {
-        const data = this.postprocess(
-          this.beatcode(Math.floor(this.t), Math.floor(this.tt))
-        )
-        for (let channel = 0; channel < output.length; ++channel) {
-          output[channel][i] = data
+        const t = Math.floor(this.t)
+        const tt = Math.floor(this.tt)
+        if (t !== lastT || tt !== lastTt) {
+          data = this.postprocess(this.beatcode(t, tt))
+          lastT = t
+          lastTt = tt
+        }
+        for (const channel of output) {
+          channel[i] = data
         }
         this.t += this.tDelta
         this.tt += this.ttDelta
       }
     } else {
-      for (let channel = 0; channel < output.length; ++channel) {
-        for (let i = 0; i < output[channel].length; ++i) {
-          output[channel][i] = 0
-        }
+      for (const channel of output) {
+        channel.fill(0)
       }
     }
     return currentTime < this.stopTime

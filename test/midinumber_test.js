@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  test,
-  runTests,
-} from 'https://deno.land/std/testing/mod.ts'
+import { assertEquals, test, runTests } from '../deps.ts'
 import { MIDINumber } from '../src/midinumber.js'
 
 test({
@@ -31,6 +27,9 @@ test({
     assertEquals(MIDINumber.toChord([60, 64, 67]), 'C')
     assertEquals(MIDINumber.toChord([61, 65, 68]), 'C♯')
     assertEquals(MIDINumber.toChord([61, 65, 68], false), 'D♭')
+    assertEquals(MIDINumber.toChord([48, 52, 55, 59]), 'CM7')
+    assertEquals(MIDINumber.toChord([33, 36, 40, 43]), 'Am7')
   },
 })
+
 if (import.meta.main) runTests()

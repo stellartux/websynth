@@ -1,3 +1,9 @@
+import { BytebeatNote } from './src/bytebeat-note.js'
+import { OscillatorNote } from './src/oscillator-note.js'
+import { Metronome } from './src/metronome.js'
+import { MIDINumber } from './src/midinumber.js'
+import { BytebeatUtils } from './src/bytebeat-utils.js'
+
 /** Type for storing envelope and oscillator preset information for recalling
  * user defined presets and UI persistence between sessions.
  * @param {string} name
@@ -179,6 +185,13 @@ const $ = x => document.getElementById(x),
   masterGain = new GainNode(audio, { gain: 0.5 }),
   masterLevel = new AnalyserNode(audio),
   metronome = new Metronome(masterGain),
+  limiter = new DynamicsCompressorNode(audio, {
+    attack: 0,
+    knee: 0,
+    ratio: 20,
+    release: 0.01,
+    threshold: -2,
+  }),
   keyboardKeymap = {
     '\\': 59,
     z: 60,
@@ -577,12 +590,12 @@ function setupKeypressKeymap() {
       noteOff(keyboardKeymap[e.key])
     }
   })
-  const bb = $('bytebeat-code'),
-    validate = () => {
-      bb.setCustomValidity(
-        BytebeatNode.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat'
-      )
-    }
+  const bb = $('bytebeat-code')
+  const validate = () => {
+    bb.setCustomValidity(
+      BytebeatUtils.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat'
+    )
+  }
   validate()
   bb.oninput = validate
 }
@@ -657,7 +670,8 @@ function loadPersistentState() {
 
 window.onload = () => {
   panner.connect(masterGain)
-  masterGain.connect(masterLevel)
+  masterGain.connect(limiter)
+  limiter.connect(masterLevel)
   masterLevel.connect(audio.destination)
   setupGlobalEventListeners()
   $('add-oscillator').addEventListener('click', () => addOscillator())
@@ -682,7 +696,7 @@ window.onload = () => {
   $('add-preset').addEventListener('click', addPreset)
   $('remove-preset').addEventListener('click', removePreset)
   if (audio.audioWorklet) {
-    audio.audioWorklet.addModule('bytebeat-processor.js')
+    audio.audioWorklet.addModule('./src/bytebeat-processor.js')
   }
   WebMidi.enable(err => {
     if (err) {

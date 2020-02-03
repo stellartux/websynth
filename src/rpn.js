@@ -1,11 +1,18 @@
+/**
+ * Functions for interpreting Reverse Polish Notation code
+ * @namespace RPN
+ */
 export const RPN = {
   validate: function(code) {
+    if (/\)[^\s)]/.test(code)) return false
+    code = this.desugar(code)
     return /^((SQRT1(_2)?|LOG10E|LN(2|10)|E|PI|random|abs|sqrt|cbrt|round|a?tan(h|2)?|log|exp|a?sinh?|a?cosh?|floor|ceil|int|trunc|min|max|pow|sign|pick|put|dup|drop|swap|tt|t|-?\d+\.\d+|-?\d+|>>|<<|&&|\|\||[-\/+*=&^|~><%])(?: |$))+/.test(
       code
     )
   },
-  interpret: function(code) {
+  interpret: function(code, t = 0, tt = 0) {
     if (!this.validate(code)) throw Error('invalid code')
+    code = this.desugar(code)
     for (const i of code.split(' ')) {
       if (/^-?\d+/.test(i)) {
         this.stack.push(Number(i))
@@ -13,6 +20,12 @@ export const RPN = {
         let x
         let y
         switch (i) {
+          case 't':
+            this.stack.push(t)
+            break
+          case 'tt':
+            this.stack.push(tt)
+            break
           case '+':
             this.stack.push(this.stack.pop() + this.stack.pop())
             break
@@ -79,7 +92,6 @@ export const RPN = {
           case 'floor':
           case 'round':
           case 'sqrt':
-          case 'floor':
           case 'ceil':
           case 'sin':
           case 'cos':
@@ -162,7 +174,7 @@ export const RPN = {
     reset: function() {
       this.data.fill(0)
       this.pointer = 0
-    }
+    },
   },
   glitchOpcodes: {
     a: 't',
@@ -187,35 +199,138 @@ export const RPN = {
     u: '=',
     '!': '\n',
   },
+  /** Tests to make sure the RPN code only contains Glitch compatible keywords */
   isValidGlitchCode: function(code) {
-    return /^((pick|put|dup|drop|swap|t|-?\d+|>>|<<|&&|\|\||[-\/+*=&^|~><%])(?: |$))+/.test(
-      code
+    return /^((pick|put|dup|drop|swap|t|-?\d+|>>|<<||[-\/+*=&^|~><%])(?:\s+|$))+/.test(
+      this.desugar(code)
     )
   },
   toGlitchURL: function(code, name = '') {
+    code = this.desugar(code)
     if (!this.isValidGlitchCode(code))
       throw Error("Can't be converted to glitch URL")
     return `glitch://${name}!`.concat(
       Array.from(
         code.match(
-          /(pick|put|dup|drop|swap|t|-?\d+|>>|<<|&&|\n|\|\||[-\/+*=&^|~><%])( |$)/gi
+          /(pick|put|dup|drop|swap|t|-?\d+|>>|<<|\n||[-\/+*=&^|~><%])(\s+|$)/gi
         )
       )
-      .map(v => v.trim())
-      .map((v, i, a) => (/\d/.test(v) && /\d/.test(a[i + 1]) ? v + '.' : v))
-      .map(v =>
-        Object.values(this.glitchOpcodes).includes(v)
-          ? Object.keys(this.glitchOpcodes)[
-              Object.values(this.glitchOpcodes).indexOf(v)
-            ]
-          : v
-      )
-      .join('')
+        .map(v => v.trim())
+        .map((v, i, a) => {
+          if (/\d/.test(v)) {
+            const x = v.toString(16).toUpperCase()
+            return /\d/.test(a[i + 1]) ? x + '.' : x
+          } else {
+            return v
+          }
+        })
+        .map(v =>
+          Object.values(this.glitchOpcodes).includes(v)
+            ? Object.keys(this.glitchOpcodes)[
+                Object.values(this.glitchOpcodes).indexOf(v)
+              ]
+            : v
+        )
+        .join('')
     )
   },
   fromGlitchURL: function(glitch) {
-    const [, name, code] = glitch.match(/^glitch:\/\/([^!]*)!(.*)$/)[2]
-
-  }
+    const [, name, code] = glitch.match(/^(?:glitch:\/\/)?([^!]*)!(.*)$/)
+    return [
+      name,
+      code
+        .match(/[\dA-F]+|[a-hj-u!]/g)
+        .map(c =>
+          /[\dA-F]+/.test(c) ? parseInt(c, 16) : this.glitchOpcodes[c]
+        )
+        .join(' ')
+        .replace(/\n /g, '\n'),
+    ]
+  },
+  glitchOpnames: {
+    '+': 'add',
+    '-': 'subtract',
+    '*': 'multiply',
+    '/': 'divide',
+    '%': 'modulo',
+    '~': 'bitwiseInvert',
+    '>>': 'shiftRight',
+    '<<': 'shiftLeft',
+    '&': 'bitwiseAnd',
+    '|': 'bitwiseOr',
+    '^': 'bitwiseXor',
+    '=': 'equal',
+    '>': 'greaterThan',
+    '<': 'lessThan',
+    drop: 'drop',
+    dup: 'dup',
+    swap: 'swap',
+    pick: 'pick',
+    put: 'put',
+  },
+  /**
+   * Converts s-expressions to RPN stack ordered instructions
+   *
+   * @param {string} code
+   * @returns {string} the desugared code string
+   * @example
+   * RPN.desugar('(+ 1 1)') // returns '1 1 +'
+   * RPN.desugar('(* (+ 2 3) (- 5 1))') // return '3 2 + 5 1 - *'
+   **/
+  desugar: function(code) {
+    while (/\(.*\)/.test(code)) {
+      code = code.replace(/\(([^(]+?) ([^()]+)\)/g, '$2 $1')
+    }
+    return code
+  },
+  get glitchMachine() {
+    delete this.glitchMachine
+    fetch('./src/rpn.wasm')
+      .then(response => response.arrayBuffer())
+      .then(bytes => WebAssembly.instantiate(bytes))
+      .then(results => (this.glitchMachine = results.instance.exports))
+  },
+  set glitchMachine(x) {
+    delete this.glitchMachine
+    this.glitchMachine = x
+  },
+  /**
+   * Interpret Glitch semantics code with wasm interpreter.
+   * If wasm is not supported, falls back to the JS interpreter.
+   *
+   * @param {string} code the code
+   * @param {number} [t = 0] value of t to be used by the passed code
+   * @param {string} [outputType = 'byte']
+   **/
+  glitchInterpret: function(code, t = 0, outputType = 'byte') {
+    code = this.desugar(code)
+    if (this.isValidGlitchCode(code) && this.glitchMachine) {
+      for (const inst of code.split(/\s+/)) {
+        if (inst === 't') {
+          this.glitchMachine.push(Number(t))
+        } else if (inst in this.glitchOpnames) {
+          this.glitchMachine[this.glitchOpnames[inst]]()
+        } else {
+          this.glitchMachine.push(Number(inst))
+        }
+      }
+      switch (outputType) {
+        case 'float32':
+          return this.glitchMachine.popFloat32()
+        case 'float32byte':
+          return this.glitchMachine.popFloat32Byte()
+        case 'uint32':
+          return this.glitchMachine.popUint32()
+        case 'byte:':
+        default:
+          return this.glitchMachine.popByte()
+      }
+    }
+  },
+  isValidGlitchURL: function(url) {
+    return /^(glitch:\/\/)?[^!]*![a-hj-u!A-F\d.]+$/.test(url)
+  },
 }
+RPN.glitchInterpret('1')
+
 export { RPN as default }

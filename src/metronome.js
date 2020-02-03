@@ -2,13 +2,17 @@
  * @param {(AudioContext|AudioNode)} target output destination for audio
  * @param {number} [tempo=120] Tempo of metronome in bpm
  */
-class Metronome {
+export class Metronome {
   constructor(target, tempo = 120) {
     this.context = target.context || target
     this.target = target.destination || target
-    this.period = 60000 / tempo
+    this.tempo = tempo
     this.active = false
-    this.buffer = this.context.createBuffer(1, Math.floor(1024 * this.context.sampleRate / 44100), this.context.sampleRate)
+    this.buffer = this.context.createBuffer(
+      1,
+      Math.floor((1024 * this.context.sampleRate) / 44100),
+      this.context.sampleRate
+    )
     this.buffer.getChannelData(0).forEach((_, i, samples) => {
       samples[i] = (1 - (i + 1) / samples.length) * (Math.random() * 2 - 1)
     })
