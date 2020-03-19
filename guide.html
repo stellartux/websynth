@@ -4,7 +4,6 @@
 <head>
 <meta charset="utf-8">
 <title>A Guide To Bytebeat</title>
-<script src="bytebeat-compat.js" charset="utf-8"></script>
 <style media="screen">
 body {
   font-family: "Carlito", sans-serif;
@@ -79,6 +78,7 @@ The most common audio sampling encoding is signed integer 16-bit 44.1kHz, meanin
 The typical encoding used in bytebeat is unsigned integer 8-bit 8kHz, i.e. each sample is a value between 0 and 255, and is played for 1/8000th of a second (125 microseconds). This encoding is used because it is the default encoding used by aout on Linux, as it was the standard encoding when PCM sound cards first came to market.
 </p>
 </section>
+<!--
 <section id="integers">
 <h2>Binary Integers</h2>
 <p>
@@ -100,11 +100,12 @@ You know these ones already. Addition <code>+</code>, subtraction <code>-</code>
 <section id="music">
 <h2>Making Music</h2>
 </section>
+-->
 <section id="helpers">
 <h2>Helper Functions</h2>
 <p>The <a href="https://mdn.io/math"><code>Math</code> object</a> is included, so <code>sin</code> calls <code>Math.sin</code>, <code>cos</code> calls <code>Math.cos</code>, etc.
 </p>
-<p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[(t>>11)%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
+<p>In C, it is possible to parse a character as an integer. Some bytebeat composers use this to index into a string to iterate through a list of integers in a compact syntax. For example, in C, <code>"HEADACHE"[t%8]</code> would produce the numbers <code>[72, 69, 65, 68, 65, 67, 72, 69]</code> repeatedly, the ASCII character codes for the letters "HEADACHE".
 </p><p>
 To imitate this behaviour in JavaScript, the function <code>int</code> works as <code>Math.floor</code> for numbers, and as <code>(x,i) => x.charCodeAt(i)</code> for strings. For example the C code <code>"HEADACHE"[(t>>11)%8]</code> could be written as <code>int("HEADACHE",(t>>11)%8)</code>.
 </p>
@@ -114,7 +115,7 @@ To imitate this behaviour in JavaScript, the function <code>int</code> works as 
 </article>
 </main>
 
-<script src="bytebeat-player.js" charset="utf-8"></script>
+<script src="/src/bytebeat-player.js" type="module" charset="utf-8"></script>
 </body>
 
 </html>
