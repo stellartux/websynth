@@ -1,4 +1,4 @@
-import { assertEquals, test, runTests } from '../deps.ts'
+import { assertEquals, test } from '../deps.ts'
 import { MIDINumber } from '../src/midinumber.js'
 
 test({
@@ -32,4 +32,4 @@ test({
   },
 })
 
-if (import.meta.main) runTests()
+if (import.meta.main) Deno.runTests()

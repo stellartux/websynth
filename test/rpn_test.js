@@ -1,10 +1,4 @@
-import {
-  assert,
-  assertEquals,
-  assertNotEquals,
-  test,
-  runIfMain,
-} from '../deps.ts'
+import { assert, assertEquals, test } from '../deps.ts'
 import { RPN } from '../src/rpn.js'
 import * as RPNWASM from '../src/rpn.wasm'
 RPN.glitchMachine = RPNWASM
@@ -103,4 +97,4 @@ test({
   },
 })
 
-runIfMain(import.meta)
+if (import.meta.main) Deno.runTests()
