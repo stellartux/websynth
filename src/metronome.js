@@ -38,17 +38,16 @@ export class Metronome {
 
   start() {
     this.active = true
-    this.keepTicking()
-  }
-
-  /** Makes ticking noises while the metronome is active
-   * @private
-   */
-  keepTicking() {
-    if (this.active) {
-      this.tick()
-      window.setTimeout(() => this.keepTicking(), this.period)
+    /** Makes ticking noises while the metronome is active
+     * @private
+     */
+    const keepTicking = () => {
+      if (this.active) {
+        this.tick()
+        window.setTimeout(keepTicking, this.period)
+      }
     }
+    keepTicking()
   }
 
   stop() {
