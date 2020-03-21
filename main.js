@@ -2,7 +2,7 @@ import { BytebeatNote } from './src/bytebeat-note.js'
 import { OscillatorNote } from './src/oscillator-note.js'
 import { Metronome } from './src/metronome.js'
 import { MIDINumber } from './src/midinumber.js'
-import { BytebeatUtils } from './src/bytebeat-utils.js'
+import { validateBytebeat } from './src/bytebeat-utils.js'
 
 /** Type for storing envelope and oscillator preset information for recalling
  * user defined presets and UI persistence between sessions.
@@ -602,9 +602,7 @@ function setupKeypressKeymap() {
   })
   const bb = $('#bytebeat-code')
   const validate = () => {
-    bb.setCustomValidity(
-      BytebeatUtils.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat'
-    )
+    bb.setCustomValidity(validateBytebeat(bb.value) ? '' : 'Invalid bytebeat')
   }
   validate()
   bb.oninput = validate

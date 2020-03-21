@@ -1,4 +1,5 @@
 import { BytebeatNode } from './bytebeat-note.js'
+import { validateBytebeat } from './bytebeat-utils.js'
 
 customElements.define(
   'bytebeat-player',
@@ -199,7 +200,7 @@ div {
     }
     validate() {
       this.input.setCustomValidity(
-        BytebeatNode.validateBytebeat(this.value) ? '' : 'Invalid bytebeat'
+        validateBytebeat(this.value) ? '' : 'Invalid bytebeat'
       )
     }
   }

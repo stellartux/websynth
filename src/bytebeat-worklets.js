@@ -1,4 +1,6 @@
-import { BytebeatUtils } from './bytebeat-utils.js'
+function forceNum(value) {
+  return typeof value === 'number' ? value : 0
+}
 
 /**
  * BytebeatNode runs in the main scope. Error checking is performed in the main
@@ -17,12 +19,11 @@ export class BytebeatNode extends AudioWorkletNode {
     tempo = 120,
     floatMode = false
   ) {
-    BytebeatUtils.evaluateBytebeat(bytebeat)
     super(context, 'bytebeat-processor', {
       numberOfInputs: 0,
       numberOfOutputs: 1,
       processorOptions: {
-        beatcode: BytebeatUtils.wrapFunction(bytebeat),
+        beatcode: bytebeat,
         frequency: frequency,
         sampleRate: context.sampleRate,
         tempo: tempo,
@@ -34,14 +35,14 @@ export class BytebeatNode extends AudioWorkletNode {
   start(startTime) {
     this.port.postMessage({
       message: 'start',
-      startTime: BytebeatUtils.forceNum(startTime),
+      startTime: forceNum(startTime),
     })
   }
 
   stop(stopTime) {
     this.port.postMessage({
       message: 'stop',
-      stopTime: BytebeatUtils.forceNum(stopTime),
+      stopTime: forceNum(stopTime),
     })
   }
 }

@@ -1,10 +1,10 @@
-import { bench } from 'https://deno.land/std/testing/bench.ts'
-import { BytebeatUtils } from '../src/bytebeat-utils.js'
+import { bench, runBenchmarks } from '../deps.ts'
+import { evaluateBytebeat } from '../src/bytebeat-utils.js'
 import { RPN } from '../src/rpn.js'
 import * as RPNWASM from '../src/rpn.wasm'
 RPN.glitchMachine = RPNWASM
 RPN.glitchInterpret('1')
-const f = BytebeatUtils.evaluateBytebeat('((t >> 10) & 42) * t')
+const f = evaluateBytebeat('((t >> 10) & 42) * t')
 
 bench({
   name: 'RPN.interpret() - 1s of 128-sample buffers',
@@ -74,4 +74,4 @@ bench({
   },
 })
 
-if (import.meta.main) Deno.runTests()
+if (import.meta.main) runBenchmarks()

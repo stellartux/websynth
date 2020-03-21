@@ -1,7 +1,4 @@
-import {
-  assert,
-  assertEquals,
-} from 'https://deno.land/std@v0.36.0/testing/asserts.ts'
+import { assert, assertEquals } from '../deps.ts'
 import { LEB128 } from '../src/leb128.js'
 
 const randInt = (max, min = 0) => Math.floor(Math.random() * (max - min)) + min

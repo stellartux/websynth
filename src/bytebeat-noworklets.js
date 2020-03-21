@@ -1,4 +1,4 @@
-import { BytebeatUtils } from './bytebeat-utils.js'
+import { evaluateBytebeat } from './bytebeat-utils.js'
 
 /**
  * A polyfill for BytebeatNode in systems that don't have AudioWorkletNode.
@@ -22,7 +22,7 @@ export class BytebeatNode {
     bufferLength = 2
   ) {
     this.context = context
-    this.beatcode = BytebeatUtils.evaluateBytebeat(bytebeat)
+    this.beatcode = evaluateBytebeat(bytebeat)
     this.sampleRate = this.context.sampleRate
     this.timeDelta = frequency / this.sampleRate
     this.time = 0
