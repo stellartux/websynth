@@ -42,28 +42,29 @@ class Preset {
  * @return {Preset}
  */
 function getPresetInfo() {
-  const type = $('source-select').value
+  const type = $('#source-select').value
   const oscs = []
+  const options = {}
   if (type === 'harmonic-series') {
     // TODO
   } else if (type === 'bytebeat') {
     oscs.push({
-      bytebeatCode: $('bytebeat-code').value,
-      bytebeatMode: $('bytebeat-mode').value,
+      bytebeatCode: $('#bytebeat-code').value,
+      bytebeatMode: $('#bytebeat-mode').value,
     })
   } else {
     for (const osc of $$('.oscillator')) {
       const o = {}
-      o.waveform = osc.querySelector('.waveform').value
-      for (const param of osc.querySelectorAll('input')) {
+      o.waveform = $('.waveform', osc).value
+      for (const param of $$('input', osc)) {
         o[param.className] = param.value
       }
-      o['invert-phase'] = osc.querySelector('.invert-phase').checked
+      o['invert-phase'] = $('.invert-phase', osc).checked
       oscs.push(o)
     }
   }
   return new Preset(
-    $('preset-name').value,
+    $('#preset-name').value,
     Object.assign({}, envelope),
     oscs,
     type
@@ -74,18 +75,18 @@ function getPresetInfo() {
  * @param {Preset} [preset]
  */
 function addOscillator(preset) {
-  const c = document.importNode($('oscillator-template').content, true)
-  const p = $('oscillator-panel')
-  c.querySelector('.remove-oscillator').addEventListener('click', e =>
+  const c = document.importNode($('#oscillator-template').content, true)
+  const p = $('#oscillator-panel')
+  $('.remove-oscillator', c).addEventListener('click', e =>
     p.removeChild(e.target.parentElement)
   )
-  c.querySelector('.gain').addEventListener('dblclick', e => {
+  $('.gain', c).addEventListener('dblclick', e => {
     e.target.value = 0.5
   })
   if (preset) {
     for (const pp in preset) {
-      if (pp === 'invert-phase') c.querySelector('.invert-phase').checked = true
-      else c.querySelector('.' + pp).value = preset[pp]
+      if (pp === 'invert-phase') $('.invert-phase', c).checked = true
+      else $('.' + pp, c).value = preset[pp]
     }
   }
   p.appendChild(c)
@@ -96,17 +97,17 @@ function addOscillator(preset) {
  * @throws Unnamed presets can't be saved
  */
 function addPreset(preset) {
-  if (!$('preset-name').value) throw Error("Unnamed preset can't be saved")
+  if (!$('#preset-name').value) throw Error("Unnamed preset can't be saved")
   customPresets.push(getPresetInfo())
-  updateCustomPresets(customPresets, $('custom-presets'))
+  updateCustomPresets(customPresets, $('#custom-presets'))
 }
 
 /** Remove the currently selected preset */
 function removePreset() {
-  const selected = $('preset-list').selectedOptions[0]
+  const selected = $('#preset-list').selectedOptions[0]
   if (selected.parentElement.label === 'Custom Presets') {
     customPresets.splice(selected.value, 1)
-    updateCustomPresets(customPresets, $('custom-presets'))
+    updateCustomPresets(customPresets, $('#custom-presets'))
   }
 }
 
@@ -114,14 +115,18 @@ function removePreset() {
  * @param {Preset} preset The preset to load
  */
 function loadPreset(preset) {
-  changeCurrentView(preset.type || 'additive-oscillators')
+  changeCurrentView(
+    preset.type || 'additive-oscillators',
+    'source-select',
+    'audio-sources'
+  )
   switch (preset.type) {
     case 'bytebeat':
-      $('bytebeat-code').value = preset.oscillators[0].bytebeatCode
-      $('bytebeat-mode').value = preset.oscillators[0].bytebeatMode
+      $('#bytebeat-code').value = preset.oscillators[0].bytebeatCode
+      $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
       break
     default:
-      removeChildren($('oscillator-panel'))
+      removeChildren($('#oscillator-panel'))
       for (const osc of preset.oscillators) addOscillator(osc)
   }
   updateEnvelopeControls(preset.envelope)
@@ -174,8 +179,8 @@ let controller,
   envelope = {},
   pitchBend = 0,
   customPresets = []
-const $ = x => document.getElementById(x),
-  $$ = x => Array.from(document.querySelectorAll(x)),
+const $ = (selector, parent = document) => parent.querySelector(selector),
+  $$ = (s, p = document) => Array.from(p.querySelectorAll(s)),
   removeChildren = el => {
     while (el.firstChild) el.removeChild(el.firstChild)
   },
@@ -366,11 +371,11 @@ function updateEnvelopeControls(newEnv) {
 /** Sync the chord displayed in the UI with the currently playing notes */
 function updateChordDisplay() {
   const notes = [...playingNotes.keys()].sort(),
-    sharp = $('sharp-or-flat').checked,
+    sharp = $('#sharp-or-flat').checked,
     short = MIDINumber.toChord(notes, sharp, false),
     long = MIDINumber.toChord(notes, sharp, true),
     chord = short === long ? short : short + ' : ' + long
-  $('chord-name').value = chord
+  $('#chord-name').value = chord
   return chord
 }
 
@@ -382,19 +387,18 @@ const noteSources = {
       const oscParams = []
       for (const panel of $$('.oscillator')) {
         oscParams.push({
-          type: panel.querySelector('.waveform').value,
-          detune: panel.querySelector('.detune').value,
+          type: $('.waveform', panel).value,
+          detune: $('.detune', panel).value,
           frequency: MIDINumber.toFrequency(
-            Number(panel.querySelector('.note-offset').value) +
+            Number($('.note-offset', panel).value) +
               midiNum +
-              Number($('note-offset').value) +
-              (Number(panel.querySelector('.octave').value) +
-                Number($('octave').value)) *
+              Number($('#note-offset').value) +
+              (Number($('.octave', panel).value) + Number($('#octave').value)) *
                 12
           ),
           gain:
-            panel.querySelector('.gain').value *
-            (panel.querySelector('.invert-phase').checked ? -1 : 1),
+            $('.gain', panel).value *
+            ($('.invert-phase', panel).checked ? -1 : 1),
         })
       }
       return oscParams
@@ -412,8 +416,8 @@ const noteSources = {
         imag: [0, 0, 0, 0, 0, 0],
         frequency: MIDINumber.toFrequency(
           midiNum +
-            Number($('note-offset').value) +
-            Number($('octave').value) * 12
+            Number($('#note-offset').value) +
+            Number($('#octave').value) * 12
         ),
         gain: 1,
       })
@@ -425,27 +429,33 @@ const noteSources = {
     oscParams: midiNum => {
       return [
         {
-          bytebeat: $('bytebeat-code').value,
+          bytebeat: $('#bytebeat-code').value,
           frequency: MIDINumber.toFrequency(
             midiNum +
-              Number($('note-offset').value) +
-              (Number($('octave').value) + 8) * 12
+              Number($('#note-offset').value) +
+              (Number($('#octave').value) + 8) * 12
           ),
-          tempo: Number($('tempo').value),
-          floatMode: $('bytebeat-mode').value === 'float',
+          tempo: Number($('#tempo').value),
+          floatMode: $('#bytebeat-mode').value === 'float',
         },
       ]
+    },
+  },
+  wasmbeat: {
+    class: BytebeatNote,
+    oscParams: midiNum => {
+      return [{}]
     },
   },
 }
 
 function noteOn(midiNum, velocity = 1) {
-  const source = $('source-select').value
-  if (source === 'bytebeat' && !$('bytebeat-code').validity.valid) return
+  const source = $('#source-select').value
+  if (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) return
   let noteParams = Object.assign({}, envelope),
     oscParams = noteSources[source].oscParams(midiNum)
   noteParams.triggerTime = audio.currentTime
-  if ($('velocity-sensitive').checked) {
+  if ($('#velocity-sensitive').checked) {
     noteParams.velocity = velocity
   }
   if (pedals.soft) {
@@ -508,17 +518,17 @@ function setupControllerListeners(channel = 'all') {
 }
 
 function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
-  removeChildren($('ebony'))
-  removeChildren($('ivory'))
+  removeChildren($('#ebony'))
+  removeChildren($('#ivory'))
   const keyWidth = (12 / 7) * (95 / maxKeys)
-  $('keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
-  $('keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
+  $('#keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
+  $('#keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
   const palette = generateColorPalette()
   const makeShadowKey = () => {
     const shadowKey = document.createElement('div')
     shadowKey.classList.add('invisible')
     shadowKey.classList.add('key')
-    $('ebony').appendChild(shadowKey)
+    $('#ebony').appendChild(shadowKey)
   }
   makeShadowKey()
   for (let i = lowNote; i < lowNote + maxKeys; i++) {
@@ -546,9 +556,9 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
       makeShadowKey()
     }
     if (elem.id.includes('♯')) {
-      $('ebony').appendChild(elem)
+      $('#ebony').appendChild(elem)
     } else {
-      $('ivory').appendChild(elem)
+      $('#ivory').appendChild(elem)
     }
   }
 }
@@ -590,7 +600,7 @@ function setupKeypressKeymap() {
       noteOff(keyboardKeymap[e.key])
     }
   })
-  const bb = $('bytebeat-code')
+  const bb = $('#bytebeat-code')
   const validate = () => {
     bb.setCustomValidity(
       BytebeatUtils.validateBytebeat(bb.value) ? '' : 'Invalid bytebeat'
@@ -601,39 +611,39 @@ function setupKeypressKeymap() {
 }
 
 function setupGlobalEventListeners() {
-  $('master-gain').addEventListener('change', e => {
+  $('#master-gain').addEventListener('change', e => {
     masterGain.gain.value = e.target.value
   })
-  $('master-gain').addEventListener('dblclick', e => {
+  $('#master-gain').addEventListener('dblclick', e => {
     masterGain.gain.value = 0.5
     e.target.value = 0.5
   })
-  $('panning').addEventListener('change', e => {
+  $('#panning').addEventListener('change', e => {
     panner.pan.value = e.target.value
   })
-  $('panning').addEventListener('dblclick', e => {
+  $('#panning').addEventListener('dblclick', e => {
     panner.pan.value = 0
     e.target.value = 0
   })
-  $('metronome').addEventListener('change', e => {
+  $('#metronome').addEventListener('change', e => {
     e.target.checked ? metronome.start() : metronome.stop()
   })
-  $('tempo').addEventListener('change', e => {
+  $('#tempo').addEventListener('change', e => {
     metronome.tempo = e.target.value
   })
-  $('source-select').addEventListener('change', e =>
-    changeCurrentView(e.target.value)
+  $('#source-select').addEventListener('change', e =>
+    changeCurrentView(e.target.value, 'source-select', 'audio-sources')
   )
 }
 
 /** Hides all audio source UI except the one with the matching ID
  * @param {string} viewId
  */
-function changeCurrentView(viewId) {
-  if ($('source-select').value !== viewId) {
-    $('source-select').value = viewId
+function changeCurrentView(viewId, selectId, parentId) {
+  if ($('#' + selectId).value !== viewId) {
+    $('#' + selectId).value = viewId
   }
-  for (const el of $$('#audio-sources')[0].children) {
+  for (const el of $$('#' + parentId)[0].children) {
     if (el.id === viewId) {
       el.classList.remove('hidden')
     } else {
@@ -674,7 +684,7 @@ window.onload = () => {
   limiter.connect(masterLevel)
   masterLevel.connect(audio.destination)
   setupGlobalEventListeners()
-  $('add-oscillator').addEventListener('click', () => addOscillator())
+  $('#add-oscillator').addEventListener('click', () => addOscillator())
   setupKeypressKeymap()
   setupDisplayKeyboard()
   updateEnvelope()
@@ -682,10 +692,10 @@ window.onload = () => {
     obj.addEventListener('change', updateEnvelope)
   }
   loadPersistentState()
-  updateCustomPresets(factoryPresets, $('factory-presets'))
-  updateCustomPresets(customPresets, $('custom-presets'))
-  $('load-preset').addEventListener('click', () => {
-    const selected = $('preset-list').selectedOptions[0],
+  updateCustomPresets(factoryPresets, $('#factory-presets'))
+  updateCustomPresets(customPresets, $('#custom-presets'))
+  $('#load-preset').addEventListener('click', () => {
+    const selected = $('#preset-list').selectedOptions[0],
       storage =
         selected.parentElement.label === 'Factory Presets'
           ? factoryPresets
@@ -693,8 +703,8 @@ window.onload = () => {
       currentPreset = storage[selected.value]
     if (currentPreset) loadPreset(currentPreset)
   })
-  $('add-preset').addEventListener('click', addPreset)
-  $('remove-preset').addEventListener('click', removePreset)
+  $('#add-preset').addEventListener('click', addPreset)
+  $('#remove-preset').addEventListener('click', removePreset)
   if (audio.audioWorklet) {
     audio.audioWorklet.addModule('./src/bytebeat-processor.js')
   }
@@ -705,9 +715,9 @@ window.onload = () => {
     } else {
       console.log('WebMidi enabled!')
 
-      const cf = $('controller-form'),
-        cs = $('controller-select'),
-        chs = $('channel-select')
+      const cf = $('#controller-form'),
+        cs = $('#controller-select'),
+        chs = $('#channel-select')
 
       cf.addEventListener('submit', e => {
         e.preventDefault()
