@@ -128,6 +128,7 @@ button:focus {
   grid-column-gap: 1ch;
   text-align: right;
   font-size: 0.85rem;
+  justify-content: space-evenly;
 }
 
 #controller-form {
