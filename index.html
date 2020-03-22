@@ -20,6 +20,7 @@ Mode:
 <option value="additive-oscillators">Additive</option>
 <!--<option value="harmonic-series">Harmonics</option>-->
 <option value="bytebeat">Bytebeat</option>
+<option value="wasmbeat">Wasmbeat</option>
 </select>
 </nav>
 
@@ -33,22 +34,27 @@ Mode:
 
 <div class="container">
 <div id="audio-sources">
+
 <div id="additive-oscillators" class="panel">
 <button id="add-oscillator" class="add">+</button>
 <ol id="oscillator-panel"></ol>
 </div>
+
 <div id="harmonic-series" class="hidden">
 <ol id="harmonic-panel" class="panel"></ol>
 <canvas id="fourier-canvas" width="400" height="300"></canvas>
 </div>
+
 <div id="bytebeat" class="hidden">
 <div class="panel">
-<code>(t, tt) ⟹ </code> <input type="text" id="bytebeat-code" value="t & t >> (8 + 2 & tt >> 7)">
-<label for="bytebeat-mode">Bytebeat Mode:</label>
-<select id="bytebeat-mode">
-<option value="byte">Bytebeat</option>
-<option value="float">Floatbeat</option>
-</select>
+  <label for="bytebeat-mode">Bytebeat Mode:</label>
+  <select id="bytebeat-mode">
+  <option value="byte">Bytebeat</option>
+  <option value="float">Floatbeat</option>
+  </select>
+</div>
+<div class="panel">
+<code>(t, tt) ⟹ </code> <input type="text" id="bytebeat-code" class="validate" value="t & t >> (8 + 2 & tt >> 7)">
 </div>
 <details>
 <summary>?</summary>
@@ -68,8 +74,29 @@ Mode:
 </p>
 <p>If you still have no idea what's going on, <a href="guide.html">here's a more in-depth guide.</a></p>
 </details>
-
 </div>
+
+<div id="wasmbeat" class="hidden">
+<div class="panel">
+<textarea id="wasm-code" class="validate" rows="20" cols="40">
+get_local $t
+get_local $t
+i32.const 8
+i32.shr_u
+i32.and
+</textarea>
+<div class="panel">
+<label>Syntax:
+<select id="wasm-language">
+  <option value="wat">WebAssembly Text format</option>
+<!--  <option value="rpn">Glitchmachine RPN</option>
+  <option value="url">Glitchmachine URL</option>  -->
+</select>
+</label>
+</div>
+</div>
+</div>
+
 </div>
 
 <template id="oscillator-template">

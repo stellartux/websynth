@@ -76,7 +76,7 @@ button {
   border: 2px solid var(--main-font);
   border-radius: 5vmin;
   box-shadow: var(--main-shadow) 0.1em 0.2em 0;
-  min-width: 2ch;
+  min-width: min-content;
   min-height: 2ch;
 }
 button:active {
@@ -243,13 +243,20 @@ a:visited {
 #bytebeat-code {
   display: inline;
   width: 80ch;
-  border-color: var(--good);
 }
-#bytebeat-code:invalid {
+
+.validate {
+  border: thick inset var(--good);
+}
+.validate:invalid {
   border-color: var(--bad);
 }
 
 details {
   max-width: 60ch;
   padding: 1ch;
+}
+
+#wat-code {
+  flex-grow: 5;
 }

@@ -17,7 +17,7 @@ export class BytebeatNote extends Note {
     for (const p of oscParams) {
       const n = new BytebeatNode(
         this.context,
-        p.bytebeat,
+        p.bytebeat || p.module,
         p.frequency,
         p.tempo,
         p.floatMode

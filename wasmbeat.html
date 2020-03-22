@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+<meta charset="utf-8">
+<title>Wasmbeat</title>
+<style media="screen">
+body {
+  display: flex;
+  background-color: #334;
+  color: #ddc;
+}
+code {
+  max-height: 90vh;
+  height: 90vh;
+  overflow-y: scroll;
+  min-width: 40ch;
+}
+</style>
+</head>
+
+<body>
+  <textarea name="code" rows="20" cols="50">(module
+    (type $t0 (func (param i32 i32) (result i32)))
+    (func $bytebeat (export "bytebeat") (type $t0) (param $t i32) (param $tt i32) (result i32)
+    get_local $t
+    get_local $t
+    i32.const 8
+    i32.shr_u
+    i32.and
+    i32.const 255
+    i32.and))
+</textarea>
+<section>
+  <button type="button" name="build">Build</button>
+  <button type="button" name="play">Play</button>
+  <button type="button" name="stop">Stop</button>
+  <input type="range" name="gain" value="0.4" min="0" max="1" step="0.001">
+</section>
+  <output name="result"></output><br/>
+  <code id="build-log"></code>
+  <script src="wasmbeat.js" type="module"></script>
+</body>
+
+</html>

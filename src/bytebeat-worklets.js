@@ -19,16 +19,21 @@ export class BytebeatNode extends AudioWorkletNode {
     tempo = 120,
     floatMode = false
   ) {
+    const options = {
+      frequency: frequency,
+      sampleRate: context.sampleRate,
+      tempo: tempo,
+      floatMode: floatMode,
+    }
+    if (typeof bytebeat === 'string') {
+      options.beatcode = bytebeat
+    } else {
+      options.module = bytebeat
+    }
     super(context, 'bytebeat-processor', {
       numberOfInputs: 0,
       numberOfOutputs: 1,
-      processorOptions: {
-        beatcode: bytebeat,
-        frequency: frequency,
-        sampleRate: context.sampleRate,
-        tempo: tempo,
-        floatMode: floatMode,
-      },
+      processorOptions: options,
     })
   }
 

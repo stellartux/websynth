@@ -1,8 +1,14 @@
+import { evaluateBytebeat } from './bytebeat-utils.js'
+
 /**
- * BytebeatProcessor runs in the AudioWorkletScope
+ * BytebeatProcessor runs in the AudioWorkletScope. The BytebeatProcessor
+ * constructor requires either `options.processorOptions.beatcode` or
+ * `options.processorOptions.module` which exports a `bytebeat` function.
  * @param {object} options
- * @param {string} options.processorOptions.beatcode
+ * @param {string} [options.processorOptions.beatcode]
  * Main block of the bytebeat function and its execution
+ * @param {WebAssembly.Module} [options.processorOptions.module]
+ * A Wasm module which exports a "bytebeat" function
  * @param {number} options.processorOptions.frequency
  * The frequency at which 't' will be incremented
  * @param {number} options.processorOptions.sampleRate
@@ -15,7 +21,13 @@
 class BytebeatProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super(options)
-    this.beatcode = new Function('t,tt', options.processorOptions.beatcode)
+    if (options.processorOptions.module) {
+      WebAssembly.instantiate(options.processorOptions.module).then(mod => {
+        this.beatcode = mod.exports.bytebeat
+      })
+    } else {
+      this.beatcode = evaluateBytebeat(options.processorOptions.beatcode)
+    }
     this.sampleRate = options.processorOptions.sampleRate
     this.frequency = options.processorOptions.frequency
     this.tDelta = this.frequency / this.sampleRate

@@ -3,6 +3,33 @@ import { OscillatorNote } from './src/oscillator-note.js'
 import { Metronome } from './src/metronome.js'
 import { MIDINumber } from './src/midinumber.js'
 import { validateBytebeat } from './src/bytebeat-utils.js'
+import { RPN } from './src/rpn.js'
+
+if (WebAssembly) {
+  import('./src/build-wabt.js').then(module => {
+    const wat = $('#wasm-code')
+    const watInput = async () => {
+      let code
+      if ($('#wasm-language').value === 'rpn') {
+
+      }
+      try {
+        const mod = await module.buildWabt(`(module (type $t0 (func (param
+          i32 i32) (result i32))) (func $bytebeat (export "bytebeat") (type $t0)
+          (param $t i32) (param $tt i32) (result i32) ${wat.value}))`)
+        wasmModule = mod.module
+        wat.setCustomValidity('')
+      } catch (e) {
+        wat.setCustomValidity('Invalid wasm')
+      }
+    }
+    watInput()
+    wat.oninput = watInput
+  })
+} else {
+  $('#wasmbeat').innerHTML =
+    '<div class="panel">WebAssembly is not supported in your browser.</div>'
+}
 
 /** Type for storing envelope and oscillator preset information for recalling
  * user defined presets and UI persistence between sessions.
@@ -21,11 +48,18 @@ import { validateBytebeat } from './src/bytebeat-utils.js'
  * @param {number} [oscillators.octave=0]
  * @param {boolean} [oscillators.invert-phase=false]
  * @param {string} [oscillators.bytebeatCode='']
- * @param {string} type='additive-oscillators'
+ * @param {string} [type='additive-oscillators']
  * Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
+ * @param {object} [options={}]
  */
 class Preset {
-  constructor(name, envelope, oscillators, type = 'additive-oscillators') {
+  constructor(
+    name,
+    envelope,
+    oscillators,
+    type = 'additive-oscillators',
+    options = {}
+  ) {
     if (!(envelope && oscillators)) {
       throw Error(
         'Preset: Constructor is missing necessary initialization parameters'
@@ -35,6 +69,7 @@ class Preset {
     this.envelope = envelope
     this.oscillators = oscillators
     this.type = type
+    this.options = options
   }
 }
 
@@ -52,6 +87,8 @@ function getPresetInfo() {
       bytebeatCode: $('#bytebeat-code').value,
       bytebeatMode: $('#bytebeat-mode').value,
     })
+  } else if (type === 'wasmbeat') {
+    oscs.push({})
   } else {
     for (const osc of $$('.oscillator')) {
       const o = {}
@@ -67,7 +104,8 @@ function getPresetInfo() {
     $('#preset-name').value,
     Object.assign({}, envelope),
     oscs,
-    type
+    type,
+    options
   )
 }
 
@@ -125,6 +163,8 @@ function loadPreset(preset) {
       $('#bytebeat-code').value = preset.oscillators[0].bytebeatCode
       $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
       break
+    case 'wasmbeat':
+      break
     default:
       removeChildren($('#oscillator-panel'))
       for (const osc of preset.oscillators) addOscillator(osc)
@@ -178,7 +218,8 @@ let controller,
   currentlyHeldKeys = new NoteMap(),
   envelope = {},
   pitchBend = 0,
-  customPresets = []
+  customPresets = [],
+  wasmModule
 const $ = (selector, parent = document) => parent.querySelector(selector),
   $$ = (s, p = document) => Array.from(p.querySelectorAll(s)),
   removeChildren = el => {
@@ -444,14 +485,30 @@ const noteSources = {
   wasmbeat: {
     class: BytebeatNote,
     oscParams: midiNum => {
-      return [{}]
+      return [
+        {
+          module: wasmModule,
+          frequency: MIDINumber.toFrequency(
+            midiNum +
+              Number($('#note-offset').value) +
+              (Number($('#octave').value) + 8) * 12
+          ),
+          tempo: Number($('#tempo').value),
+          floatMode: false,
+        },
+      ]
     },
   },
 }
 
 function noteOn(midiNum, velocity = 1) {
   const source = $('#source-select').value
-  if (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) return
+  if (
+    (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) ||
+    (source === 'wasmbeat' && !$('#wasm-code').validity.valid)
+  ) {
+    return
+  }
   let noteParams = Object.assign({}, envelope),
     oscParams = noteSources[source].oscParams(midiNum)
   noteParams.triggerTime = audio.currentTime
@@ -467,7 +524,7 @@ function noteOn(midiNum, velocity = 1) {
     new noteSources[source].class(panner, noteParams, oscParams)
   )
   updateChordDisplay()
-  $(MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
+  $('#' + MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
 }
 
 function noteOff(midiNum) {
@@ -477,7 +534,7 @@ function noteOff(midiNum) {
     playingNotes.release(midiNum)
   }
   updateChordDisplay()
-  $(MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
+  $('#' + MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
 }
 
 function sustainPedalEvent(ev) {
