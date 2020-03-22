@@ -76,7 +76,6 @@ class Preset {
 function getPresetInfo() {
   const type = $('#source-select').value
   const oscs = []
-  const options = {}
   if (type === 'harmonic-series') {
     // TODO
   } else if (type === 'bytebeat') {
@@ -85,7 +84,10 @@ function getPresetInfo() {
       bytebeatMode: $('#bytebeat-mode').value,
     })
   } else if (type === 'wasmbeat') {
-    oscs.push({})
+    oscs.push({
+      wasmbeatCode: $('#wasm-code').value,
+      wasmbeatLanguage: $('#wasm-language').value,
+    })
   } else {
     for (const osc of $$('.oscillator')) {
       const o = {}
@@ -101,8 +103,7 @@ function getPresetInfo() {
     $('#preset-name').value,
     Object.assign({}, envelope),
     oscs,
-    type,
-    options
+    type
   )
 }
 
@@ -161,6 +162,10 @@ function loadPreset(preset) {
       $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
       break
     case 'wasmbeat':
+      $('#wasm-language').value = preset.oscillators[0].wasmbeatLanguage
+      const wasmCode = $('#wasm-code')
+      wasmCode.value = preset.oscillators[0].wasmbeatCode
+      wasmCode.oninput && wasmCode.oninput()
       break
     default:
       removeChildren($('#oscillator-panel'))
@@ -326,6 +331,18 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
         },
       ],
       'bytebeat'
+    ),
+    new Preset(
+      'Wasm Sierpinski',
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
+      [
+        {
+          wasmbeatCode:
+            'local.get $t\nlocal.get $t\ni32.const 8\ni32.shr_u\ni32.and',
+          wasmbeatLanguage: 'wat',
+        },
+      ],
+      'wasmbeat'
     ),
     new Preset(
       'Headachegoldfish',
