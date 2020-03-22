@@ -1,7 +1,7 @@
-import { assertEquals, test } from '../deps.ts'
+import { assertEquals } from '../deps.ts'
 import { MIDINumber } from '../src/midinumber.js'
 
-test({
+Deno.test({
   name: 'MIDINumber.toLetter(n)',
   fn: function() {
     assertEquals(MIDINumber.toLetter(60), 'C')
@@ -11,7 +11,7 @@ test({
     assertEquals(MIDINumber.toLetter(68), 'G♯')
   },
 })
-test({
+Deno.test({
   name: 'MIDINumber.toLetter(n, false)',
   fn: function() {
     assertEquals(MIDINumber.toLetter(60, false), 'C')
@@ -21,7 +21,7 @@ test({
     assertEquals(MIDINumber.toLetter(68, false), 'A♭')
   },
 })
-test({
+Deno.test({
   name: 'MIDINumber.toChord()',
   fn: function() {
     assertEquals(MIDINumber.toChord([60, 64, 67]), 'C')
