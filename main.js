@@ -9,10 +9,6 @@ if (WebAssembly) {
   import('./src/build-wabt.js').then(module => {
     const wat = $('#wasm-code')
     const watInput = async () => {
-      let code
-      if ($('#wasm-language').value === 'rpn') {
-
-      }
       try {
         const mod = await module.buildWabt(`(module (type $t0 (func (param
           i32 i32) (result i32))) (func $bytebeat (export "bytebeat") (type $t0)
@@ -25,6 +21,7 @@ if (WebAssembly) {
     }
     watInput()
     wat.oninput = watInput
+    wat.onkeydown = ev => ev.stopPropagation()
   })
 } else {
   $('#wasmbeat').innerHTML =
