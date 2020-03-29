@@ -28,7 +28,7 @@ export class LEB128 extends Uint8Array {
     }
   }
   static toInt32(input) {
-    if (input.length > 5) throw Error('In')
+    if (input.length > 5) throw Error('Input too large')
     let result = 0
     let shift = 0
     for (let i = 0; i < input.length; i++) {
