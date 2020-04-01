@@ -26,6 +26,7 @@ if (WebAssembly) {
 } else {
   $('#wasmbeat').innerHTML =
     '<div class="panel">WebAssembly is not supported in your browser.</div>'
+  $('option[value="wasmbeat"]').remove()
 }
 
 /** Type for storing envelope and oscillator preset information for recalling
