@@ -8,7 +8,7 @@ export const RPN = {
   validate: function(code) {
     if (/\)[^\s)]/.test(code)) return false
     code = this.desugar(code)
-    return /^((SQRT1(_2)?|LOG10E|LN(2|10)|E|PI|random|abs|sqrt|cbrt|round|a?tan(h|2)?|log|exp|a?sinh?|a?cosh?|floor|ceil|int|trunc|min|max|pow|sign|pick|put|dup|drop|swap|tt|t|-?\d+\.\d+|-?\d+|>>>?|<<|&&|\|\||[-\/+*=&^|~><%])(?: |$))+/.test(
+    return /^((SQRT(1_)?2|LOG10E|LN(2|10)|E|PI|random|abs|sqrt|cbrt|round|a?tan(h|2)?|log|exp|a?sinh?|a?cosh?|floor|ceil|int|trunc|min|max|pow|sign|pick|put|dup|drop|swap|tt|t|-?\d+\.\d+|-?\d+|>>>?|<<|&&|\|\||[-\/+*=&^|~><%])(?: |$))+/.test(
       code
     )
   },
