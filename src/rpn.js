@@ -291,9 +291,7 @@ export const RPN = {
   },
   get glitchMachine() {
     delete this.glitchMachine
-    fetch('./src/rpn.wasm')
-      .then(response => response.arrayBuffer())
-      .then(bytes => WebAssembly.instantiate(bytes))
+    WebAssembly.instantiateStreaming(fetch('./src/rpn.wasm'))
       .then(results => (this.glitchMachine = results.instance.exports))
   },
   set glitchMachine(x) {
@@ -302,7 +300,6 @@ export const RPN = {
   },
   /**
    * Interpret Glitch semantics code with wasm interpreter.
-   * If wasm is not supported, falls back to the JS interpreter.
    *
    * @param {string} code the code
    * @param {number} [t = 0] value of t to be used by the passed code
