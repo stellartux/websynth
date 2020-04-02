@@ -8,9 +8,6 @@
   --highlight: #8ad;
   --good: #4d6;
   --bad: #d42;
-  --squish: #a4a;
-  --key-width: 1em;
-  --half-key: .5em;
 }
 
 body {
@@ -161,58 +158,6 @@ a {
 }
 a:visited {
   color: var(--highlight, #a8d);
-}
-
-#keyboard {
-  display: flex;
-  position: relative;
-  overflow-x: hidden;
-  width: 100%;
-  bottom: 0%;
-}
-#ivory, #ebony {
-  height: 100%;
-  display: flex;
-  width: 100%;
-  position: absolute;
-  justify-content: center;
-}
-#ebony {
-  height: 60%;
-  position: relative;
-  right: var(--half-key);
-}
-.key {
-  position: relative;
-  margin: 0;
-  padding: 0;
-  background-color: #fefee8;
-  width: var(--key-width);
-  top: 3%;
-  height: 97%;
-  border: outset;
-  border-top: none;
-  border-bottom-width: 1.8vh;
-  box-sizing: border-box;
-  border-radius: 8%;
-}
-
-#ebony .key {
-  background-color: #333;
-  z-index: 1;
-  position: relative;
-  border-color: #555;
-  top: 0%;
-}
-#keyboard .invisible {
-  visibility: hidden;
-}
-#ebony .key:last-child {
-  visibility: hidden;
-}
-#keyboard .key.keypress {
-  background-color: var(--squish);
-  border-color: var(--squish);
 }
 
 #master-level {
