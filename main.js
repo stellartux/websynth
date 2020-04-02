@@ -227,7 +227,7 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
   pedals = { sustain: false, sostenuto: false, soft: false },
   panner = new StereoPannerNode(audio),
   masterGain = new GainNode(audio, { gain: 0.5 }),
-  masterLevel = new AnalyserNode(audio),
+  // masterLevel = new AnalyserNode(audio),
   metronome = new Metronome(masterGain),
   limiter = new DynamicsCompressorNode(audio, {
     attack: 0,
@@ -732,10 +732,11 @@ function loadPersistentState() {
 }
 
 window.onload = () => {
-  panner.connect(masterGain)
-  masterGain.connect(limiter)
-  limiter.connect(masterLevel)
-  masterLevel.connect(audio.destination)
+  panner
+    .connect(masterGain)
+    .connect(limiter)
+  //  .connect(masterLevel)
+    .connect(audio.destination)
   setupGlobalEventListeners()
   $('#add-oscillator').addEventListener('click', () => addOscillator())
   setupKeypressKeymap()
