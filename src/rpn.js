@@ -211,6 +211,11 @@ export const RPN = {
       this.desugar(code)
     )
   },
+  isValidWasmRPN: function(code) {
+    return /^((drop|tt?|-?\d+|>>>?|<<||[-\/+*=&^|~><%])(?:\s+|$))+/.test(
+      this.desugar(code)
+    )
+  },
   toGlitchURL: function(code, name = '') {
     code = this.desugar(code)
     if (!this.isValidGlitchCode(code))
@@ -358,7 +363,7 @@ export const RPN = {
     return this.wrapWat(this.tokensToWat(code))
   },
   tokensToWat: function(code) {
-    return this.desugar(code)
+    return this.desugar(code.trim())
       .split(/\s+/)
       .map(token => {
         if (token in this.glitchToWat) {
@@ -452,6 +457,7 @@ export const RPN = {
     0x74, // tt : local name 1
   ],
   toWasmBinary: function(code) {
+    if (!this.isValidWasmRPN(code)) throw Error()
     let func = [0] // local decl count = 0
     for (const token of this.desugar(code).split(/\s+/g)) {
       if (/\d+/.test(token)) {

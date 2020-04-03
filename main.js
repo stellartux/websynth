@@ -8,7 +8,7 @@ import { NoteMap } from './src/note-map.js'
 
 if (WebAssembly) {
   import('./src/build-wabt.js').then(module => {
-    const wat = $('#wasm-code')
+    const wat = $('#wasm-wat-code')
     const watInput = async () => {
       try {
         const mod = await module.buildWabt(`(module (type $t0 (func (param
@@ -20,13 +20,35 @@ if (WebAssembly) {
         wat.setCustomValidity('Invalid wasm')
       }
     }
-    watInput()
     wat.oninput = watInput
-    wat.onkeydown = ev => ev.stopPropagation()
+
+    const rpn = $('#wasm-rpn-code')
+    const rpnInput = async () => {
+      try {
+        const bin = RPN.toWasmBinary(rpn.value)
+        if (WebAssembly.validate(bin)) {
+          wasmModule = await WebAssembly.compile(bin)
+          rpn.setCustomValidity('')
+        } else {
+          rpn.setCustomValidity('Invalid wasm')
+        }
+      } catch {
+        rpn.setCustomValidity('Invalid wasm')
+      }
+    }
+    rpn.oninput = rpnInput
+
+    const codeBlocks = [wat, rpn]
+    const noProp = ev => ev.stopPropagation()
+    for (const b of codeBlocks) b.addEventListener('keydown', noProp)
+
+    const wasmLanguage = $('#wasm-language')
+    wasmLanguage.addEventListener('change', ev =>
+      changeCurrentView(ev.target.value, 'wasm-language', 'wasm-code-blocks')
+    )
+    $('#' + wasmLanguage.value).oninput()
   })
 } else {
-  $('#wasmbeat').innerHTML =
-    '<div class="panel">WebAssembly is not supported in your browser.</div>'
   $('option[value="wasmbeat"]').remove()
 }
 
@@ -49,16 +71,9 @@ if (WebAssembly) {
  * @param {string} [oscillators.bytebeatCode='']
  * @param {string} [type='additive-oscillators']
  * Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
- * @param {object} [options={}]
  */
 class Preset {
-  constructor(
-    name,
-    envelope,
-    oscillators,
-    type = 'additive-oscillators',
-    options = {}
-  ) {
+  constructor(name, envelope, oscillators, type = 'additive-oscillators') {
     if (!(envelope && oscillators)) {
       throw Error(
         'Preset: Constructor is missing necessary initialization parameters'
@@ -68,7 +83,6 @@ class Preset {
     this.envelope = envelope
     this.oscillators = oscillators
     this.type = type
-    this.options = options
   }
 }
 
@@ -78,7 +92,6 @@ class Preset {
 function getPresetInfo() {
   const type = $('#source-select').value
   const oscs = []
-  const options = {}
   if (type === 'harmonic-series') {
     // TODO
   } else if (type === 'bytebeat') {
@@ -87,7 +100,11 @@ function getPresetInfo() {
       bytebeatMode: $('#bytebeat-mode').value,
     })
   } else if (type === 'wasmbeat') {
-    oscs.push({})
+    const code = $('#wasm-code-blocks textarea:not(.hidden)')
+    oscs.push({ id: code.id, value: code.value })
+    for (const o of $$('#wasm-options select')) {
+      oscs.push({ id: o.id, value: o.value })
+    }
   } else {
     for (const osc of $$('.oscillator')) {
       const o = {}
@@ -103,8 +120,7 @@ function getPresetInfo() {
     $('#preset-name').value,
     Object.assign({}, envelope),
     oscs,
-    type,
-    options
+    type
   )
 }
 
@@ -163,6 +179,7 @@ function loadPreset(preset) {
       $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
       break
     case 'wasmbeat':
+      for (const o of preset.oscillators) $(`#${o.id}`).value = o.value
       break
     default:
       removeChildren($('#oscillator-panel'))
@@ -302,6 +319,9 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
       ],
       'bytebeat'
     ),
+    new Preset('', { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 }, [
+      {},
+    ]),
   ]
 
 /** Release all currently playing notes */
@@ -465,7 +485,7 @@ function noteOn(midiNum, velocity = 1) {
   const source = $('#source-select').value
   if (
     (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) ||
-    (source === 'wasmbeat' && !$('#wasm-code').validity.valid)
+    (source === 'wasmbeat' && !wasmModule)
   ) {
     return
   }
@@ -659,11 +679,7 @@ function changeCurrentView(viewId, selectId, parentId) {
     $('#' + selectId).value = viewId
   }
   for (const el of $$('#' + parentId)[0].children) {
-    if (el.id === viewId) {
-      el.classList.remove('hidden')
-    } else {
-      el.classList.add('hidden')
-    }
+    el.classList[el.id === viewId ? 'remove' : 'add']('hidden')
   }
 }
 
@@ -697,7 +713,7 @@ window.onload = () => {
   panner
     .connect(masterGain)
     .connect(limiter)
-  //  .connect(masterLevel)
+    //  .connect(masterLevel)
     .connect(audio.destination)
   setupGlobalEventListeners()
   $('#add-oscillator').addEventListener('click', () => addOscillator())

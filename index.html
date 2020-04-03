@@ -79,25 +79,34 @@ Mode:
 
 <div id="wasmbeat" class="hidden">
 <div class="panel">
-<textarea id="wasm-code" class="validate" rows="20" cols="40" spellcheck="false">
+<div id="wasm-code-blocks">
+<textarea id="wasm-wat-code" class="validate" rows="20" cols="40" spellcheck="false">
 local.get $t
 local.get $t
 i32.const 8
 i32.shr_u
 i32.and
 </textarea>
-<div class="panel">
-<label>Syntax:
-<select id="wasm-language">
-  <option value="wat">WebAssembly Text format</option>
-<!--  <option value="rpn">Glitchmachine RPN</option>
-  <option value="url">Glitchmachine URL</option>  -->
+<textarea id="wasm-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
+<textarea id="glitch-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
+</div>
+<div id="wasm-options" class="panel optlist">
+<!--
+<label for="wasm-semantics">Semantics</label>
+<select id="wasm-semantics">
+<option value="wasm">WebAssembly Stack Machine</option>
+<option value="glitch">GlitchMachine</option>
 </select>
-</label>
-</div>
-</div>
-</div>
+-->
+<label for="wasm-language">Syntax</label>
+<select id="wasm-language">
+<option value="wasm-wat-code">WebAssembly Text format</option>
+<option value="wasm-rpn-code">GlitchMachine RPN</option>
+</select>
 
+</div>
+</div>
+</div>
 </div>
 
 <template id="oscillator-template">
