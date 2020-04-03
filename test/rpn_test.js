@@ -2,6 +2,7 @@ import { assert, assertEquals } from '../deps.ts'
 import { RPN } from '../src/rpn.js'
 import * as RPNWASM from '../src/rpn.wasm'
 RPN.glitchMachine = RPNWASM
+const COMPILED = await WebAssembly.instantiate(RPN.toWasmBinary('t t 8 >> &'))
 
 Deno.test({
   name: "RPN.interpret('1 1 +')",
@@ -99,14 +100,32 @@ Deno.test({
 Deno.test({
   name: "RPN.toWat('t t 8 >> &')",
   fn: function() {
-    assertEquals(RPN.toWat('t t 8 >> &'), `(module (type $t0 (func (param i32 i32) (result i32))) (func
-      $bytebeat (export "bytebeat") (type $t0) (param $t i32) (param $tt i32)
-      (result i32) local.get $t
+    assertEquals(
+      RPN.toWat('t t 8 >> &'),
+      `(module (type $t0 (func (param i32 i32) (result i32))) (func $bytebeat
+      (export "bytebeat") (type $t0) (param $t i32) (param $tt i32) (result i32)
+      local.get $t
 local.get $t
 i32.const 8
 i32.shr_s
-i32.and))`)
-  }
+i32.and))`
+    )
+  },
+})
+Deno.test({
+  name: "WebAssembly.validate(RPN.toWasmBinary('t t 8 >> &'))",
+  fn: function() {
+    assert(WebAssembly.validate(RPN.toWasmBinary('t t 8 >> &')))
+  },
+})
+Deno.test({
+  name: "RPN.toWasmBinary(f).bytebeat(x) == RPN.interpret(f, x)",
+  fn: async function() {
+    for (let i = 10; i--; ) {
+      const x = Math.floor(Math.random() * 10000)
+      assertEquals(COMPILED.instance.exports.bytebeat(x), RPN.interpret('t t 8 >> &', x))
+    }
+  },
 })
 
 if (import.meta.main) Deno.runTests()

@@ -4,10 +4,11 @@
 <head>
 <meta charset="utf-8">
 <title>Websynth</title>
-<script src="https://cdn.jsdelivr.net/npm/webmidi"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/webmidi" charset="utf-8"></script>
 <script type="module" src="main.js" charset="utf-8"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&display=swap">
 <link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="css/keyboard.css">
 <link rel="shortcut icon" href="favicon.ico">
 </head>
 
@@ -78,25 +79,34 @@ Mode:
 
 <div id="wasmbeat" class="hidden">
 <div class="panel">
-<textarea id="wasm-code" class="validate" rows="20" cols="40" spellcheck="false">
+<div id="wasm-code-blocks">
+<textarea id="wasm-wat-code" class="validate" rows="20" cols="40" spellcheck="false">
 local.get $t
 local.get $t
 i32.const 8
 i32.shr_u
 i32.and
 </textarea>
-<div class="panel">
-<label>Syntax:
-<select id="wasm-language">
-  <option value="wat">WebAssembly Text format</option>
-<!--  <option value="rpn">Glitchmachine RPN</option>
-  <option value="url">Glitchmachine URL</option>  -->
+<textarea id="wasm-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
+<textarea id="glitch-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
+</div>
+<div id="wasm-options" class="panel optlist">
+<!--
+<label for="wasm-semantics">Semantics</label>
+<select id="wasm-semantics">
+<option value="wasm">WebAssembly Stack Machine</option>
+<option value="glitch">GlitchMachine</option>
 </select>
-</label>
-</div>
-</div>
-</div>
+-->
+<label for="wasm-language">Syntax</label>
+<select id="wasm-language">
+<option value="wasm-wat-code">WebAssembly Text format</option>
+<option value="wasm-rpn-code">GlitchMachine RPN</option>
+</select>
 
+</div>
+</div>
+</div>
 </div>
 
 <template id="oscillator-template">

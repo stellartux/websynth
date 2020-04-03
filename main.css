@@ -8,9 +8,6 @@
   --highlight: #8ad;
   --good: #4d6;
   --bad: #d42;
-  --squish: #a4a;
-  --key-width: 1em;
-  --half-key: .5em;
 }
 
 body {
@@ -37,10 +34,9 @@ nav {
   top: 0;
   left: 0;
   right: 0;
-  margin: 0 auto;
-  height: 1em;
+  margin: 0 auto 0.5em;
+  height: min-content;
   padding: 0.3em 0.5em;
-  margin-bottom: 0.5em;
   border-bottom: thin solid var(--main-shadow);
 }
 
@@ -49,6 +45,7 @@ select {
   margin-right: 0.7em;
   border-radius: 0.4em;
   min-width: 3ch;
+  max-height: 2rem;
 }
 
 input[type="number"] {
@@ -163,65 +160,13 @@ a:visited {
   color: var(--highlight, #a8d);
 }
 
-#keyboard {
-  display: flex;
-  position: relative;
-  overflow-x: hidden;
-  width: 100%;
-  bottom: 0%;
-}
-#ivory, #ebony {
-  height: 100%;
-  display: flex;
-  width: 100%;
-  position: absolute;
-  justify-content: center;
-}
-#ebony {
-  height: 60%;
-  position: relative;
-  right: var(--half-key);
-}
-.key {
-  position: relative;
-  margin: 0;
-  padding: 0;
-  background-color: #fefee8;
-  width: var(--key-width);
-  top: 3%;
-  height: 97%;
-  border: outset;
-  border-top: none;
-  border-bottom-width: 1.8vh;
-  box-sizing: border-box;
-  border-radius: 8%;
-}
-
-#ebony .key {
-  background-color: #333;
-  z-index: 1;
-  position: relative;
-  border-color: #555;
-  top: 0%;
-}
-#keyboard .invisible {
-  visibility: hidden;
-}
-#ebony .key:last-child {
-  visibility: hidden;
-}
-#keyboard .key.keypress {
-  background-color: var(--squish);
-  border-color: var(--squish);
-}
-
 #master-level {
   border: solid thick red;
 }
 #chord-name {
   text-align: center;
 }
-#sharp-or-flat::after, #sharp-or-flat:checked::after {
+#sharp-or-flat::after {
   content: '♭';
   color: var(--main-font);
   position: relative;
@@ -258,6 +203,10 @@ details {
   padding: 1ch;
 }
 
-#wat-code {
-  flex-grow: 5;
+.optlist {
+  display: grid;
+  grid-template-columns: 2;
+  align-content: start;
+  grid-auto-rows: minmax(auto, 1.5rem);
+  row-gap: 0.25rem;
 }
