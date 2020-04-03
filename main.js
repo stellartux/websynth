@@ -4,6 +4,7 @@ import { Metronome } from './src/metronome.js'
 import { MIDINumber } from './src/midinumber.js'
 import { validateBytebeat } from './src/bytebeat-utils.js'
 import { RPN } from './src/rpn.js'
+import { NoteMap } from './src/note-map.js'
 
 if (WebAssembly) {
   import('./src/build-wabt.js').then(module => {
@@ -168,45 +169,6 @@ function loadPreset(preset) {
       for (const osc of preset.oscillators) addOscillator(osc)
   }
   updateEnvelopeControls(preset.envelope)
-}
-
-/** an extension of the built-in Map object for keeping track of groups of pressed keys */
-class NoteMap extends Map {
-  release(num) {
-    const note = this.get(num)
-    note.releaseNote()
-    this.delete(num)
-    return note
-  }
-
-  releaseAll() {
-    this.forEach(n => n.releaseNote())
-    this.clear()
-  }
-
-  stop(num) {
-    this.get(num).stopNote()
-    this.delete(num)
-  }
-
-  stopAll() {
-    this.forEach(n => n.stopNote())
-    this.clear()
-  }
-
-  sustain(num) {
-    const note = this.get(num)
-    this.delete(num)
-    return note
-  }
-
-  sustainAll() {
-    const notes = []
-    this.forEach(n => {
-      notes.push(n)
-    })
-    this.clear()
-  }
 }
 
 let controller,
