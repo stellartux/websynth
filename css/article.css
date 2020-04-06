@@ -1,0 +1,17 @@
+body {
+  background-color: var(--main-bg);
+  color: var(--main-font);
+  font-family: "Aldrich", "Lucida Sans Unicode", "Lucida Grande", "Open Sans", sans-serif;
+  padding: 0;
+  margin: 0;
+}
+article {
+  min-width: 40ch;
+  max-width: 80ch;
+  margin: auto;
+  padding: 1em;
+}
+h1 {
+  padding-left: 1em;
+  text-shadow: 0.1rem 0rem var(--attention);
+}

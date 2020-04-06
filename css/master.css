@@ -1,0 +1,19 @@
+:root {
+  --main-bg: #222;
+  --main-font: #ddd;
+  --main-shadow: #888;
+  --neutral: #48d;
+  --attention: #d85;
+  --link: #88d;
+  --highlight: #8ad;
+  --good: #4d6;
+  --bad: #d42;
+}
+
+body {
+  background-color: var(--main-bg);
+  color: var(--main-font);
+  font-family: "Aldrich", "Lucida Sans Unicode", "Lucida Grande", "Open Sans", sans-serif;
+  padding: 0;
+  margin: 0;
+}
