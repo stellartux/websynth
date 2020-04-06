@@ -12,7 +12,9 @@ let currentNote
 let currentInstance
 document.querySelector('button[name="build"]').onclick = async () => {
   try {
-    const { instance, module, log } = await buildWabt(userInput.value, true)
+    const { instance, module, log } = await buildWabt(userInput.value, {
+      log: true,
+    })
     output.innerText = '✔'
     buildLog.innerText = log
     currentModule = module
@@ -24,7 +26,7 @@ document.querySelector('button[name="build"]').onclick = async () => {
 document.querySelector('button[name="play"]').onclick = async () => {
   if (currentModule) {
     if (currentNote) currentNote.stop()
-    currentNote = new BytebeatNote(gain, { attack: 0.01, sustain: 0.5}, [
+    currentNote = new BytebeatNote(gain, { attack: 0.01, sustain: 0.5 }, [
       {
         module: currentModule,
         tempo: 120,

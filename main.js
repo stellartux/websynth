@@ -6,52 +6,6 @@ import { validateBytebeat } from './src/bytebeat-utils.js'
 import { RPN } from './src/rpn.js'
 import { NoteMap } from './src/note-map.js'
 
-if (WebAssembly) {
-  import('./src/build-wabt.js').then(module => {
-    const wat = $('#wasm-wat-code')
-    const watInput = async () => {
-      try {
-        const mod = await module.buildWabt(`(module (type $t0 (func (param
-          i32 i32) (result i32))) (func $bytebeat (export "bytebeat") (type $t0)
-          (param $t i32) (param $tt i32) (result i32) ${wat.value}))`)
-        wasmModule = mod.module
-        wat.setCustomValidity('')
-      } catch (e) {
-        wat.setCustomValidity('Invalid wasm')
-      }
-    }
-    wat.oninput = watInput
-
-    const rpn = $('#wasm-rpn-code')
-    const rpnInput = async () => {
-      try {
-        const bin = RPN.toWasmBinary(rpn.value)
-        if (WebAssembly.validate(bin)) {
-          wasmModule = await WebAssembly.compile(bin)
-          rpn.setCustomValidity('')
-        } else {
-          rpn.setCustomValidity('Invalid wasm')
-        }
-      } catch {
-        rpn.setCustomValidity('Invalid wasm')
-      }
-    }
-    rpn.oninput = rpnInput
-
-    const codeBlocks = [wat, rpn]
-    const noProp = ev => ev.stopPropagation()
-    for (const b of codeBlocks) b.addEventListener('keydown', noProp)
-
-    const wasmLanguage = $('#wasm-language')
-    wasmLanguage.addEventListener('change', ev =>
-      changeCurrentView(ev.target.value, 'wasm-language', 'wasm-code-blocks')
-    )
-    $('#' + wasmLanguage.value).oninput()
-  })
-} else {
-  $('option[value="wasmbeat"]').remove()
-}
-
 /** Type for storing envelope and oscillator preset information for recalling
  * user defined presets and UI persistence between sessions.
  * @param {string} name
@@ -196,7 +150,8 @@ let controller,
   envelope = {},
   pitchBend = 0,
   customPresets = [],
-  wasmModule
+  wasmModule,
+  objectURL
 const $ = (selector, parent = document) => parent.querySelector(selector),
   $$ = (s, p = document) => Array.from(p.querySelectorAll(s)),
   removeChildren = el => {
@@ -319,10 +274,70 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
       ],
       'bytebeat'
     ),
-    new Preset('', { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 }, [
-      {},
-    ]),
+    new Preset(
+      'Other',
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
+      [{}]
+    ),
   ]
+
+const downloadLink = $('#wasm-download')
+function setObjectURL(url) {
+  if (objectURL) URL.revokeObjectURL(objectURL)
+  objectURL = url
+  downloadLink.setAttribute('href', url)
+}
+
+if (WebAssembly) {
+  const rpn = $('#wasm-rpn-code')
+  const rpnInput = async () => {
+    try {
+      const bin = RPN.toWasmBinary(rpn.value)
+      if (WebAssembly.validate(bin)) {
+        wasmModule = await WebAssembly.compile(bin)
+        rpn.setCustomValidity('')
+        setObjectURL(URL.createObjectURL(new Blob(bin)))
+      } else {
+        rpn.setCustomValidity('Invalid wasm')
+      }
+    } catch {
+      rpn.setCustomValidity('Invalid wasm')
+    }
+  }
+  rpn.oninput = rpnInput
+
+  import('./src/build-wabt.js').then(module => {
+    const wat = $('#wasm-wat-code')
+    const watInput = async () => {
+      try {
+        const mod = await module.buildWabt(
+          `(module (type $t0 (func (param i32 i32) (result i32)))
+          (func $bytebeat (export "bytebeat") (type $t0) (param $t i32)
+          (param $tt i32) (result i32) ${wat.value}))`,
+          { objectURL: true }
+        )
+        wasmModule = mod.module
+        setObjectURL(mod.objectURL)
+        wat.setCustomValidity('')
+      } catch (e) {
+        wat.setCustomValidity('Invalid wasm')
+      }
+    }
+    wat.oninput = watInput
+
+    const codeBlocks = [wat, rpn]
+    const noProp = ev => ev.stopPropagation()
+    for (const b of codeBlocks) b.addEventListener('keydown', noProp)
+
+    const wasmLanguage = $('#wasm-language')
+    wasmLanguage.addEventListener('change', ev =>
+      changeCurrentView(ev.target.value, 'wasm-language', 'wasm-code-blocks')
+    )
+    $('#' + wasmLanguage.value).oninput()
+  })
+} else {
+  $('option[value="wasmbeat"]').remove()
+}
 
 /** Release all currently playing notes */
 function releaseAllNotes() {
