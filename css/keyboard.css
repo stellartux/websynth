@@ -48,9 +48,6 @@
 #keyboard .invisible {
   visibility: hidden;
 }
-#ebony .key:last-child {
-  visibility: hidden;
-}
 #keyboard .key.keypress {
   background-color: var(--squish);
   border-color: var(--squish);

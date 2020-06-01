@@ -576,13 +576,7 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
   $('#keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
   $('#keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
   const palette = generateColorPalette()
-  const makeShadowKey = () => {
-    const shadowKey = document.createElement('div')
-    shadowKey.classList.add('invisible')
-    shadowKey.classList.add('key')
-    $('#ebony').appendChild(shadowKey)
-  }
-  makeShadowKey()
+
   for (let i = lowNote; i < lowNote + maxKeys; i++) {
     const elem = document.createElement('div')
     elem.classList.add('key')
@@ -604,8 +598,8 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
       noteOff(e.target.midiNumber)
     })
     elem.style.setProperty('--squish', palette[i % 12])
-    if (elem.id.includes('E') || elem.id.includes('B')) {
-      makeShadowKey()
+    if (elem.id.includes('F♯') || elem.id.includes('C♯')) {
+      elem.style.setProperty('margin-left', 'var(--key-width)')
     }
     if (elem.id.includes('♯')) {
       $('#ebony').appendChild(elem)
