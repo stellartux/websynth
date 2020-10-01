@@ -50,12 +50,12 @@ export class BytebeatNode {
       let lastT = -1
       let lastTt = -1
       this.buffer.getChannelData(0).forEach((v, i, p) => {
-        if (lastT === this.time && lastTT === this.tempoTime) {
+        if (lastT === this.time && lastTt === this.tempoTime) {
           p[i] = p[i - 1]
         } else {
           lastT = this.time | 0
-          lastTT = this.tempoTime | 0
-          p[i] = this.postprocess(this.beatcode(lastT, lastTT))
+          lastTt = this.tempoTime | 0
+          p[i] = this.postprocess(this.beatcode(lastT, lastTt))
         }
         this.time += this.timeDelta
         this.tempoTime += this.tempoTimeDelta

@@ -1,4 +1,4 @@
-import { BytebeatNode } from './bytebeat-note.js'
+import { BytebeatNote } from './bytebeat-note.js'
 import { validateBytebeat } from './bytebeat-utils.js'
 
 customElements.define(
