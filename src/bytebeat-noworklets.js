@@ -5,14 +5,16 @@ import { evaluateBytebeat } from './bytebeat-utils.js'
  * Instead of real time generation, a thirty second sample is generated
  *
  * @variation no AudioWorkletNode
- * @param {AudioContext} context
- * @param {string} bytebeat The bytebeat function to be played
- * @param {number} [frequency=8000] The fundamental frequency of the note to be played, used by 't'
- * @param {number} [tempo=120] The tempo that will be translated to counter 'tt'
- * @param {boolean} [floatMode=false] Whether the bytebeat function expects an output between 0:255 (default) or -1:1
- * @param {number} [bufferLength=2] Length of the buffer to render in seconds
  */
 export class BytebeatNode {
+  /**
+   * @param {AudioContext} context
+   * @param {string} bytebeat The bytebeat function to be played
+   * @param {number} [frequency=8000] The fundamental frequency of the note to be played, used by 't'
+   * @param {number} [tempo=120] The tempo that will be translated to counter 'tt'
+   * @param {boolean} [floatMode=false] Whether the bytebeat function expects an output between 0:255 (default) or -1:1
+   * @param {number} [bufferLength=2] Length of the buffer to render in seconds
+   */
   constructor(
     context,
     bytebeat,

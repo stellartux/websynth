@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { WabtModule } from '../ext/libwabt.min.js'
 
 const wabt = WabtModule()

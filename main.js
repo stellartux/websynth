@@ -8,25 +8,26 @@ import { NoteMap } from './src/note-map.js'
 
 /** Type for storing envelope and oscillator preset information for recalling
  * user defined presets and UI persistence between sessions.
- * @param {string} name
- * @param {object} envelope
- * @param {number} [envelope.attack=0.2]
- * @param {number} [envelope.decay=0.2]
- * @param {number} [envelope.sustain=0.4]
- * @param {number} [envelope.release=0.1]
- * @param {object[]} oscillators
- * @param {string} [oscillators.waveform='sine']
- * Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
- * @param {number} [oscillators.gain=0.5]
- * @param {number} [oscillators.detune=0]
- * @param {number} [oscillators.note-offset=0]
- * @param {number} [oscillators.octave=0]
- * @param {boolean} [oscillators.invert-phase=false]
- * @param {string} [oscillators.bytebeatCode='']
- * @param {string} [type='additive-oscillators']
- * Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
  */
 class Preset {
+  /**
+   * @param {string} name
+   * @param {object} envelope
+   * @param {number} [envelope.attack=0.2]
+   * @param {number} [envelope.decay=0.2]
+   * @param {number} [envelope.sustain=0.4]
+   * @param {number} [envelope.release=0.1]
+   * @param {object[]} oscillators
+   * @param {string} [oscillators.waveform='sine']
+   * Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
+   * @param {number} [oscillators.gain=0.5]
+   * @param {number} [oscillators.detune=0]
+   * @param {number} [oscillators.noteOffset=0]
+   * @param {number} [oscillators.octave=0]
+   * @param {boolean} [oscillators.invertPhase=false]
+   * @param {string} [oscillators.bytebeatCode='']
+   * @param {string} [type='additive-oscillators'] Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
+   */
   constructor(name, envelope, oscillators, type = 'additive-oscillators') {
     if (!(envelope && oscillators)) {
       throw Error(

@@ -1,9 +1,12 @@
 /** an extension of the built-in Map object for keeping track of groups of pressed keys */
 export class NoteMap extends Map {
-  release(num) {
-    const note = this.get(num)
+  /**
+   * @param {number} midiNumber 
+   */
+  release(midiNumber) {
+    const note = this.get(midiNumber)
     note.releaseNote()
-    this.delete(num)
+    this.delete(midiNumber)
     return note
   }
 
@@ -12,9 +15,12 @@ export class NoteMap extends Map {
     this.clear()
   }
 
-  stop(num) {
-    this.get(num).stopNote()
-    this.delete(num)
+  /**
+   * @param {number} midiNumber 
+   */
+  stop(midiNumber) {
+    this.get(midiNumber).stopNote()
+    this.delete(midiNumber)
   }
 
   stopAll() {
@@ -22,9 +28,12 @@ export class NoteMap extends Map {
     this.clear()
   }
 
-  sustain(num) {
-    const note = this.get(num)
-    this.delete(num)
+  /**
+   * @param {number} midiNumber
+   */
+  sustain(midiNumber) {
+    const note = this.get(midiNumber)
+    this.delete(midiNumber)
     return note
   }
 

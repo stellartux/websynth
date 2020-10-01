@@ -13,7 +13,7 @@ customElements.define(
       this.input = document.createElement('textarea')
       this.input.setAttribute('name', 'bytebeat')
       this.input.setAttribute('placeholder', 't => { // bytebeat }')
-      this.input.setAttribute('spellcheck', false)
+      this.input.setAttribute('spellcheck', '')
       this.input.cols = 40
       this.input.rows = 1
       this.input.innerText = this.textContent
@@ -34,7 +34,7 @@ customElements.define(
       rate.setAttribute('max', '96000')
       rate.value = this.hasAttribute('samplerate')
         ? this.getAttribute('samplerate')
-        : 8000
+        : '8000'
       rate.onchange = () => (this.hasChanged = true)
       rateLabel.appendChild(rate)
       options.appendChild(rateLabel)

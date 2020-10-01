@@ -1,5 +1,5 @@
 /**
- * @param {(AudioContext|AudioNode)} target output destination for audio
+ * @param {AudioContext|AudioNode} target output destination for audio
  * @param {number} [tempo=120] Tempo of metronome in bpm
  */
 export class Metronome {
@@ -21,6 +21,10 @@ export class Metronome {
   get tempo() {
     return this.period * 60000
   }
+
+  /**
+   * @param {number} bpm
+   */
   set tempo(bpm) {
     this.period = 60000 / bpm
   }
