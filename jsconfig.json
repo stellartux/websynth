@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "lib": ["dom"],
+    "lib": ["dom", "es2020"],
     "checkJs": true,
-    "module": "system"
+    "noImplicitAny": false,
+    "module": "system",
+    "alwaysStrict": true
   }
 }
