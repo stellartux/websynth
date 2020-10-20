@@ -4,8 +4,8 @@ export class MIDINumber {
    * Calculates the name of a chord from an array of MIDI note numbers.
    * If a name can't be found, lists all held notes, separated by long dashes.
    * @param {number[]} nums An array of MIDI note numbers.
-   * @param {boolean} [sharp=true] Format accidentals as sharp or flat
-   * @param {boolean} [verbose=false] Format as short or verbose form of chord names
+   * @param {boolean} [sharp=true] Format accidentals as sharp or flat, default is sharp.
+   * @param {boolean} [verbose=false] Format as short or verbose form of chord names, default is short.
    * @returns {string} The chord name of the held notes.
    */
   static toChord(nums, sharp = true, verbose = false) {
