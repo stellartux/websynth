@@ -264,6 +264,18 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
       'bytebeat'
     ),
     new Preset(
+      'Wasm Sierpinski',
+      { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
+      [
+        {
+          wasmbeatCode:
+            'local.get $t\nlocal.get $t\ni32.const 8\ni32.shr_u\ni32.and',
+          wasmbeatLanguage: 'wat',
+        },
+      ],
+      'wasmbeat'
+    ),
+    new Preset(
       'Headachegoldfish',
       { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 },
       [
