@@ -1,13 +1,13 @@
 import { BytebeatNote } from './src/bytebeat-note.js'
-import { OscillatorNote } from './src/oscillator-note.js'
+import { validateBytebeat } from './src/bytebeat-utils.js'
 import { Metronome } from './src/metronome.js'
 import { MIDINumber } from './src/midinumber.js'
-import { validateBytebeat } from './src/bytebeat-utils.js'
-import { RPN } from './src/rpn.js'
 import { NoteMap } from './src/note-map.js'
+import { OscillatorNote } from './src/oscillator-note.js'
+import { RPN } from './src/rpn.js'
 
 if (WebAssembly) {
-  import('./src/build-wabt.js').then(module => {
+  import('./src/build-wabt.js').then((module) => {
     const wat = $('#wasm-wat-code')
     const watInput = async () => {
       try {
@@ -39,11 +39,11 @@ if (WebAssembly) {
     rpn.oninput = rpnInput
 
     const codeBlocks = [wat, rpn]
-    const noProp = ev => ev.stopPropagation()
+    const noProp = (ev) => ev.stopPropagation()
     for (const b of codeBlocks) b.addEventListener('keydown', noProp)
 
     const wasmLanguage = $('#wasm-language')
-    wasmLanguage.addEventListener('change', ev =>
+    wasmLanguage.addEventListener('change', (ev) =>
       changeCurrentView(ev.target.value, 'wasm-language', 'wasm-code-blocks')
     )
     $('#' + wasmLanguage.value).oninput()
@@ -130,10 +130,10 @@ function getPresetInfo() {
 function addOscillator(preset) {
   const c = document.importNode($('#oscillator-template').content, true)
   const p = $('#oscillator-panel')
-  $('.remove-oscillator', c).addEventListener('click', e =>
+  $('.remove-oscillator', c).addEventListener('click', (e) =>
     p.removeChild(e.target.parentElement)
   )
-  $('.gain', c).addEventListener('dblclick', e => {
+  $('.gain', c).addEventListener('dblclick', (e) => {
     e.target.value = 0.5
   })
   if (preset) {
@@ -199,7 +199,7 @@ let controller,
   wasmModule
 const $ = (selector, parent = document) => parent.querySelector(selector),
   $$ = (s, p = document) => Array.from(p.querySelectorAll(s)),
-  removeChildren = el => {
+  removeChildren = (el) => {
     while (el.firstChild) el.removeChild(el.firstChild)
   },
   audio = new (window.AudioContext || window.webkitAudioContext)(),
@@ -416,7 +416,7 @@ function updateChordDisplay() {
 const noteSources = {
   'additive-oscillators': {
     class: OscillatorNote,
-    oscParams: midiNum => {
+    oscParams: (midiNum) => {
       const oscParams = []
       for (const panel of $$('.oscillator')) {
         oscParams.push({
@@ -439,7 +439,7 @@ const noteSources = {
   },
   'harmonic-series': {
     class: OscillatorNote,
-    oscParams: midiNum => {
+    oscParams: (midiNum) => {
       const oscParams = [],
         reals = [],
         imags = []
@@ -459,7 +459,7 @@ const noteSources = {
   },
   bytebeat: {
     class: BytebeatNote,
-    oscParams: midiNum => {
+    oscParams: (midiNum) => {
       return [
         {
           bytebeat: $('#bytebeat-code').value,
@@ -476,7 +476,7 @@ const noteSources = {
   },
   wasmbeat: {
     class: BytebeatNote,
-    oscParams: midiNum => {
+    oscParams: (midiNum) => {
       return [
         {
           module: wasmModule,
@@ -532,7 +532,7 @@ function noteOff(midiNum) {
 function sustainPedalEvent(ev) {
   if (pedals.sustain && ev.value < 64) {
     pedals.sustain = false
-    sustainingNotes.forEach(n => n.releaseNote())
+    sustainingNotes.forEach((n) => n.releaseNote())
     sustainingNotes.clear()
   } else if (!pedals.sustain && ev.value > 63) {
     pedals.sustain = true
@@ -558,10 +558,10 @@ function sostenutoPedalEvent(ev) {
  * @param {string|number} [channel='all'] MIDI channel to listen for events on
  */
 function setupControllerListeners(channel = 'all') {
-  controller.addListener('noteon', channel, e =>
+  controller.addListener('noteon', channel, (e) =>
     noteOn(e.note.number, e.velocity)
   )
-  controller.addListener('noteoff', channel, e => noteOff(e.note.number))
+  controller.addListener('noteoff', channel, (e) => noteOff(e.note.number))
   controller.addListener('controlchange', channel, controlChange)
   controller.addListener('channelmode', channel, channelMode)
 }
@@ -585,18 +585,18 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
     elem.classList.add('key')
     elem.id = MIDINumber.toScientificPitch(i)
     elem.midiNumber = i
-    elem.onmousedown = e => noteOn(e.target.midiNumber)
-    elem.onmouseleave = e => noteOff(e.target.midiNumber)
-    elem.onmouseup = e => noteOff(e.target.midiNumber)
-    elem.addEventListener('touchstart', e => {
+    elem.onmousedown = (e) => noteOn(e.target.midiNumber)
+    elem.onmouseleave = (e) => noteOff(e.target.midiNumber)
+    elem.onmouseup = (e) => noteOff(e.target.midiNumber)
+    elem.addEventListener('touchstart', (e) => {
       e.preventDefault()
       noteOn(e.target.midiNumber)
     })
-    elem.addEventListener('touchend', e => {
+    elem.addEventListener('touchend', (e) => {
       e.preventDefault()
       noteOff(e.target.midiNumber)
     })
-    elem.addEventListener('touchcancel', e => {
+    elem.addEventListener('touchcancel', (e) => {
       e.preventDefault()
       noteOff(e.target.midiNumber)
     })
@@ -615,7 +615,7 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
 function generateColorPalette(seed = Math.random() * Math.PI * 2) {
   const palette = [],
     j = (2 * Math.PI) / 3
-  const magic = f =>
+  const magic = (f) =>
     (187 + (Math.cos(f * 5) + Math.cos(f * 7)) * 32).toPrecision(3)
   for (let i = 0; i < 12; i++) {
     let f = i + seed,
@@ -630,7 +630,7 @@ function generateColorPalette(seed = Math.random() * Math.PI * 2) {
 }
 
 function setupKeypressKeymap() {
-  document.addEventListener('keydown', e => {
+  document.addEventListener('keydown', (e) => {
     if (
       Object.keys(keyboardKeymap).includes(e.key) &&
       !e.altKey &&
@@ -643,7 +643,7 @@ function setupKeypressKeymap() {
       noteOn(keyboardKeymap[e.key])
     }
   })
-  document.addEventListener('keyup', e => {
+  document.addEventListener('keyup', (e) => {
     if (Object.keys(currentlyHeldKeys).includes(e.key)) {
       delete currentlyHeldKeys[e.key]
       noteOff(keyboardKeymap[e.key])
@@ -658,27 +658,27 @@ function setupKeypressKeymap() {
 }
 
 function setupGlobalEventListeners() {
-  $('#master-gain').addEventListener('change', e => {
+  $('#master-gain').addEventListener('change', (e) => {
     masterGain.gain.value = e.target.value
   })
-  $('#master-gain').addEventListener('dblclick', e => {
+  $('#master-gain').addEventListener('dblclick', (e) => {
     masterGain.gain.value = 0.5
     e.target.value = 0.5
   })
-  $('#panning').addEventListener('change', e => {
+  $('#panning').addEventListener('change', (e) => {
     panner.pan.value = e.target.value
   })
-  $('#panning').addEventListener('dblclick', e => {
+  $('#panning').addEventListener('dblclick', (e) => {
     panner.pan.value = 0
     e.target.value = 0
   })
-  $('#metronome').addEventListener('change', e => {
+  $('#metronome').addEventListener('change', (e) => {
     e.target.checked ? metronome.start() : metronome.stop()
   })
-  $('#tempo').addEventListener('change', e => {
+  $('#tempo').addEventListener('change', (e) => {
     metronome.tempo = e.target.value
   })
-  $('#source-select').addEventListener('change', e =>
+  $('#source-select').addEventListener('change', (e) =>
     changeCurrentView(e.target.value, 'source-select', 'audio-sources')
   )
 }
@@ -752,7 +752,7 @@ window.onload = () => {
   if (audio.audioWorklet) {
     audio.audioWorklet.addModule('./src/bytebeat-processor.js')
   }
-  WebMidi.enable(err => {
+  WebMidi.enable((err) => {
     if (err) {
       console.error('WebMidi could not be enabled.', err)
       setupDisplayKeyboard()
@@ -763,7 +763,7 @@ window.onload = () => {
         cs = $('#controller-select'),
         chs = $('#channel-select')
 
-      cf.addEventListener('submit', e => {
+      cf.addEventListener('submit', (e) => {
         e.preventDefault()
         controller = WebMidi.getInputByName(cs.options[cs.selectedIndex].value)
         setupControllerListeners(chs.options[chs.selectedIndex].value)
@@ -798,3 +798,8 @@ window.onunload = () => {
   window.localStorage.persistentSettings = JSON.stringify(getPresetInfo())
   window.localStorage.customPresets = JSON.stringify(customPresets)
 }
+
+window.addEventListener('click', () => audio.resume(), {
+  capture: true,
+  once: true,
+})
