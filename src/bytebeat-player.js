@@ -1,4 +1,4 @@
-import { BytebeatNode } from './bytebeat-note.js'
+import { BytebeatNode } from './bytebeat-worklets.js'
 import { validateBytebeat } from './bytebeat-utils.js'
 
 customElements.define(
@@ -8,6 +8,9 @@ customElements.define(
       super()
       const shadow = this.attachShadow({ mode: 'open' })
       const main = document.createElement('main')
+      this.addEventListener('click', (ev) => {
+        this.context.resume()
+      })
       this.hasChanged = false
 
       this.input = document.createElement('textarea')
@@ -78,30 +81,30 @@ customElements.define(
         threshold: -0.3,
       })
       this.limiter.connect(this.context.destination)
-      this.usingPolyfill = !this.context.audioWorklet
-      if (this.usingPolyfill) {
-        const lengthLabel = document.createElement('label')
-        lengthLabel.innerText = 'Length: '
-        const length = document.createElement('input')
-        length.setAttribute('name', 'length')
-        length.setAttribute('type', 'number')
-        length.setAttribute('min', 1)
-        length.value = this.hasAttribute('length')
-          ? this.getAttribute('length')
-          : 30
-        length.onchange = () => (this.hasChanged = true)
-        options.appendChild(lengthLabel).appendChild(length)
-        Object.defineProperty(this, 'renderLength', {
-          get() {
-            return length.value
-          },
-          set(v) {
-            length.value = v
-          },
-        })
-      } else {
-        this.context.audioWorklet.addModule('bytebeat-processor.js')
-      }
+      // this.usingPolyfill = !this.context.audioWorklet
+      // if (this.usingPolyfill) {
+      //   const lengthLabel = document.createElement('label')
+      //   lengthLabel.innerText = 'Length: '
+      //   const length = document.createElement('input')
+      //   length.setAttribute('name', 'length')
+      //   length.setAttribute('type', 'number')
+      //   length.setAttribute('min', 1)
+      //   length.value = this.hasAttribute('length')
+      //     ? this.getAttribute('length')
+      //     : 30
+      //   length.onchange = () => (this.hasChanged = true)
+      //   options.appendChild(lengthLabel).appendChild(length)
+      //   Object.defineProperty(this, 'renderLength', {
+      //     get() {
+      //       return length.value
+      //     },
+      //     set(v) {
+      //       length.value = v
+      //     },
+      //   })
+      // } else {
+        this.context.audioWorklet.addModule('src/bytebeat-processor.js')
+      // }
 
       const playButton = document.createElement('button')
       playButton.addEventListener('click', () => {
