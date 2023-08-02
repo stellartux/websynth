@@ -10,6 +10,7 @@
   overflow-x: hidden;
   width: 100%;
   bottom: 0%;
+  min-height: 3ch;
 }
 #ivory, #ebony {
   height: 100%;

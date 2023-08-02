@@ -146,10 +146,9 @@ function addOscillator(preset) {
 }
 
 /** Saves a preset to the custom presets list.
- * @param {Preset} preset The preset to be saved
  * @throws Unnamed presets can't be saved
  */
-function addPreset(preset) {
+function addPreset() {
   if (!$('#preset-name').value) throw Error("Unnamed preset can't be saved")
   customPresets.push(getPresetInfo())
   updateCustomPresets(customPresets, $('#custom-presets'))
@@ -194,7 +193,7 @@ let controller,
   sostenutoNotes = new NoteMap(),
   currentlyHeldKeys = new NoteMap(),
   envelope = {},
-  pitchBend = 0,
+  // pitchBend = 0,
   customPresets = [],
   wasmModule
 const $ = (selector, parent = document) => parent.querySelector(selector),
@@ -331,9 +330,9 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
       ],
       'bytebeat'
     ),
-    new Preset('', { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 }, [
-      {},
-    ]),
+    // new Preset('', { attack: 0, decay: 0.15, sustain: 0.75, release: 0.04 }, [
+    //   {},
+    // ]),
   ]
 
 /** Release all currently playing notes */
@@ -383,9 +382,9 @@ function controlChange(_ev) {
 }
 
 /** Sync the envelope object to the UI */
-function updateEnvelope(_ev) {
-  if (_ev) {
-    envelope[_ev.target.id] = Number(_ev.target.value)
+function updateEnvelope(ev) {
+  if (ev) {
+    envelope[ev.target.id] = Number(ev.target.value)
   } else {
     for (const c of $$('#envelope-controls input')) {
       envelope[c.id] = Number(c.value)
@@ -424,10 +423,10 @@ const noteSources = {
           detune: $('.detune', panel).value,
           frequency: MIDINumber.toFrequency(
             Number($('.note-offset', panel).value) +
-              midiNum +
-              Number($('#note-offset').value) +
-              (Number($('.octave', panel).value) + Number($('#octave').value)) *
-                12
+            midiNum +
+            Number($('#note-offset').value) +
+            (Number($('.octave', panel).value) + Number($('#octave').value)) *
+            12
           ),
           gain:
             $('.gain', panel).value *
@@ -441,16 +440,23 @@ const noteSources = {
     class: OscillatorNote,
     oscParams: (midiNum) => {
       const oscParams = [],
-        reals = [],
-        imags = []
+        real = [],
+        imag = []
+      const baseRe = +$('#real-part').value
+      const baseIm = +$('#imag-part').value
+      let re = 1
+      let im = 0
+      for (let i = 0; i < 10; i++) {
+        [re, im] = [re * baseRe - im * baseIm, re * baseIm + im * baseRe]
+        real.push(re)
+        imag.push(im)
+      }
       oscParams.push({
-        type: 'custom',
-        real: [0, 1, 0.5, 0.25, 0.125, 0.0125],
-        imag: [0, 0, 0, 0, 0, 0],
+        type: 'custom', real, imag,
         frequency: MIDINumber.toFrequency(
           midiNum +
-            Number($('#note-offset').value) +
-            Number($('#octave').value) * 12
+          Number($('#note-offset').value) +
+          Number($('#octave').value) * 12
         ),
         gain: 1,
       })
@@ -465,8 +471,8 @@ const noteSources = {
           bytebeat: $('#bytebeat-code').value,
           frequency: MIDINumber.toFrequency(
             midiNum +
-              Number($('#note-offset').value) +
-              (Number($('#octave').value) + 8) * 12
+            Number($('#note-offset').value) +
+            (Number($('#octave').value) + 8) * 12
           ),
           tempo: Number($('#tempo').value),
           floatMode: $('#bytebeat-mode').value === 'float',
@@ -482,8 +488,8 @@ const noteSources = {
           module: wasmModule,
           frequency: MIDINumber.toFrequency(
             midiNum +
-              Number($('#note-offset').value) +
-              (Number($('#octave').value) + 8) * 12
+            Number($('#note-offset').value) +
+            (Number($('#octave').value) + 8) * 12
           ),
           tempo: Number($('#tempo').value),
           floatMode: false,
@@ -687,17 +693,18 @@ function setupGlobalEventListeners() {
  * @param {string} viewId
  */
 function changeCurrentView(viewId, selectId, parentId) {
-  if ($('#' + selectId).value !== viewId) {
-    $('#' + selectId).value = viewId
+  const select = $('#' + selectId)
+  if (select.value !== viewId) {
+    select.value = viewId
   }
-  for (const el of $$('#' + parentId)[0].children) {
+  for (const el of $$(`#${parentId}>:not(nav)`)) {
     el.classList[el.id === viewId ? 'remove' : 'add']('hidden')
   }
 }
 
 /** Attach preset <option>s to <select>.
  * @param {Preset[]} presets
- * @param {DOMElement} target
+ * @param {HTMLSelectElement} target
  */
 function updateCustomPresets(presets, target) {
   removeChildren(target)

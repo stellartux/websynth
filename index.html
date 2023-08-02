@@ -13,17 +13,6 @@
 </head>
 
 <body>
-<main>
-
-<nav>
-Mode:
-<select id="source-select">
-<option value="additive-oscillators">Additive</option>
-<!--<option value="harmonic-series">Harmonics</option>-->
-<option value="bytebeat">Bytebeat</option>
-<option value="wasmbeat">Wasmbeat</option>
-</select>
-</nav>
 
 <form id="controller-form" class="hidden">
 <label for="controller-select">Select your MIDI controller</label>
@@ -33,81 +22,20 @@ Mode:
 <button type="submit">Select</button>
 </form>
 
-<div class="container">
 <div id="audio-sources">
+<nav>
+<label for="source-select">Mode</label>
+<select id="source-select">
+<option value="additive-oscillators">Additive</option>
+<option value="harmonic-series">Harmonics</option>
+<option value="bytebeat">Bytebeat</option>
+<option value="wasmbeat">Wasmbeat</option>
+</select>
+</nav>
 
 <div id="additive-oscillators" class="panel">
 <button id="add-oscillator" class="add">+</button>
 <ol id="oscillator-panel"></ol>
-</div>
-
-<div id="harmonic-series" class="hidden">
-<ol id="harmonic-panel" class="panel"></ol>
-<canvas id="fourier-canvas" width="400" height="300"></canvas>
-</div>
-
-<div id="bytebeat" class="hidden">
-<div class="panel">
-  <label for="bytebeat-mode">Bytebeat Mode:</label>
-  <select id="bytebeat-mode">
-  <option value="byte">Bytebeat</option>
-  <option value="float">Floatbeat</option>
-  </select>
-</div>
-<div class="panel">
-<code>(t, tt) ⟹ </code> <input type="text" id="bytebeat-code" class="validate" value="t & t >> (8 + 2 & tt >> 7)">
-</div>
-<details>
-<summary>?</summary>
-<p>If you're already familiar with bytebeat, this keyboard mode works similarly
-  to other JS bytebeat software, except <code>t</code> is incremented at a rate relative to
-  the note played on the keyboard, such that the bytebeat function <code>t</code> plays the same
-  pitch as the equivalent sawtooth wave in additive mode.
-</p>
-<p>There is also a second counter, <code>tt</code>, which is incremented so that
-  <code>1 & tt >> 11</code> produces quarter notes at the set tempo. This can be
-  used to produce rhythms that will be at the same tempo across all notes.
-  <code>tt</code> is incremented at 8kHz about 113bpm, 11kHz and multiples of
-  it about 163bpm.
-</p>
-<p>The <code>Math</code> object is included, as well as the function
-  <code>int(string, index)</code> for C-style char-to-int indexing and conversion.
-</p>
-<p>If you still have no idea what's going on, <a href="guide.html">here's a more in-depth guide.</a></p>
-</details>
-</div>
-
-<div id="wasmbeat" class="hidden">
-<div class="panel">
-<div id="wasm-code-blocks">
-<textarea id="wasm-wat-code" class="validate" rows="20" cols="40" spellcheck="false">
-local.get $t
-local.get $t
-i32.const 8
-i32.shr_u
-i32.and
-</textarea>
-<textarea id="wasm-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
-<textarea id="glitch-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
-</div>
-<div id="wasm-options" class="panel optlist">
-<!--
-<label for="wasm-semantics">Semantics</label>
-<select id="wasm-semantics">
-<option value="wasm">WebAssembly Stack Machine</option>
-<option value="glitch">GlitchMachine</option>
-</select>
--->
-<label for="wasm-language">Syntax</label>
-<select id="wasm-language">
-<option value="wasm-wat-code">WebAssembly Text format</option>
-<option value="wasm-rpn-code">GlitchMachine RPN</option>
-</select>
-
-</div>
-</div>
-</div>
-</div>
 
 <template id="oscillator-template">
 <li class="oscillator">
@@ -137,12 +65,72 @@ i32.and
 <button class="remove-oscillator remove">-</button>
 </li>
 </template>
+</div>
 
-<template id="harmonic-template">
-<label>
-<input type="" name="" value="">
-</label>
-</template>
+<div id="harmonic-series" class="hidden">
+<div id="harmonic-panel" class="panel">
+<form id="harmonic-inputs">
+<math><mo>(</mo></math>
+<input type="text" id="real-part" spellcheck="false" value="1">
+<math><mo>)</mo><mo>+</mo><mo>(</mo></math>
+<input type="text" id="imag-part" spellcheck="false" value="0">
+<math><mo>)</mo><mo>𝑖</mo></math>
+</form>
+
+</div>
+</div>
+
+<div id="bytebeat" class="hidden">
+<div class="panel">
+<label for="bytebeat-mode">Bytebeat Mode</label>
+<select id="bytebeat-mode">
+<option value="byte">Bytebeat</option>
+<option value="float">Floatbeat</option>
+</select>
+</div>
+<textarea id="bytebeat-code" class="validate" rows="20" cols="40" spellcheck="false">t & t >> (8 + 2 & tt >> 7)</textarea>
+<details>
+<summary>?</summary>
+<p>If you're already familiar with bytebeat, this keyboard mode works similarly
+  to other JS bytebeat software, except <code>t</code> is incremented at a rate relative to
+  the note played on the keyboard, such that the bytebeat function <code>t</code> plays the same
+  pitch as the equivalent sawtooth wave in additive mode.
+</p>
+<p>There is also a second counter, <code>tt</code>, which is incremented so that
+  <code>1 & tt >> 11</code> produces quarter notes at the set tempo. This can be
+  used to produce rhythms that will be at the same tempo across all notes.
+  <code>tt</code> is incremented at 8kHz about 113bpm, 11kHz and its multiples
+  at about 163bpm.
+</p>
+<p>The <code>Math</code> object is included, as well as the function
+  <code>int(string, index)</code> for C-style char-to-int indexing and conversion.
+</p>
+<p>If you still have no idea what's going on, <a href="guide.html">here's a more in-depth guide.</a></p>
+</details>
+</div>
+
+<div id="wasmbeat" class="hidden">
+<div id="wasm-options" class="panel">
+<label for="wasm-language">Syntax</label>
+<select id="wasm-language">
+<option value="wasm-wat-code">WebAssembly Text format</option>
+<option value="wasm-rpn-code">GlitchMachine RPN</option>
+</select>
+
+</div>
+<div id="wasm-code-blocks">
+<textarea id="wasm-wat-code" class="validate" rows="20" cols="40" spellcheck="false">
+local.get $t
+local.get $t
+i32.const 8
+i32.shr_u
+i32.and
+</textarea>
+<textarea id="wasm-rpn-code" class="validate hidden" rows="20" cols="40" spellcheck="false">t t 8 &gt;&gt; &amp;</textarea>
+
+</div>
+</div>
+</div>
 
 <section id="global-controls">
 
@@ -192,9 +180,6 @@ i32.and
 <input type="number" value="120" min="40" max="400" step="any" id="tempo">
 </section>
 </section>
-</div>
-
-</main>
 <output id="chord-name"></output>
 <section id="keyboard">
 <div id="ebony"></div>

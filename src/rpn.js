@@ -329,7 +329,7 @@ export const RPN = {
           return this.glitchMachine.popFloat32Byte()
         case 'uint32':
           return this.glitchMachine.popUint32()
-        case 'byte:':
+        case 'byte':
         default:
           return this.glitchMachine.popByte()
       }

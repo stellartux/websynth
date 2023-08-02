@@ -4,38 +4,40 @@
   --main-shadow: #888;
   --neutral: #48d;
   --attention: #d84;
-  --link: #88d;
   --highlight: #8ad;
   --good: #4d6;
   --bad: #d42;
+  color-scheme: dark light;
 }
-
+@media (prefers-color-scheme: light) {
+  :root {
+    --main-font:#333;
+    --main-bg: #fff;
+  }
+}
+* {
+  box-sizing: border-box;
+}
 body {
-  width: 100%;
   max-height: 100vh;
   height: 100vh;
+  overflow: hidden;
   background-color: var(--main-bg);
   color: var(--main-font);
   font-family: "Aldrich", "Lucida Sans Unicode", "Lucida Grande", "Open Sans", sans-serif;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-rows: 4fr 1.5em 1fr;
-  justify-content: stretch;
-}
-main {
-  overflow-y: auto;
-  max-height: 80vh;
-  position: relative;
+  grid-template:
+    "a a" min-content
+    "b c" auto
+    "d d" 2ch
+    "e e" 20vh / 13fr 5fr;
+  gap: 0.5ch;
+  margin: 0 1.3ch;
 }
 
 nav {
-  position: relative;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto 0.5em;
-  height: min-content;
   padding: 0.3em 0.5em;
   border-bottom: thin solid var(--main-shadow);
 }
@@ -44,7 +46,7 @@ input,
 select {
   margin-right: 0.7em;
   border-radius: 0.4em;
-  min-width: 3ch;
+  min-width: 7ch;
   max-height: 2rem;
 }
 
@@ -56,14 +58,20 @@ input[type=range] {
   color: var(--main-shadow);
 }
 
-.container {
-  display: flex;
-  flex-wrap: wrap;
-  margin-right: 1ch;
+#audio-sources {
+  max-height: 80vh;
+  overflow-y: auto;
+  grid-area: b;
+  width: max(60ch, max-content);
 }
+#global-controls {
+  grid-area: c;
+}
+#keyboard {
+  grid-area: e;
+}
+
 #oscillator-panel {
-  margin-left: 0;
-  min-width: 400px;
   flex: 4;
 }
 button {
@@ -91,20 +99,14 @@ button:active.remove {
   color: var(--bad);
   border-color: var(--bad);
 }
-button:focus {
-  outline: none;
-}
 #add-oscillator {
   position: relative;
   height: 5vmin;
   width: 5vmin;
   margin-left: 0.5em;
-  border-width: thick;
+  border-width: medium;
   font-size: 1.2em;
-}
-
-#global-controls {
-  flex: 1;
+  font-weight: bold;
 }
 
 .oscillator {
@@ -136,6 +138,7 @@ button:focus {
   margin-bottom: 1em;
   display: flex;
   justify-content: center;
+  grid-area: a;
 }
 
 #controller-form > * {
@@ -160,11 +163,9 @@ a:visited {
   color: var(--highlight, #a8d);
 }
 
-#master-level {
-  border: solid thick red;
-}
 #chord-name {
   text-align: center;
+  grid-area: d;
 }
 #sharp-or-flat::after {
   content: '♭';
@@ -180,15 +181,8 @@ a:visited {
   display: flex;
   flex-direction: row;
 }
-#audio-sources {
-  min-width: 70%;
-}
 #additive-oscillators {
   display: flex;
-}
-#bytebeat-code {
-  display: inline;
-  width: 80ch;
 }
 
 .validate {
@@ -203,10 +197,6 @@ details {
   padding: 1ch;
 }
 
-.optlist {
-  display: grid;
-  grid-template-columns: 2;
-  align-content: start;
-  grid-auto-rows: minmax(auto, 1.5rem);
-  row-gap: 0.25rem;
+textarea { 
+  width: 100%;
 }
