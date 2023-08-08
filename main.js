@@ -5,6 +5,7 @@ import { MIDINumber } from './src/midinumber.js'
 import { NoteMap } from './src/note-map.js'
 import { OscillatorNote } from './src/oscillator-note.js'
 import { RPN } from './src/rpn.js'
+import { ComplexNumber, evaluate, invert, mathML, parse, validate as validateFormula } from './src/maths.js'
 
 if (WebAssembly) {
   import('./src/build-wabt.js').then((module) => {
@@ -93,7 +94,11 @@ function getPresetInfo() {
   const type = $('#source-select').value
   const oscs = []
   if (type === 'harmonic-series') {
-    // TODO
+    const o = {}
+    for (const id of ['harmonic-count', 'harmonic-function']) {
+      o[id] = document.getElementById(id).value
+    }
+    oscs.push(o)
   } else if (type === 'bytebeat') {
     oscs.push({
       bytebeatCode: $('#bytebeat-code').value,
@@ -179,6 +184,11 @@ function loadPreset(preset) {
       break
     case 'wasmbeat':
       for (const o of preset.oscillators) $(`#${o.id}`).value = o.value
+      break
+    case 'harmonic-series':
+      for (const [id, value] of Object.entries(preset.oscillators[0])) {
+        document.getElementById(id).value = value
+      }
       break
     default:
       removeChildren($('#oscillator-panel'))
@@ -439,28 +449,41 @@ const noteSources = {
   'harmonic-series': {
     class: OscillatorNote,
     oscParams: (midiNum) => {
-      const oscParams = [],
-        real = [],
-        imag = []
-      const baseRe = +$('#real-part').value
-      const baseIm = +$('#imag-part').value
-      let re = 1
-      let im = 0
-      for (let i = 0; i < 10; i++) {
-        [re, im] = [re * baseRe - im * baseIm, re * baseIm + im * baseRe]
-        real.push(re)
-        imag.push(im)
+      const oscParams = []
+      const count = document.getElementById('harmonic-count').value
+      const real = new Float32Array(count + 1)
+      real[1] = 1
+      const imag = new Float32Array(count + 1)
+      const N = new ComplexNumber(count)
+      const func = document.getElementById('harmonic-function')
+      try {
+        const expr = ['/', new ComplexNumber(1), parse(func.value)]
+        let x = new ComplexNumber(1, 0)
+        for (let k = 1; k <= count; ++k) {
+          x = evaluate(expr, { k: new ComplexNumber(k), N })
+          real[k + 1] = x.re
+          imag[k + 1] = x.im
+        }
+        if (real.some(Number.isNaN)) {
+          func.setCustomValidity('Invalid')
+          return
+        }
+        func.setCustomValidity('')
+        oscParams.push({
+          type: 'custom', real, imag,
+          frequency: MIDINumber.toFrequency(
+            midiNum +
+            Number($('#note-offset').value) +
+            Number($('#octave').value) * 12
+          ),
+          gain: 1,
+        })
+        return oscParams
+      } catch (error) {
+        func.setCustomValidity('Invalid')
+        throw error
       }
-      oscParams.push({
-        type: 'custom', real, imag,
-        frequency: MIDINumber.toFrequency(
-          midiNum +
-          Number($('#note-offset').value) +
-          Number($('#octave').value) * 12
-        ),
-        gain: 1,
-      })
-      return oscParams
+
     },
   },
   bytebeat: {
@@ -503,14 +526,16 @@ function noteOn(midiNum, velocity = 1) {
   const source = $('#source-select').value
   if (
     (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) ||
-    (source === 'wasmbeat' && !wasmModule)
+    (source === 'wasmbeat' && !wasmModule) ||
+    (source === 'harmonic-series' && !$('#harmonic-function').validity.valid)
   ) {
     return
   }
   let noteParams = Object.assign({}, envelope),
     oscParams = noteSources[source].oscParams(midiNum)
+  if (!oscParams) return
   noteParams.triggerTime = audio.currentTime
-  if ($('#velocity-sensitive').checked) {
+  if (document.getElementById('velocity-sensitive').checked) {
     noteParams.velocity = velocity
   }
   if (pedals.soft) {
@@ -522,7 +547,7 @@ function noteOn(midiNum, velocity = 1) {
     new noteSources[source].class(panner, noteParams, oscParams)
   )
   updateChordDisplay()
-  $('#' + MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
+  document.getElementById(MIDINumber.toScientificPitch(midiNum)).classList.add('keypress')
 }
 
 function noteOff(midiNum) {
@@ -532,7 +557,7 @@ function noteOff(midiNum) {
     playingNotes.release(midiNum)
   }
   updateChordDisplay()
-  $('#' + MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
+  document.getElementById(MIDINumber.toScientificPitch(midiNum)).classList.remove('keypress')
 }
 
 function sustainPedalEvent(ev) {
@@ -655,12 +680,10 @@ function setupKeypressKeymap() {
       noteOff(keyboardKeymap[e.key])
     }
   })
-  const bb = $('#bytebeat-code')
-  const validate = () => {
+  const bb = document.getElementById('bytebeat-code')
+  bb.oninput = () => {
     bb.setCustomValidity(validateBytebeat(bb.value) ? '' : 'Invalid bytebeat')
   }
-  validate()
-  bb.oninput = validate
 }
 
 function setupGlobalEventListeners() {
@@ -743,6 +766,25 @@ window.onload = () => {
     obj.addEventListener('change', updateEnvelope)
   }
   loadPersistentState()
+  const hf = document.getElementById('harmonic-function')
+  const huf = document.getElementById('harmonic-user-formula')
+  function harmonicOnInput() {
+    try {
+      if (hf.value === '1') {
+        huf.innerHTML = '<mn>1</mn>'
+      } else if (validateFormula(hf.value)) {
+        huf.innerHTML = mathML(invert(parse(hf.value)))
+      } else {
+        throw new Error("Didn't validate.")
+      }
+      hf.setCustomValidity('')
+    } catch {
+      huf.innerHTML = '<mfrac><mn>1</mn><mrow><mi>f</mi><mo>(</mo><mi>k</mi><mo>)</mo></mrow></mfrac>'
+      hf.setCustomValidity('Invalid function')
+    }
+  }
+  harmonicOnInput()
+  document.getElementById('harmonic-function').oninput = harmonicOnInput
   updateCustomPresets(factoryPresets, $('#factory-presets'))
   updateCustomPresets(customPresets, $('#custom-presets'))
   $('#load-preset').addEventListener('click', () => {

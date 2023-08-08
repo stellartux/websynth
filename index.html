@@ -67,17 +67,56 @@
 </template>
 </div>
 
-<div id="harmonic-series" class="hidden">
-<div id="harmonic-panel" class="panel">
+<div id="harmonic-series" class="hidden panel">
 <form id="harmonic-inputs">
-<math><mo>(</mo></math>
-<input type="text" id="real-part" spellcheck="false" value="1">
-<math><mo>)</mo><mo>+</mo><mo>(</mo></math>
-<input type="text" id="imag-part" spellcheck="false" value="0">
-<math><mo>)</mo><mo>𝑖</mo></math>
+<label for="harmonic-count"><math><mi>N</mi><mo>=</mo></math></label>
+<input type="number" id="harmonic-count" class="validate" value="10" min="1" max="16">
+<label for="harmonic-function">
+<math>
+<mi>f</mi>
+<mo stretch="false">(</mo>
+<mi>k</mi>
+<mo stretchy="false">)</mo>
+<mo>=</mo>
+</math>
+</label>
+<input
+  type="text"
+  id="harmonic-function"
+  class="validate"
+  value="1 / 2 ^ k"
+  placeholder="Amplitude of the kth harmonic"
+  spellcheck="false">
 </form>
-
-</div>
+<math id="harmonic-formula" display="block">
+<mrow>
+<mi>F</mi>
+<mo stretch="false">(</mo>
+<mi>x</mi>
+<mo stretch="false">)</mo>
+<mo>=</mo>
+<munderover>
+<mo>∑</mo>
+<mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow>
+<mrow><mi>N</mi></mrow>
+</munderover>
+<mrow><mrow id="harmonic-user-formula">
+<mfrac>
+<mn>1</mn>
+<mi>f</mi>
+<mo stretchy="false">(</mo>
+<mi>k</mi>
+<mo stretchy="false">)</mo>
+</mfrac>
+</mrow>
+</mrow>
+<mo>·</mo>
+<msup>
+<mi>e</mi>
+<mrow><mi>i</mi><mi>k</mi><mi>x</mi></mrow>
+</msup>
+</mrow>
+</math>
 </div>
 
 <div id="bytebeat" class="hidden">

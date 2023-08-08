@@ -200,3 +200,16 @@ details {
 textarea { 
   width: 100%;
 }
+
+#harmonic-series {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  gap: 1ch;
+  flex-direction: column;
+  font-size: larger;
+}
+
+#harmonic-function {
+  width: 40ch;
+}
