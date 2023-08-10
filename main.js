@@ -183,7 +183,9 @@ function loadPreset(preset) {
       $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
       break
     case 'wasmbeat':
-      for (const o of preset.oscillators) $(`#${o.id}`).value = o.value
+      for (const o of preset.oscillators) {
+        document.getElementById(o.id).value = o.value
+      }
       break
     case 'harmonic-series':
       for (const [id, value] of Object.entries(preset.oscillators[0])) {
@@ -211,7 +213,7 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
   removeChildren = (el) => {
     while (el.firstChild) el.removeChild(el.firstChild)
   },
-  audio = new (window.AudioContext || window.webkitAudioContext)(),
+  audio = new AudioContext(),
   pedals = { sustain: false, sostenuto: false, soft: false },
   panner = new StereoPannerNode(audio),
   masterGain = new GainNode(audio, { gain: 0.5 }),
@@ -359,8 +361,8 @@ function stopAllSound() {
   updateChordDisplay()
 }
 
-function channelMode(_ev) {
-  switch (_ev.controller.number) {
+function channelMode(event) {
+  switch (event.controller.number) {
     case WebMidi.MIDI_CHANNEL_MODE_MESSAGES.allsoundoff:
       stopAllSound()
       break
@@ -372,21 +374,21 @@ function channelMode(_ev) {
   }
 }
 
-function controlChange(_ev) {
-  switch (_ev.controller.number) {
+function controlChange(event) {
+  switch (event.controller.number) {
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.holdpedal:
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.hold2pedal:
-      sustainPedalEvent(_ev)
+      sustainPedalEvent(event)
       break
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.modulationwheelcoarse:
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.sustenutopedal:
-      sostenutoPedalEvent(_ev)
+      sostenutoPedalEvent(event)
       break
     case WebMidi.MIDI_CONTROL_CHANGE_MESSAGES.softpedal:
-      pedals.soft = _ev.value > 63
+      pedals.soft = event.value > 63
       break
     default:
-      console.log(_ev)
+      console.log(event)
       break
   }
 }
@@ -661,23 +663,21 @@ function generateColorPalette(seed = Math.random() * Math.PI * 2) {
 }
 
 function setupKeypressKeymap() {
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', ({ altKey, code, ctrlKey, repeat, shiftKey, target }) => {
     if (
-      Object.keys(keyboardKeymap).includes(e.key) &&
-      !e.altKey &&
-      !e.shiftKey &&
-      !e.ctrlKey &&
-      !Object.values(currentlyHeldKeys).includes(keyboardKeymap[e.key]) &&
-      e.target.tagName !== 'INPUT'
+      Object.keys(keyboardKeymap).includes(code) &&
+      !altKey && !shiftKey && !ctrlKey && !repeat &&
+      !Object.values(currentlyHeldKeys).includes(keyboardKeymap[code]) &&
+      target.tagName !== 'INPUT'
     ) {
-      currentlyHeldKeys[e.key] = keyboardKeymap[e.key]
-      noteOn(keyboardKeymap[e.key])
+      currentlyHeldKeys[code] = keyboardKeymap[code]
+      noteOn(keyboardKeymap[code])
     }
   })
-  document.addEventListener('keyup', (e) => {
-    if (Object.keys(currentlyHeldKeys).includes(e.key)) {
-      delete currentlyHeldKeys[e.key]
-      noteOff(keyboardKeymap[e.key])
+  document.addEventListener('keyup', ({ code }) => {
+    if (Object.keys(currentlyHeldKeys).includes(code)) {
+      delete currentlyHeldKeys[code]
+      noteOff(keyboardKeymap[code])
     }
   })
   const bb = document.getElementById('bytebeat-code')

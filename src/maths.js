@@ -126,11 +126,11 @@ function expect(expected, tokens) {
   return tokens
 }
 
-const tokenize = tokenizer(/\d+(\.\d+)?|\*\*?|[+\-\/()^']|im?|[jkN]|sqrt|abs|e(xp)?|pi/g)
+const tokenize = tokenizer(/\d+(\.\d+)?|\*\*?|[+\-\/()^'πℯ]|im?|[jkN]|abs|e(xp)?|pi|sqrt/g)
 
 /** @param {string} code */
 export function validate(code) {
-  return !/^\s*$/.test(code) && /^(\d+(\.\d+)?|\*\*?|[+\-\/()^']|im?|[jkN]|sqrt|abs|e(xp)?|pi)*$/.test(code)
+  return /\S/.test(code) && /^(\d+(\.\d+)?|\*\*?|[+\-\/()^'πℯ]|im?|[jkN]|abs|e(xp)?|pi|sqrt)*$/.test(code)
 }
 
 function isImaginaryUnit(token = '') {
@@ -145,18 +145,6 @@ const operators = {
   '^': { precedence: 3, leftAssociative: false, },
   '**': { precedence: 3, leftAssociative: false, alternative: '^', },
   maxPrecedence: 3,
-}
-
-function precedenceOf(expr) {
-  if (expr instanceof ComplexNumber && expr.im !== 0) {
-    return operators['+'].precedence
-  } else if (typeof expr === 'string' && expr in operators) {
-    return operators[expr].precedence
-  } else if (Array.isArray(expr)) {
-    return precedenceOf(expr[0])
-  } else {
-    return operators.maxPrecedence + 1
-  }
 }
 
 /** @param {Tokens} tokens */
@@ -242,7 +230,12 @@ export function invert(expr) {
  * @param {Expr} expr
  * @return {string}
  */
-export function mathML(expr) {
+export function mathML(expr, parentOperator = '*', lhs = true) {
+  /** @param {string[]} result */
+  function addBracketsToResult(result) {
+    result.splice(1, 0, '<mo>(</mo>')
+    result.splice(-1, 0, '<mo>)</mo>')
+  }
   if (typeof expr === 'string') {
     if (expr === 'pi') {
       expr = 'π'
@@ -253,25 +246,31 @@ export function mathML(expr) {
   }
   if (Array.isArray(expr)) {
     const op = expr[0]
-    switch (op) {
-      case '/':
-        return `<mfrac>${mathML(expr[1])}${mathML(expr[2])}</mfrac>`
-      case '^':
-        return `<msup>${mathML(expr[1])}${mathML(expr[2])}</msup>`
-      case '+': case '-':
-        if (expr.length === 2) {
-          return `<mrow><mo>${op}</mo>${mathML(expr[1])}</mrow>`
-        }
-        return `<mrow>${mathML(expr[1])}<mo>${op}</mo>${mathML(expr[2])}</mrow>`
-      case '*':
-        if (op === '*' && typeof expr[2] === 'string' && expr[1] instanceof ComplexNumber && expr[1].im === 0) {
-          return `<mrow>${mathML(expr[1])}${mathML(expr[2])}</mrow>`
-        }
-        return `<mrow>${mathML(expr[1])}<mo>·</mo>${mathML(expr[2])}</mrow>`
-      case 'sqrt':
-        return `<msqrt>${mathML(expr[1])}</msqrt>`
-      default:
-        return `<mrow>${mathML(op)}<mo stretchy="false">(</mo>${mathML(expr[1])}<mo stretchy="false">)</mo></mrow>`
+    if (op === '/') {
+      return `<mfrac>${mathML(expr[1], op)}${mathML(expr[2], op, false)}</mfrac>`
+    } else if (op === '^') {
+      return `<msup>${mathML(expr[1], op)}${mathML(expr[2], op, false)}</msup>`
+    } else if (op === '+' || op === '-') {
+      let result = ['<mrow>', '<mo>', op, '</mo>', '</mrow>']
+      if (expr.length === 2) {
+        result.splice(-1, 0, mathML(expr[1], op))
+      } else {
+        result.splice(1, 0, mathML(expr[1], op))
+        result.splice(-1, 0, mathML(expr[2], op, false))
+      }
+      if (parentOperator === '*') addBracketsToResult(result)
+      return result.join('')
+    } else if (op === '*') {
+      let result = ['<mrow>', mathML(expr[1], op), mathML(expr[2], op, false), '</mrow>']
+      if (!(op === '*' && typeof expr[2] === 'string' && expr[1] instanceof ComplexNumber && expr[1].im === 0)) {
+        result.splice(2, 0, '<mo>·</mo>')
+        if (parentOperator === '*' && !lhs) addBracketsToResult(result)
+      }
+      return result.join('')
+    } else if (op === 'sqrt') {
+      return `<msqrt>${mathML(expr[1], op)}</msqrt>`
+    } else {
+      return `<mrow>${mathML(op)}<mo stretchy="false">(</mo>${mathML(expr[1], op)}<mo stretchy="false">)</mo></mrow>`
     }
   } else if (expr instanceof ComplexNumber) {
     return expr.toMathML()
@@ -308,7 +307,7 @@ export function normalize(expr) {
   }
 }
 
-/** @param {string} code */ 
+/** @param {string} code */
 export function parse(code) {
   const tokens = tokenize(code)
   const expr = binop(tokens)
