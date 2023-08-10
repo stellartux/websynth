@@ -121,7 +121,7 @@ button:active.remove {
   padding: 0.7em;
   margin-top: 0.5em;
   margin-bottom: 0px;
-  border: solid thin var(--main-shadow);
+  border-bottom: solid thin var(--main-shadow);
   display: grid;
   grid-template-columns: max-content min-content;
   grid-column-gap: 1ch;

@@ -123,7 +123,7 @@ function getPresetInfo() {
   }
   return new Preset(
     $('#preset-name').value,
-    Object.assign({}, envelope),
+    envelopeElement.envelope,
     oscs,
     type
   )
@@ -196,7 +196,7 @@ function loadPreset(preset) {
       removeChildren($('#oscillator-panel'))
       for (const osc of preset.oscillators) addOscillator(osc)
   }
-  updateEnvelopeControls(preset.envelope)
+  envelopeElement.envelope = preset.envelope
 }
 
 let controller,
@@ -204,7 +204,6 @@ let controller,
   sustainingNotes = new NoteMap(),
   sostenutoNotes = new NoteMap(),
   currentlyHeldKeys = new NoteMap(),
-  envelope = {},
   // pitchBend = 0,
   customPresets = [],
   wasmModule
@@ -226,45 +225,46 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
     release: 0.01,
     threshold: -2,
   }),
+  envelopeElement = $('websynth-envelope'),
   keyboardKeymap = {
-    '\\': 59,
-    z: 60,
-    x: 62,
-    c: 64,
-    v: 65,
-    b: 67,
-    n: 69,
-    m: 71,
-    ',': 72,
-    '.': 74,
-    '/': 76,
-    q: 72,
-    w: 74,
-    e: 76,
-    r: 77,
-    t: 79,
-    y: 81,
-    u: 83,
-    i: 84,
-    o: 86,
-    p: 88,
-    '[': 89,
-    ']': 91,
-    s: 61,
-    d: 63,
-    g: 66,
-    h: 68,
-    j: 70,
-    l: 73,
-    ';': 75,
-    2: 73,
-    3: 75,
-    5: 78,
-    6: 80,
-    7: 82,
-    9: 85,
-    0: 87,
-    '=': 90,
+    "Digit0": 75,
+    "Digit2": 61,
+    "Digit3": 63,
+    "Digit5": 66,
+    "Digit6": 68,
+    "Digit7": 70,
+    "Digit9": 73,
+    "KeyB": 55,
+    "KeyC": 52,
+    "KeyD": 51,
+    "KeyE": 64,
+    "KeyG": 54,
+    "KeyH": 56,
+    "KeyI": 72,
+    "KeyJ": 58,
+    "KeyL": 61,
+    "KeyM": 59,
+    "KeyN": 57,
+    "KeyO": 74,
+    "KeyP": 76,
+    "KeyQ": 60,
+    "KeyR": 65,
+    "KeyS": 49,
+    "KeyT": 67,
+    "KeyU": 71,
+    "KeyV": 53,
+    "KeyW": 62,
+    "KeyX": 50,
+    "KeyY": 69,
+    "KeyZ": 48,
+    "Semicolon": 63,
+    "Equal": 78,
+    "Comma": 60,
+    "Period": 62,
+    "Slash": 64,
+    "BracketLeft": 77,
+    "Backslash": 47,
+    "BracketRight": 79
   },
   factoryPresets = [
     new Preset(
@@ -393,25 +393,6 @@ function controlChange(event) {
   }
 }
 
-/** Sync the envelope object to the UI */
-function updateEnvelope(ev) {
-  if (ev) {
-    envelope[ev.target.id] = Number(ev.target.value)
-  } else {
-    for (const c of $$('#envelope-controls input')) {
-      envelope[c.id] = Number(c.value)
-    }
-  }
-}
-
-/** Sync the UI to a modified envelope object */
-function updateEnvelopeControls(newEnv) {
-  if (newEnv) envelope = newEnv
-  for (const c of $$('#envelope-controls input')) {
-    c.value = envelope[c.id]
-  }
-}
-
 /** Sync the chord displayed in the UI with the currently playing notes */
 function updateChordDisplay() {
   const notes = [...playingNotes.keys()].sort(),
@@ -533,7 +514,7 @@ function noteOn(midiNum, velocity = 1) {
   ) {
     return
   }
-  let noteParams = Object.assign({}, envelope),
+  let noteParams = envelopeElement.envelope,
     oscParams = noteSources[source].oscParams(midiNum)
   if (!oscParams) return
   noteParams.triggerTime = audio.currentTime
@@ -687,28 +668,28 @@ function setupKeypressKeymap() {
 }
 
 function setupGlobalEventListeners() {
-  $('#master-gain').addEventListener('change', (e) => {
-    masterGain.gain.value = e.target.value
+  document.getElementById('master-gain').addEventListener('change', ({ target }) => {
+    masterGain.gain.value = target.value
   })
-  $('#master-gain').addEventListener('dblclick', (e) => {
+  document.getElementById('master-gain').addEventListener('dblclick', ({ target }) => {
     masterGain.gain.value = 0.5
-    e.target.value = 0.5
+    target.value = 0.5
   })
-  $('#panning').addEventListener('change', (e) => {
-    panner.pan.value = e.target.value
+  document.getElementById('panning').addEventListener('change', ({ target }) => {
+    panner.pan.value = target.value
   })
-  $('#panning').addEventListener('dblclick', (e) => {
+  document.getElementById('panning').addEventListener('dblclick', ({ target }) => {
     panner.pan.value = 0
-    e.target.value = 0
+    target.value = 0
   })
-  $('#metronome').addEventListener('change', (e) => {
-    e.target.checked ? metronome.start() : metronome.stop()
+  document.getElementById('metronome').addEventListener('change', ({ target }) => {
+    target.checked ? metronome.start() : metronome.stop()
   })
-  $('#tempo').addEventListener('change', (e) => {
-    metronome.tempo = e.target.value
+  document.getElementById('tempo').addEventListener('change', ({ target }) => {
+    metronome.tempo = target.value
   })
-  $('#source-select').addEventListener('change', (e) =>
-    changeCurrentView(e.target.value, 'source-select', 'audio-sources')
+  document.getElementById('source-select').addEventListener('change', ({ target }) =>
+    changeCurrentView(target.value, 'source-select', 'audio-sources')
   )
 }
 
@@ -761,10 +742,6 @@ window.onload = () => {
   $('#add-oscillator').addEventListener('click', () => addOscillator())
   setupKeypressKeymap()
   setupDisplayKeyboard()
-  updateEnvelope()
-  for (const obj of $$('#envelope-controls input')) {
-    obj.addEventListener('change', updateEnvelope)
-  }
   loadPersistentState()
   const hf = document.getElementById('harmonic-function')
   const huf = document.getElementById('harmonic-user-formula')
