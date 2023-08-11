@@ -752,12 +752,13 @@ window.onload = () => {
       } else if (validateFormula(hf.value)) {
         huf.innerHTML = mathML(invert(parse(hf.value)))
       } else {
-        throw new Error("Didn't validate.")
+        throw new Error('Invalid character in formula string.')
       }
       hf.setCustomValidity('')
-    } catch {
+    } catch (error) {
       huf.innerHTML = '<mfrac><mn>1</mn><mrow><mi>f</mi><mo>(</mo><mi>k</mi><mo>)</mo></mrow></mfrac>'
       hf.setCustomValidity('Invalid function')
+      console.warn(error.message)
     }
   }
   harmonicOnInput()

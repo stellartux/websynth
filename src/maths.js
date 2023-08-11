@@ -2,111 +2,162 @@
 import { tokenizer } from "./lookahead.js"
 
 export class ComplexNumber {
-  #re
-  #im
+  /** @type {number} */ re
+  /** @type {number} */ im
   /**
-   * @param {number} re
+   * @param {number|ComplexNumber} re
    * @param {number} [im=0]
    */
   constructor(re, im = 0) {
-    this.#re = re
-    this.#im = im
+    if (typeof re === 'string' && !isNaN(re)) re = Number(re)
+    if (typeof im === 'string' && !isNaN(im)) im = Number(im)
+    if (typeof re === 'number') {
+      this.re = re
+      this.im = im
+    } else if (re instanceof ComplexNumber) {
+      this.re = re.re
+      this.im = re.im
+    } else {
+      throw new Error('re must be a number.')
+    }
   }
-  get re() {
-    return this.#re
-  }
-  get im() {
-    return this.#im
-  }
-  /** @param {ComplexNumber?} that */
+  /** @param {number|ComplexNumber?} that */
   ['+'](that) {
-    if (that instanceof ComplexNumber) {
-      const a = this.#re, b = this.#im, c = that.#re, d = that.#im
-      return new ComplexNumber(a + c, b + d)
-    } else {
+    if (that instanceof ComplexNumber || typeof that === 'number') {
+      return new ComplexNumber(this)['+='](that)
+    } else if (that === undefined) {
       return this
-    }
-  }
-  /** @param {ComplexNumber?} that */
-  ['-'](that) {
-    if (that instanceof ComplexNumber) {
-      const a = this.#re, b = this.#im, c = that.#re, d = that.#im
-      return new ComplexNumber(a - c, b - d)
     } else {
-      return new ComplexNumber(-this.#re, -this.#im)
+      throw new TypeError('Unexpected ' + typeof that)
     }
   }
-  /** @param {ComplexNumber} that */
+  /** @param {number|ComplexNumber} that */
+  ['+='](that) {
+    if (that instanceof ComplexNumber) {
+      this.re += that.re
+      this.im += that.im
+    } else if (typeof that === 'number') {
+      this.re += that
+    }
+    return this
+  }
+  /** @param {number|ComplexNumber?} that */
+  ['-'](that) {
+    if (that instanceof ComplexNumber || typeof that === 'number') {
+      return new ComplexNumber(this)['-='](that)
+    } else if (that === undefined) {
+      return new ComplexNumber(-this.re, -this.im)
+    } else {
+      throw new TypeError('Unexpected ' + typeof that)
+    }
+  }
+  /** @param {number|ComplexNumber} that */
+  ['-='](that) {
+    if (that instanceof ComplexNumber) {
+      const a = this.re, b = this.im, c = that.re, d = that.im
+      return new ComplexNumber(a - c, b - d)
+    } else if (typeof that === 'number') {
+      return new ComplexNumber(this.re - that, this.im)
+    }
+  }
+  /** @param {number|ComplexNumber} that */
   ['*'](that) {
-    const a = this.#re, b = this.#im, c = that.#re, d = that.#im
-    return new ComplexNumber(a * c - b * d, b * c + a * d)
+    return new ComplexNumber(this)['*='](that)
+  }
+  /** @param {number|ComplexNumber} that */
+  ['*='](that) {
+    const a = this.re, b = this.im
+    let c = 0, d = 0
+    if (that instanceof ComplexNumber) {
+      c = that.re, d = that.im
+      this.re = a * c - b * d
+      this.im = b * c + a * d
+    } else if (typeof that === 'number') {
+      c = that
+      this.re *= that
+      this.im *= that
+    }
+    return this
   }
   /** @param {ComplexNumber} that */
   ['/'](that) {
-    const a = this.#re, b = this.#im, c = that.#re, d = that.#im
+    const a = this.re, b = this.im, c = that.re, d = that.im
     const q = c ** 2 + d ** 2
+    // for pragmatic reasons `x / 0 === 0`
+    if (q === 0) return new ComplexNumber(0)
     return new ComplexNumber((a * c + b * d) / q, (b * c - a * d) / q)
   }
   /** @param {ComplexNumber} that */
   ['^'](that) {
-    if (this.#im === 0) {
+    if (this.im === 0) {
       if (that.im === 0) {
-        return new ComplexNumber(this.#re ** that.re)
+        return new ComplexNumber(this.re ** that.re)
       } else {
-        return that['*'](new ComplexNumber(Math.log(this.#re))).exp()
+        return that['*'](new ComplexNumber(Math.log(this.re))).exp()
       }
     } else {
-      throw new Error('Unimplemented: exponentiation with complex exponent')
+      if (that.im === 0 && that.re > 0 && Number.isSafeInteger(that.re)) {
+        let result = new ComplexNumber(1)
+        let temp = new ComplexNumber(this)
+        for (let power = that.re; power > 0; power >>>= 1) {
+          if (power & 1) {
+            result['*='](temp)
+          }
+          temp['+='](temp)
+        }
+        return result
+      }
     }
   }
   /** @param {ComplexNumber} that */
   ['=='](that) {
-    return this.#re === that.#re && this.#im === that.#im
+    return this.re === that.re && this.im === that.im
   }
   abs() {
-    return new ComplexNumber(Math.hypot(this.#re, this.#im))
+    return new ComplexNumber(Math.hypot(this.re, this.im))
   }
   ["'"]() {
-    return new ComplexNumber(this.#re, -this.#im)
+    return new ComplexNumber(this.re, -this.im)
   }
   exp() {
-    const a = this.#re, b = this.#im, e = Math.E
+    const a = this.re, b = this.im, e = Math.E
     return new ComplexNumber(Math.cos(b), Math.sin(b))['*'](new ComplexNumber(e ** a))
   }
   /** @returns {ComplexNumber} the square roots are `result` and `result.conj` */
   sqrt() {
-    const a = this.#re, b = this.#im, h = Math.hypot(a, b), sgn = (b >= 0 ? 1 : -1)
+    const a = this.re, b = this.im, h = Math.hypot(a, b), sgn = (b >= 0 ? 1 : -1)
     return new ComplexNumber(Math.sqrt((a + h) / 2), sgn * Math.sqrt((-a + h) / 2))
   }
   toString() {
-    return `ComplexNumber(${this.#re}, ${this.#im})`
+    return `ComplexNumber(${this.re}, ${this.im})`
   }
   get [Symbol.toStringTag]() {
-    const im = Math.abs(this.#im)
+    const im = Math.abs(this.im)
     if (im !== 0) {
-      return `${this.#re} ${this.#im >= 0 ? '+' : '-'} ${im === 1 ? '' : im}i`
+      return `${this.re} ${this.im >= 0 ? '+' : '-'} ${im === 1 ? '' : im}i`
     } else {
-      return this.#re.toString()
+      return this.re.toString()
     }
   }
-  valueOf() {
-    return this.#re
-  }
   toJSON() {
-    return `{"re":${this.#re},"im":${this.#im}}`
+    return `{"re":${this.re},"im":${this.im}}`
   }
   /** @param {string} json */
   static fromJSON(json) {
     const { re, im } = JSON.parse(json)
     return new ComplexNumber(re, im)
   }
-  toMathML() {
-    if (this.#im === 0) {
-      return `<mn>${this.#re}</mn>`
-    } else if (this.#re === 0) {
-      return `<mn>${this.#im === 1 ? '' : this.#im}i</mn>`
+  toMathML(brackets = false) {
+    if (this.im === 0) {
+      return `<mn>${this.re}</mn>`
+    } else if (this.re === 0) {
+      return `<mn>${this.im === 1 ? '' : this.im}i</mn>`
     } else {
-      return `<mrow><mn>${this.#re}</mn><mo>${this.#im > 0 ? '+' : '-'}</mo><mn>${Math.abs(this.#im)}</mn><mi>i</mi></mrow>`
+      return `<mrow>${brackets ? '<mo>(</mo>' : ''
+        }<mn>${this.re
+        }</mn><mo>${this.im > 0 ? '+' : '-'
+        }</mo><mn>${Math.abs(this.im)}</mn><mi>i</mi>${brackets ? '<mo>)</mo>' : ''
+        }</mrow>`
     }
   }
 }
@@ -130,7 +181,7 @@ const tokenize = tokenizer(/\d+(\.\d+)?|\*\*?|[+\-\/()^'πℯ]|im?|[jkN]|abs|e(x
 
 /** @param {string} code */
 export function validate(code) {
-  return /\S/.test(code) && /^(\d+(\.\d+)?|\*\*?|[+\-\/()^'πℯ]|im?|[jkN]|abs|e(xp)?|pi|sqrt)*$/.test(code)
+  return /\S/.test(code) && /^(\d+(\.\d+)?|\*\*?|[+\-\/()^'πℯ]|im?|[jkN]|abs|e(xp)?|pi|sqrt|\s)*$/.test(code)
 }
 
 function isImaginaryUnit(token = '') {
@@ -244,6 +295,7 @@ export function mathML(expr, parentOperator = '*', lhs = true) {
     }
     return `<mi>${expr}</mi>`
   }
+  const needsBrackets = () => parentOperator === '*' || parentOperator === "'" || (parentOperator === '^' && lhs)
   if (Array.isArray(expr)) {
     const op = expr[0]
     if (op === '/') {
@@ -252,28 +304,32 @@ export function mathML(expr, parentOperator = '*', lhs = true) {
       return `<msup>${mathML(expr[1], op)}${mathML(expr[2], op, false)}</msup>`
     } else if (op === '+' || op === '-') {
       let result = ['<mrow>', '<mo>', op, '</mo>', '</mrow>']
-      if (expr.length === 2) {
+      if (expr[2] === undefined) {
         result.splice(-1, 0, mathML(expr[1], op))
       } else {
         result.splice(1, 0, mathML(expr[1], op))
         result.splice(-1, 0, mathML(expr[2], op, false))
       }
-      if (parentOperator === '*') addBracketsToResult(result)
+      if (needsBrackets()) addBracketsToResult(result)
       return result.join('')
     } else if (op === '*') {
       let result = ['<mrow>', mathML(expr[1], op), mathML(expr[2], op, false), '</mrow>']
       if (!(op === '*' && typeof expr[2] === 'string' && expr[1] instanceof ComplexNumber && expr[1].im === 0)) {
         result.splice(2, 0, '<mo>·</mo>')
-        if (parentOperator === '*' && !lhs) addBracketsToResult(result)
+        if (parentOperator === '*' && !lhs || parentOperator === "'" || (parentOperator === '^' && lhs)) {
+          addBracketsToResult(result)
+        }
       }
       return result.join('')
     } else if (op === 'sqrt') {
       return `<msqrt>${mathML(expr[1], op)}</msqrt>`
+    } else if (op === "'") {
+      return `<mrow>${mathML(expr[1], op)}<mo>'</mo></mrow>`
     } else {
       return `<mrow>${mathML(op)}<mo stretchy="false">(</mo>${mathML(expr[1], op)}<mo stretchy="false">)</mo></mrow>`
     }
   } else if (expr instanceof ComplexNumber) {
-    return expr.toMathML()
+    return expr.toMathML(needsBrackets())
   } else {
     throw new Error(`Unexpected: ${expr}`)
   }
@@ -290,23 +346,6 @@ export function sexpr(expr) {
   }
 }
 
-/** @param {Expr} expr */
-export function normalize(expr) {
-  if (Array.isArray(expr)) {
-    const args = expr.slice(1).map(normalize)
-    const result = [expr[0], ...args]
-    if (args.every((/** @type {any} */ arg) => arg instanceof ComplexNumber)) {
-      return evaluate(result)
-    } else {
-      return result
-    }
-  } else if (typeof expr === 'string' && expr in constants) {
-    return constants[expr]
-  } else {
-    return expr
-  }
-}
-
 /** @param {string} code */
 export function parse(code) {
   const tokens = tokenize(code)
@@ -314,7 +353,7 @@ export function parse(code) {
   if (tokens.next().value) {
     throw new Error('Excess tokens.')
   }
-  return expr
+  return evaluate(expr, { im, i: im, j: im })
 }
 
 /**
@@ -324,16 +363,18 @@ export function parse(code) {
 export function evaluate(expr, ctx = constants) {
   if (Array.isArray(expr)) {
     const [left, right] = expr.slice(1).map((arg) => evaluate(arg, ctx))
-    if (left instanceof ComplexNumber && right instanceof ComplexNumber) {
+    if (left instanceof ComplexNumber && (right instanceof ComplexNumber || right === undefined)) {
       return left[expr[0]](right)
-    } else {
+    } else if (right) {
       return [expr[0], left, right]
+    } else {
+      return [expr[0], left]
     }
   } else if (typeof expr === 'string') {
     if (expr in ctx) {
       return ctx[expr]
     } else {
-      throw new Error(`${expr} is not defined.`)
+      return expr
     }
   } else if (expr instanceof ComplexNumber) {
     return expr
