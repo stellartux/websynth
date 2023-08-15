@@ -1,25 +1,26 @@
-import { BytebeatNode } from './bytebeat-worklets.js'
+//@ts-check
+import { BytebeatNode } from './bytebeat-note.js'
 import { validateBytebeat } from './bytebeat-utils.js'
 
 customElements.define(
   'bytebeat-player',
   class extends HTMLElement {
+    #isPlaying = false
     constructor() {
       super()
       const shadow = this.attachShadow({ mode: 'open' })
       const main = document.createElement('main')
-      this.addEventListener('click', (ev) => {
-        this.context.resume()
+      this.addEventListener('click', () => this.context.resume(), {
+        once: true,
       })
       this.hasChanged = false
 
       this.input = document.createElement('textarea')
       this.input.setAttribute('name', 'bytebeat')
       this.input.setAttribute('placeholder', 't => { // bytebeat }')
-      this.input.setAttribute('spellcheck', false)
+      this.input.setAttribute('spellcheck', 'false')
       this.input.cols = 40
-      this.input.rows = 1
-      this.input.innerText = this.textContent
+      this.input.innerText = this.textContent ?? ''
       this.input.oninput = () => {
         this.hasChanged = true
         this.validate()
@@ -35,9 +36,7 @@ customElements.define(
       rate.setAttribute('type', 'number')
       rate.setAttribute('min', '4000')
       rate.setAttribute('max', '96000')
-      rate.value = this.hasAttribute('samplerate')
-        ? this.getAttribute('samplerate')
-        : 8000
+      rate.value = this.getAttribute('samplerate') || '8000'
       rate.onchange = () => (this.hasChanged = true)
       rateLabel.appendChild(rate)
       options.appendChild(rateLabel)
@@ -50,9 +49,7 @@ customElements.define(
       tempo.setAttribute('type', 'number')
       tempo.setAttribute('min', '60')
       tempo.setAttribute('max', '400')
-      tempo.value = this.hasAttribute('tempo')
-        ? this.getAttribute('tempo')
-        : 120
+      tempo.value = this.getAttribute('tempo') ?? '120'
       tempo.onchange = () => (this.hasChanged = true)
       tempoLabel.appendChild(tempo)
       options.appendChild(tempoLabel)
@@ -72,7 +69,7 @@ customElements.define(
       beatType.onchange = () => (this.hasChanged = true)
       this.beatType = beatType
 
-      this.context = new (window.AudioContext || window.webkitAudioContext)()
+      this.context = new AudioContext()
       this.limiter = new DynamicsCompressorNode(this.context, {
         attack: 0,
         knee: 0,
@@ -81,30 +78,7 @@ customElements.define(
         threshold: -0.3,
       })
       this.limiter.connect(this.context.destination)
-      // this.usingPolyfill = !this.context.audioWorklet
-      // if (this.usingPolyfill) {
-      //   const lengthLabel = document.createElement('label')
-      //   lengthLabel.innerText = 'Length: '
-      //   const length = document.createElement('input')
-      //   length.setAttribute('name', 'length')
-      //   length.setAttribute('type', 'number')
-      //   length.setAttribute('min', 1)
-      //   length.value = this.hasAttribute('length')
-      //     ? this.getAttribute('length')
-      //     : 30
-      //   length.onchange = () => (this.hasChanged = true)
-      //   options.appendChild(lengthLabel).appendChild(length)
-      //   Object.defineProperty(this, 'renderLength', {
-      //     get() {
-      //       return length.value
-      //     },
-      //     set(v) {
-      //       length.value = v
-      //     },
-      //   })
-      // } else {
-        this.context.audioWorklet.addModule('src/bytebeat-processor.js')
-      // }
+      this.context.audioWorklet.addModule('src/bytebeat-processor.js')
 
       const playButton = document.createElement('button')
       playButton.addEventListener('click', () => {
@@ -128,7 +102,10 @@ customElements.define(
       style.innerText = `
 main {
   display: grid;
-  border: solid thick blue;
+  color-scheme: light dark;
+}
+[name=bytebeat] {
+  height: max-content;
 }
 [name=bytebeat]:valid {
   border: solid thick green;
@@ -153,42 +130,27 @@ div {
     get value() {
       return this.input.value
     }
-    set value(v) {
-      this.input.value = v
+    set value(value) {
+      this.input.value = value
     }
     get isPlaying() {
-      return this._isPlaying
+      return this.#isPlaying
     }
-    set isPlaying(v) {
-      this._isPlaying = v
-      this.speakerIcon.style.visibility = v ? '' : 'hidden'
+    set isPlaying(value) {
+      this.#isPlaying = value
+      this.speakerIcon.style.visibility = value ? '' : 'hidden'
     }
 
     play() {
-      if (
-        this.usingPolyfill &&
-        !this.hasChanged &&
-        this.currentPlayingBytebeat
-      ) {
-        this.currentPlayingBytebeat.restart()
-        this.currentPlayingBytebeat.source.onended = () => {
-          this.isPlaying = false
-        }
-      } else if (this.input.validity.valid) {
+      if (this.input.validity.valid) {
         this.stop()
-        this.currentPlayingBytebeat = new BytebeatNode(
-          this.context,
-          this.value,
-          this.rate.value,
-          this.tempo.value,
-          this.beatType.value === 'Floatbeat',
-          this.renderLength
-        )
-        if (this.usingPolyfill) {
-          this.currentPlayingBytebeat.source.onended = () => {
-            this.isPlaying = false
-          }
-        }
+        this.currentPlayingBytebeat = new BytebeatNode(this.context, {
+          bytebeat: this.value,
+          frequency: Number(this.rate.value),
+          tempo: Number(this.tempo.value),
+          floatMode: this.beatType.value === 'Floatbeat',
+          sampleRate: this.context.sampleRate
+        })
         this.currentPlayingBytebeat.connect(this.limiter)
         this.currentPlayingBytebeat.start()
       }

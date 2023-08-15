@@ -1,43 +1,56 @@
-import { evaluateBytebeat } from './bytebeat-utils.js'
+import { evaluateBytebeat } from "./bytebeat-utils.js"
 
-/**
- * BytebeatProcessor runs in the AudioWorkletScope. The BytebeatProcessor
- * constructor requires either `options.processorOptions.beatcode` or
- * `options.processorOptions.module` which exports a `bytebeat` function.
- * @param {object} options
- * @param {string} [options.processorOptions.beatcode]
- * Main block of the bytebeat function and its execution
- * @param {WebAssembly.Module} [options.processorOptions.module]
- * A Wasm module which exports a "bytebeat" function
- * @param {number} options.processorOptions.frequency
- * The frequency at which 't' will be incremented
- * @param {number} options.processorOptions.sampleRate
- * The sample rate of the audio context
- * @param {number} options.processorOptions.tempo
- * The tempo which the speed that tt will be incremented depends on
- * @param {boolean} [options.processorOptions.floatMode=false]
- * Whether the function expects an output between 0:255 (default) or -1:1
+/** 
+ * @typedef {{
+ *  bytebeat?: string,
+ *  module?: WebAssembly.Module,
+ *  frequency: number,
+ *  sampleRate: number,
+ *  tempo: number,
+ *  floatMode?: boolean
+ * }} BytebeatProcessorOptions
+ * - `bytebeat` Main block of the bytebeat function and its execution
+ * - `module` A Wasm module which exports a "bytebeat" function
+ * - `frequency` at which 't' will be incremented
+ * - `sampleRate` of the audio context
+ * - `tempo` which the speed that `tt` will be incremented depends on
+ * - `floatMode` Whether the function expects an output between 0:255 (default) or -1:1
  */
+
 class BytebeatProcessor extends AudioWorkletProcessor {
+  t = 0
+  tt = 0
+  startTime = Infinity
+  stopTime = Infinity
+  sampleRate
+  frequency
+  tempo
+  tDelta
+  ttDelta
+  /** @type {Function} */ beatcode
+  /** @type {(x: number) => number} */ postprocess
+
+  /**
+   * BytebeatProcessor runs in the AudioWorkletScope.
+   * @param {{ numberOfInputs: number, numberOfOutputs: number, processorOptions: BytebeatProcessorOptions}} options
+   */
   constructor(options) {
     super(options)
     if (options.processorOptions.module) {
       WebAssembly.instantiate(options.processorOptions.module).then(mod => {
         this.beatcode = mod.exports.bytebeat
       })
+    } else if (typeof options.processorOptions.bytebeat === 'string') {
+      this.beatcode = evaluateBytebeat(options.processorOptions.bytebeat)
     } else {
-      this.beatcode = evaluateBytebeat(options.processorOptions.beatcode)
+      throw new TypeError('BytebeatProcessor needs a JavaScript function definition string or a WebAssembly.Module to instantiate.')
     }
     this.sampleRate = options.processorOptions.sampleRate
     this.frequency = options.processorOptions.frequency
-    this.tDelta = this.frequency / this.sampleRate
-    this.t = 0
-    this.tt = 0
     this.tempo = options.processorOptions.tempo
+    this.tDelta = this.frequency / this.sampleRate
     this.ttDelta = (this.tempo * 8192) / 120 / this.sampleRate
-    this.startTime = Infinity
-    this.stopTime = Infinity
-    this.port.onmessage = event => {
+    this.port.onmessage = (/** @type {{ data: { message: any; stopTime: any; startTime: any; }; }} */ event) => {
       switch (event.data.message) {
         case 'stop':
           this.stopTime = currentTime + event.data.stopTime
@@ -55,8 +68,11 @@ class BytebeatProcessor extends AudioWorkletProcessor {
     }
   }
 
-  process(inputs, outputs) {
-    const output = outputs[0]
+  /**
+   * @param {Float32Array[][]} _inputs
+   * @param {Float32Array[][]} outputs
+   **/
+  process(_inputs, [output]) {
     if (currentTime >= this.startTime) {
       let lastT
       let lastTt
