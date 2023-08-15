@@ -7,9 +7,9 @@ import { OscillatorNote } from './src/oscillator-note.js'
 import { RPN } from './src/rpn.js'
 import { ComplexNumber, evaluate, invert, mathML, parse, validate as validateFormula } from './src/maths.js'
 
-if (WebAssembly) {
+if (window.WebAssembly) {
   import('./src/build-wabt.js').then((module) => {
-    const wat = $('#wasm-wat-code')
+    const wat = document.getElementById('wasm-wat-code')
     const watInput = async () => {
       try {
         const mod = await module.buildWabt(`(module (type $t0 (func (param
@@ -23,7 +23,7 @@ if (WebAssembly) {
     }
     wat.oninput = watInput
 
-    const rpn = $('#wasm-rpn-code')
+    const rpn = document.getElementById('wasm-rpn-code')
     const rpnInput = async () => {
       try {
         const bin = RPN.toWasmBinary(rpn.value)
@@ -43,40 +43,39 @@ if (WebAssembly) {
     const noProp = (ev) => ev.stopPropagation()
     for (const b of codeBlocks) b.addEventListener('keydown', noProp)
 
-    const wasmLanguage = $('#wasm-language')
+    const wasmLanguage = document.getElementById('wasm-language')
     wasmLanguage.addEventListener('change', (ev) =>
       changeCurrentView(ev.target.value, 'wasm-language', 'wasm-code-blocks')
     )
-    $('#' + wasmLanguage.value).oninput()
+    document.getElementById(wasmLanguage.value).oninput()
   })
 } else {
-  $('option[value="wasmbeat"]').remove()
+  document.querySelector('option[value="wasmbeat"]').remove()
 }
 
-/** Type for storing envelope and oscillator preset information for recalling
- * user defined presets and UI persistence between sessions.
- * @param {string} name
- * @param {object} envelope
- * @param {number} [envelope.attack=0.2]
- * @param {number} [envelope.decay=0.2]
- * @param {number} [envelope.sustain=0.4]
- * @param {number} [envelope.release=0.1]
- * @param {object[]} oscillators
- * @param {string} [oscillators.waveform='sine']
- * Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
- * @param {number} [oscillators.gain=0.5]
- * @param {number} [oscillators.detune=0]
- * @param {number} [oscillators.note-offset=0]
- * @param {number} [oscillators.octave=0]
- * @param {boolean} [oscillators.invert-phase=false]
- * @param {string} [oscillators.bytebeatCode='']
- * @param {string} [type='additive-oscillators']
- * Options are 'additive-oscillators', 'bytebeat', 'harmonic-series'
- */
 class Preset {
+  /** Type for storing envelope and oscillator preset information for recalling
+   * user defined presets and UI persistence between sessions.
+   * @param {string} name
+   * @param {object} envelope
+   * @param {number} [envelope.attack=0.2]
+   * @param {number} [envelope.decay=0.2]
+   * @param {number} [envelope.sustain=0.4]
+   * @param {number} [envelope.release=0.1]
+   * @param {object[]} oscillators
+   * @param {string} [oscillators.waveform='sine']
+   * Options are 'sine', 'square', 'triangle', 'sawtooth', 'custom'
+   * @param {number} [oscillators.gain=0.5]
+   * @param {number} [oscillators.detune=0]
+   * @param {number} [oscillators.note-offset=0]
+   * @param {number} [oscillators.octave=0]
+   * @param {boolean} [oscillators.invert-phase=false]
+   * @param {string} [oscillators.bytebeatCode='']
+   * @param {'additive-oscillators' | 'bytebeat' | 'harmonic-series' | 'wasmbeat'} type
+   */
   constructor(name, envelope, oscillators, type = 'additive-oscillators') {
     if (!(envelope && oscillators)) {
-      throw Error(
+      throw new TypeError(
         'Preset: Constructor is missing necessary initialization parameters'
       )
     }
@@ -91,7 +90,7 @@ class Preset {
  * @return {Preset}
  */
 function getPresetInfo() {
-  const type = $('#source-select').value
+  const type = document.getElementById('source-select').value
   const oscs = []
   if (type === 'harmonic-series') {
     const o = {}
@@ -101,28 +100,28 @@ function getPresetInfo() {
     oscs.push(o)
   } else if (type === 'bytebeat') {
     oscs.push({
-      bytebeatCode: $('#bytebeat-code').value,
-      bytebeatMode: $('#bytebeat-mode').value,
+      bytebeatCode: document.getElementById('bytebeat-code').value,
+      bytebeatMode: document.getElementById('bytebeat-mode').value,
     })
   } else if (type === 'wasmbeat') {
-    const code = $('#wasm-code-blocks textarea:not(.hidden)')
+    const code = document.querySelector('#wasm-code-blocks textarea:not(.hidden)')
     oscs.push({ id: code.id, value: code.value })
-    for (const o of $$('#wasm-options select')) {
-      oscs.push({ id: o.id, value: o.value })
+    for (const { id, value } of document.querySelectorAll('#wasm-options select')) {
+      oscs.push({ id, value })
     }
   } else {
-    for (const osc of $$('.oscillator')) {
+    for (const osc of document.querySelectorAll('.oscillator')) {
       const o = {}
-      o.waveform = $('.waveform', osc).value
-      for (const param of $$('input', osc)) {
+      o.waveform = osc.querySelector('.waveform').value
+      for (const param of osc.querySelectorAll('input')) {
         o[param.className] = param.value
       }
-      o['invert-phase'] = $('.invert-phase', osc).checked
+      o['invert-phase'] = osc.querySelector('.invert-phase').checked
       oscs.push(o)
     }
   }
   return new Preset(
-    $('#preset-name').value,
+    document.getElementById('preset-name').value,
     envelopeElement.envelope,
     oscs,
     type
@@ -133,70 +132,76 @@ function getPresetInfo() {
  * @param {Preset} [preset]
  */
 function addOscillator(preset) {
-  const c = document.importNode($('#oscillator-template').content, true)
-  const p = $('#oscillator-panel')
-  $('.remove-oscillator', c).addEventListener('click', (e) =>
-    p.removeChild(e.target.parentElement)
-  )
-  $('.gain', c).addEventListener('dblclick', (e) => {
-    e.target.value = 0.5
-  })
+  const oscillator = document.importNode(
+    document.getElementById('oscillator-template').content, true)
+  const panel = document.getElementById('oscillator-panel')
+  oscillator.querySelector('.remove-oscillator')
+    .addEventListener('click', (e) => panel.removeChild(e.target.parentElement))
+  oscillator.querySelector('.gain')
+    .addEventListener('dblclick', (e) => { e.target.value = 0.5 })
   if (preset) {
     for (const pp in preset) {
-      if (pp === 'invert-phase') $('.invert-phase', c).checked = true
-      else $('.' + pp, c).value = preset[pp]
+      if (pp === 'invert-phase') {
+        oscillator.querySelector('.invert-phase').checked = true
+      } else {
+        oscillator.querySelector('.' + pp).value = preset[pp]
+      }
     }
   }
-  p.appendChild(c)
+  panel.appendChild(oscillator)
 }
 
 /** Saves a preset to the custom presets list.
  * @throws Unnamed presets can't be saved
  */
 function addPreset() {
-  if (!$('#preset-name').value) throw Error("Unnamed preset can't be saved")
+  if (!document.getElementById('preset-name').value) {
+    throw new Error("Unnamed preset can't be saved")
+  }
   customPresets.push(getPresetInfo())
-  updateCustomPresets(customPresets, $('#custom-presets'))
+  updateCustomPresets(customPresets, document.getElementById('custom-presets'))
 }
 
 /** Remove the currently selected preset */
 function removePreset() {
-  const selected = $('#preset-list').selectedOptions[0]
+  const selected = document.getElementById('preset-list').selectedOptions[0]
   if (selected.parentElement.label === 'Custom Presets') {
     customPresets.splice(selected.value, 1)
-    updateCustomPresets(customPresets, $('#custom-presets'))
+    updateCustomPresets(customPresets, document.getElementById('custom-presets'))
   }
 }
 
 /** Load the settings of a preset to the page
  * @param {Preset} preset The preset to load
  */
-function loadPreset(preset) {
+function loadPreset({ envelope, oscillators, type }) {
   changeCurrentView(
-    preset.type || 'additive-oscillators',
+    type || 'additive-oscillators',
     'source-select',
     'audio-sources'
   )
-  switch (preset.type) {
+  switch (type) {
     case 'bytebeat':
-      $('#bytebeat-code').value = preset.oscillators[0].bytebeatCode
-      $('#bytebeat-mode').value = preset.oscillators[0].bytebeatMode
+      document.getElementById('bytebeat-code').value = oscillators[0].bytebeatCode
+      document.getElementById('bytebeat-mode').value = oscillators[0].bytebeatMode
       break
     case 'wasmbeat':
-      for (const o of preset.oscillators) {
-        document.getElementById(o.id).value = o.value
+      for (const { id, value } of oscillators) {
+        const el = document.getElementById(id)
+        if (el) el.value = value
       }
       break
     case 'harmonic-series':
-      for (const [id, value] of Object.entries(preset.oscillators[0])) {
+      for (const [id, value] of Object.entries(oscillators[0])) {
         document.getElementById(id).value = value
       }
       break
+    case 'additive-oscillators':
     default:
-      removeChildren($('#oscillator-panel'))
-      for (const osc of preset.oscillators) addOscillator(osc)
+      removeChildren(document.getElementById('oscillator-panel'))
+      oscillators.forEach(addOscillator)
   }
-  envelopeElement.envelope = preset.envelope
+  envelopeElement.envelope = envelope
 }
 
 let controller,
@@ -207,9 +212,7 @@ let controller,
   // pitchBend = 0,
   customPresets = [],
   wasmModule
-const $ = (selector, parent = document) => parent.querySelector(selector),
-  $$ = (s, p = document) => Array.from(p.querySelectorAll(s)),
-  removeChildren = (el) => {
+const removeChildren = (el) => {
     while (el.firstChild) el.removeChild(el.firstChild)
   },
   audio = new AudioContext(),
@@ -225,7 +228,7 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
     release: 0.01,
     threshold: -2,
   }),
-  envelopeElement = $('websynth-envelope'),
+  envelopeElement = document.querySelector('websynth-envelope'),
   keyboardKeymap = {
     "Digit0": 75,
     "Digit2": 61,
@@ -264,7 +267,8 @@ const $ = (selector, parent = document) => parent.querySelector(selector),
     "Slash": 64,
     "BracketLeft": 77,
     "Backslash": 47,
-    "BracketRight": 79
+    "BracketRight": 79,
+    "IntlBackslash": 47,
   },
   factoryPresets = [
     new Preset(
@@ -395,12 +399,12 @@ function controlChange(event) {
 
 /** Sync the chord displayed in the UI with the currently playing notes */
 function updateChordDisplay() {
-  const notes = [...playingNotes.keys()].sort(),
-    sharp = $('#sharp-or-flat').checked,
+  const notes = [...playingNotes.keys()].sort((a, b) => a - b),
+    sharp = document.getElementById('sharp-or-flat').checked,
     short = MIDINumber.toChord(notes, sharp, false),
     long = MIDINumber.toChord(notes, sharp, true),
     chord = short === long ? short : short + ' : ' + long
-  $('#chord-name').value = chord
+  document.getElementById('chord-name').value = chord
   return chord
 }
 
@@ -410,20 +414,21 @@ const noteSources = {
     class: OscillatorNote,
     oscParams: (midiNum) => {
       const oscParams = []
-      for (const panel of $$('.oscillator')) {
+      for (const panel of document.querySelectorAll('.oscillator')) {
         oscParams.push({
-          type: $('.waveform', panel).value,
-          detune: $('.detune', panel).value,
+          type: panel.querySelector('.waveform').value,
+          detune: panel.querySelector('.detune').value,
           frequency: MIDINumber.toFrequency(
-            Number($('.note-offset', panel).value) +
+            Number(panel.querySelector('.note-offset').value) +
             midiNum +
-            Number($('#note-offset').value) +
-            (Number($('.octave', panel).value) + Number($('#octave').value)) *
+            Number(document.getElementById('note-offset').value) +
+            (Number(panel.querySelector('.octave').value) +
+              Number(document.getElementById('octave').value)) *
             12
           ),
           gain:
-            $('.gain', panel).value *
-            ($('.invert-phase', panel).checked ? -1 : 1),
+            panel.querySelector('.gain').value *
+            (panel.querySelector('.invert-phase').checked ? -1 : 1),
         })
       }
       return oscParams
@@ -456,8 +461,8 @@ const noteSources = {
           type: 'custom', real, imag,
           frequency: MIDINumber.toFrequency(
             midiNum +
-            Number($('#note-offset').value) +
-            Number($('#octave').value) * 12
+            Number(document.getElementById('note-offset').value) +
+            Number(document.getElementById('octave').value) * 12
           ),
           gain: 1,
         })
@@ -474,14 +479,14 @@ const noteSources = {
     oscParams: (midiNum) => {
       return [
         {
-          bytebeat: $('#bytebeat-code').value,
+          bytebeat: document.getElementById('bytebeat-code').value,
           frequency: MIDINumber.toFrequency(
             midiNum +
-            Number($('#note-offset').value) +
-            (Number($('#octave').value) + 8) * 12
+            Number(document.getElementById('note-offset').value) +
+            (Number(document.getElementById('octave').value) + 8) * 12
           ),
-          tempo: Number($('#tempo').value),
-          floatMode: $('#bytebeat-mode').value === 'float',
+          tempo: Number(document.getElementById('tempo').value),
+          floatMode: document.getElementById('bytebeat-mode').value === 'float',
         },
       ]
     },
@@ -494,10 +499,10 @@ const noteSources = {
           module: wasmModule,
           frequency: MIDINumber.toFrequency(
             midiNum +
-            Number($('#note-offset').value) +
-            (Number($('#octave').value) + 8) * 12
+            Number(document.getElementById('note-offset').value) +
+            (Number(document.getElementById('octave').value) + 8) * 12
           ),
-          tempo: Number($('#tempo').value),
+          tempo: Number(document.getElementById('tempo').value),
           floatMode: false,
         },
       ]
@@ -506,11 +511,11 @@ const noteSources = {
 }
 
 function noteOn(midiNum, velocity = 1) {
-  const source = $('#source-select').value
+  const source = document.getElementById('source-select').value
   if (
-    (source === 'bytebeat' && !$('#bytebeat-code').validity.valid) ||
+    (source === 'bytebeat' && !document.getElementById('bytebeat-code').validity.valid) ||
     (source === 'wasmbeat' && !wasmModule) ||
-    (source === 'harmonic-series' && !$('#harmonic-function').validity.valid)
+    (source === 'harmonic-series' && !document.getElementById('harmonic-function').validity.valid)
   ) {
     return
   }
@@ -563,7 +568,7 @@ function sostenutoPedalEvent(ev) {
   } else if (!pedals.sostenuto && ev.value > 63) {
     pedals.sostenuto = true
     sostenutoNotes = playingNotes
-    playingNotes = {}
+    playingNotes.clear()
   }
 }
 
@@ -581,17 +586,17 @@ function setupControllerListeners(channel = 'all') {
 }
 
 function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
-  removeChildren($('#ebony'))
-  removeChildren($('#ivory'))
+  removeChildren(document.getElementById('ebony'))
+  removeChildren(document.getElementById('ivory'))
   const keyWidth = (12 / 7) * (95 / maxKeys)
-  $('#keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
-  $('#keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
+  document.getElementById('keyboard').style.setProperty('--key-width', `${keyWidth}vw`)
+  document.getElementById('keyboard').style.setProperty('--half-key', `${keyWidth / 2}vw`)
   const palette = generateColorPalette()
   const makeShadowKey = () => {
     const shadowKey = document.createElement('div')
     shadowKey.classList.add('invisible')
     shadowKey.classList.add('key')
-    $('#ebony').appendChild(shadowKey)
+    document.getElementById('ebony').appendChild(shadowKey)
   }
   makeShadowKey()
   for (let i = lowNote; i < lowNote + maxKeys; i++) {
@@ -619,9 +624,9 @@ function setupDisplayKeyboard(maxKeys = 88, lowNote = 21) {
       makeShadowKey()
     }
     if (elem.id.includes('♯')) {
-      $('#ebony').appendChild(elem)
+      document.getElementById('ebony').appendChild(elem)
     } else {
-      $('#ivory').appendChild(elem)
+      document.getElementById('ivory').appendChild(elem)
     }
   }
 }
@@ -661,10 +666,11 @@ function setupKeypressKeymap() {
       noteOff(keyboardKeymap[code])
     }
   })
+  /** @type {HTMLInputElement} */
   const bb = document.getElementById('bytebeat-code')
-  bb.oninput = () => {
+  bb.addEventListener('input', () => {
     bb.setCustomValidity(validateBytebeat(bb.value) ? '' : 'Invalid bytebeat')
-  }
+  })
 }
 
 function setupGlobalEventListeners() {
@@ -697,11 +703,11 @@ function setupGlobalEventListeners() {
  * @param {string} viewId
  */
 function changeCurrentView(viewId, selectId, parentId) {
-  const select = $('#' + selectId)
+  const select = document.getElementById(selectId)
   if (select.value !== viewId) {
     select.value = viewId
   }
-  for (const el of $$(`#${parentId}>:not(nav)`)) {
+  for (const el of document.querySelectorAll(`#${parentId}>:not(nav)`)) {
     el.classList[el.id === viewId ? 'remove' : 'add']('hidden')
   }
 }
@@ -715,7 +721,7 @@ function updateCustomPresets(presets, target) {
   presets.forEach((preset, index) => {
     const el = document.createElement('option')
     el.textContent = preset.name
-    el.value = index
+    el.value = index.toString()
     target.appendChild(el)
   })
 }
@@ -739,7 +745,7 @@ window.onload = () => {
     //  .connect(masterLevel)
     .connect(audio.destination)
   setupGlobalEventListeners()
-  $('#add-oscillator').addEventListener('click', () => addOscillator())
+  document.getElementById('add-oscillator').addEventListener('click', () => addOscillator())
   setupKeypressKeymap()
   setupDisplayKeyboard()
   loadPersistentState()
@@ -758,15 +764,15 @@ window.onload = () => {
     } catch (error) {
       huf.innerHTML = '<mfrac><mn>1</mn><mrow><mi>f</mi><mo>(</mo><mi>k</mi><mo>)</mo></mrow></mfrac>'
       hf.setCustomValidity('Invalid function')
-      console.warn(error.message)
+      console.warn(error)
     }
   }
   harmonicOnInput()
   document.getElementById('harmonic-function').oninput = harmonicOnInput
-  updateCustomPresets(factoryPresets, $('#factory-presets'))
-  updateCustomPresets(customPresets, $('#custom-presets'))
-  $('#load-preset').addEventListener('click', () => {
-    const selected = $('#preset-list').selectedOptions[0],
+  updateCustomPresets(factoryPresets, document.getElementById('factory-presets'))
+  updateCustomPresets(customPresets, document.getElementById('custom-presets'))
+  document.getElementById('load-preset').addEventListener('click', () => {
+    const selected = document.getElementById('preset-list').selectedOptions[0],
       storage =
         selected.parentElement.label === 'Factory Presets'
           ? factoryPresets
@@ -774,24 +780,24 @@ window.onload = () => {
       currentPreset = storage[selected.value]
     if (currentPreset) loadPreset(currentPreset)
   })
-  $('#add-preset').addEventListener('click', addPreset)
-  $('#remove-preset').addEventListener('click', removePreset)
+  document.getElementById('add-preset').addEventListener('click', addPreset)
+  document.getElementById('remove-preset').addEventListener('click', removePreset)
   if (audio.audioWorklet) {
     audio.audioWorklet.addModule('./src/bytebeat-processor.js')
   }
-  WebMidi.enable((err) => {
+  window.WebMidi?.enable((err) => {
     if (err) {
       console.error('WebMidi could not be enabled.', err)
       setupDisplayKeyboard()
     } else {
       console.log('WebMidi enabled!')
 
-      const cf = $('#controller-form'),
-        cs = $('#controller-select'),
-        chs = $('#channel-select')
+      const cf = document.getElementById('controller-form'),
+        cs = document.getElementById('controller-select'),
+        chs = document.getElementById('channel-select')
 
-      cf.addEventListener('submit', (e) => {
-        e.preventDefault()
+      cf.addEventListener('submit', (event) => {
+        event.preventDefault()
         controller = WebMidi.getInputByName(cs.options[cs.selectedIndex].value)
         setupControllerListeners(chs.options[chs.selectedIndex].value)
         cf.classList.add('hidden')
@@ -821,10 +827,10 @@ window.onload = () => {
   })
 }
 
-window.onunload = () => {
+window.addEventListener('pagehide', () => {
   window.localStorage.persistentSettings = JSON.stringify(getPresetInfo())
   window.localStorage.customPresets = JSON.stringify(customPresets)
-}
+})
 
 window.addEventListener('click', () => audio.resume(), {
   capture: true,

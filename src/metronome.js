@@ -21,6 +21,7 @@ export class Metronome {
   get tempo() {
     return this.period * 60000
   }
+  /** @param {number} bpm */
   set tempo(bpm) {
     this.period = 60000 / bpm
   }
@@ -38,9 +39,7 @@ export class Metronome {
 
   start() {
     this.active = true
-    /** Makes ticking noises while the metronome is active
-     * @private
-     */
+    /** Makes ticking noises while the metronome is active */
     const keepTicking = () => {
       if (this.active) {
         this.tick()

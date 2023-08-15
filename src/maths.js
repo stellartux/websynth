@@ -18,8 +18,9 @@ export class ComplexNumber {
       this.re = re.re
       this.im = re.im
     } else {
-      throw new Error('re must be a number.')
+      throw new TypeError('re must be a number.')
     }
+    if (typeof im !== 'number') throw new TypeError('im must be a number.')
   }
   /** @param {number|ComplexNumber?} that */
   ['+'](that) {
@@ -38,6 +39,8 @@ export class ComplexNumber {
       this.im += that.im
     } else if (typeof that === 'number') {
       this.re += that
+    } else {
+      throw new TypeError('Unexpected ' + typeof that)
     }
     return this
   }
@@ -58,6 +61,8 @@ export class ComplexNumber {
       return new ComplexNumber(a - c, b - d)
     } else if (typeof that === 'number') {
       return new ComplexNumber(this.re - that, this.im)
+    } else {
+      throw new TypeError('Unexpected ' + typeof that)
     }
   }
   /** @param {number|ComplexNumber} that */
@@ -66,16 +71,15 @@ export class ComplexNumber {
   }
   /** @param {number|ComplexNumber} that */
   ['*='](that) {
-    const a = this.re, b = this.im
-    let c = 0, d = 0
     if (that instanceof ComplexNumber) {
-      c = that.re, d = that.im
+      const a = this.re, b = this.im, c = that.re, d = that.im
       this.re = a * c - b * d
       this.im = b * c + a * d
     } else if (typeof that === 'number') {
-      c = that
       this.re *= that
       this.im *= that
+    } else {
+      throw new TypeError('Unexpected ' + typeof that)
     }
     return this
   }
@@ -95,18 +99,18 @@ export class ComplexNumber {
       } else {
         return that['*'](new ComplexNumber(Math.log(this.re))).exp()
       }
-    } else {
-      if (that.im === 0 && that.re > 0 && Number.isSafeInteger(that.re)) {
-        let result = new ComplexNumber(1)
-        let temp = new ComplexNumber(this)
-        for (let power = that.re; power > 0; power >>>= 1) {
-          if (power & 1) {
-            result['*='](temp)
-          }
-          temp['+='](temp)
+    } else if (that.im === 0 && that.re > 0 && Number.isSafeInteger(that.re)) {
+      let result = new ComplexNumber(1)
+      let temp = new ComplexNumber(this)
+      for (let power = that.re; power > 0; power >>>= 1) {
+        if (power & 1) {
+          result['*='](temp)
         }
-        return result
+        temp['+='](temp)
       }
+      return result
+    } else {
+      throw new Error('Unimplemented exponentiation type')
     }
   }
   /** @param {ComplexNumber} that */
@@ -139,9 +143,6 @@ export class ComplexNumber {
       return this.re.toString()
     }
   }
-  toJSON() {
-    return `{"re":${this.re},"im":${this.im}}`
-  }
   /** @param {string} json */
   static fromJSON(json) {
     const { re, im } = JSON.parse(json)
@@ -153,10 +154,11 @@ export class ComplexNumber {
     } else if (this.re === 0) {
       return `<mn>${this.im === 1 ? '' : this.im}i</mn>`
     } else {
+      const im = Math.abs(this.im)
       return `<mrow>${brackets ? '<mo>(</mo>' : ''
         }<mn>${this.re
         }</mn><mo>${this.im > 0 ? '+' : '-'
-        }</mo><mn>${Math.abs(this.im)}</mn><mi>i</mi>${brackets ? '<mo>)</mo>' : ''
+        }</mo><mn>${im === 1 ? '' : im}</mn><mi>i</mi>${brackets ? '<mo>)</mo>' : ''
         }</mrow>`
     }
   }
@@ -235,7 +237,7 @@ function unop(tokens) {
       return postfix(new ComplexNumber(0, Number(token)), tokens)
     }
     const value = new ComplexNumber(Number(token))
-    if (tokens[0] && /^[a-zA-Z_]+$/.test(tokens[0])) {
+    if (tokens[0] && /^[[:alpha:]_]+$/.test(tokens[0])) {
       return postfix(['*', value, tokens.shift()], tokens)
     } else {
       return postfix(value, tokens)
